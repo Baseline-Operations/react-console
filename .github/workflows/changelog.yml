@@ -1,0 +1,77 @@
+name: Update Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update-changelog:
+    name: Update Changelog
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update CHANGELOG.md
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          
+          # Determine changelog section based on PR title prefix
+          if [[ "$PR_TITLE" =~ ^[Ff]eat ]]; then
+            SECTION="### Added"
+          elif [[ "$PR_TITLE" =~ ^[Ff]ix ]]; then
+            SECTION="### Fixed"
+          elif [[ "$PR_TITLE" =~ ^[Rr]efactor ]]; then
+            SECTION="### Changed"
+          else
+            SECTION="### Changed"
+          fi
+          
+          # Create entry
+          ENTRY="- $PR_TITLE ([#$PR_NUMBER](https://github.com/${{ github.repository }}/pull/$PR_NUMBER)) by @$PR_AUTHOR"
+          
+          # Update CHANGELOG.md
+          if [ -f CHANGELOG.md ]; then
+            # Create temp file with new entry
+            awk -v section="$SECTION" -v entry="$ENTRY" '
+              /^## \[Unreleased\]/ {
+                print
+                getline
+                print
+                print ""
+                print section
+                print entry
+                print ""
+                next
+              }
+              { print }
+            ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+          else
+            # Create new CHANGELOG.md without heredoc
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "## [Unreleased]" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "$SECTION" >> CHANGELOG.md
+            echo "$ENTRY" >> CHANGELOG.md
+          fi
+          
+          # Commit and push
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for PR #$PR_NUMBER [skip ci]" || exit 0
+          git push || exit 0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

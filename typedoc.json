@@ -1,0 +1,33 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "README.md",
+  "name": "React Console API",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Components",
+    "Hooks",
+    "Utilities",
+    "Types",
+    "*"
+  ],
+  "gitRevision": "main",
+  "sort": ["source-order", "alphabetical"],
+  "kindSortOrder": [
+    "Project",
+    "Module",
+    "Namespace",
+    "Enum",
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Function",
+    "Variable"
+  ]
+}

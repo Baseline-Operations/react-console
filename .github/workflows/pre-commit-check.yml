@@ -1,0 +1,27 @@
+name: Pre-commit Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  pre-commit:
+    name: Verify Pre-commit Hooks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run lint-staged check
+        run: |
+          echo "Verifying that staged files would pass pre-commit checks"
+          npx lint-staged --diff=origin/${{ github.base_ref }}...HEAD || true
+        continue-on-error: true

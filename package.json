@@ -1,0 +1,130 @@
+{
+  "name": "react-console",
+  "version": "0.1.0",
+  "description": "React 19+ TypeScript library for building console/terminal applications using JSX",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./cli": {
+      "import": "./dist/cli.mjs",
+      "require": "./dist/cli.js",
+      "types": "./dist/cli.d.ts"
+    },
+    "./router": {
+      "import": "./dist/router.mjs",
+      "require": "./dist/router.js",
+      "types": "./dist/router.d.ts"
+    },
+    "./selection": {
+      "import": "./dist/selection.mjs",
+      "require": "./dist/selection.js",
+      "types": "./dist/selection.d.ts"
+    },
+    "./layout": {
+      "import": "./dist/layout.mjs",
+      "require": "./dist/layout.js",
+      "types": "./dist/layout.d.ts"
+    },
+    "./animations": {
+      "import": "./dist/animations.mjs",
+      "require": "./dist/animations.js",
+      "types": "./dist/animations.d.ts"
+    },
+    "./theme": {
+      "import": "./dist/theme.mjs",
+      "require": "./dist/theme.js",
+      "types": "./dist/theme.d.ts"
+    },
+    "./storage": {
+      "import": "./dist/storage.mjs",
+      "require": "./dist/storage.js",
+      "types": "./dist/storage.d.ts"
+    },
+    "./hooks": {
+      "import": "./dist/hooks.mjs",
+      "require": "./dist/hooks.js",
+      "types": "./dist/hooks.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md"
+  ],
+  "prepublishOnly": "npm run build",
+  "scripts": {
+    "build": "tsc && babel src --out-dir dist --extensions .ts,.tsx --source-maps",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,json,md}\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "docs": "typedoc",
+    "docs:watch": "typedoc --watch",
+    "clean": "rm -rf dist",
+    "prepare": "husky install || true",
+    "precommit": "lint-staged",
+    "prepush": "npm run typecheck && npm test -- --run && npm run lint"
+  },
+  "keywords": [
+    "react",
+    "react19",
+    "console",
+    "terminal",
+    "cli",
+    "jsx",
+    "typescript",
+    "reconciler"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "dependencies": {
+    "react-reconciler": "^0.31.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0",
+    "@babel/preset-env": "^7.25.0",
+    "@babel/preset-react": "^7.25.0",
+    "@babel/preset-typescript": "^7.25.0",
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.0",
+    "@types/react-reconciler": "^0.28.5",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "babel-plugin-react-compiler": "^19.0.0-beta-45e3631b-20250413",
+    "eslint": "^9.19.0",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^17.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.4.2",
+    "react": "^19.1.0",
+    "typedoc": "^0.28.16",
+    "typedoc-plugin-markdown": "^4.9.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": {
+    "create-react-console-app": "./dist/utils/build/create-app.js"
+  }
+}

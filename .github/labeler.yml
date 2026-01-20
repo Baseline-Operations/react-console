@@ -1,0 +1,50 @@
+# Auto-label PRs based on changed files
+
+# CLI related changes
+cli:
+  - src/components/cli/**/*
+  - src/utils/cli/**/*
+  - '**/*cli*'
+
+# Renderer changes
+renderer:
+  - src/renderer/**/*
+
+# Component changes
+components:
+  - src/components/**/*
+  - '!src/components/cli/**/*'
+
+# Documentation
+docs:
+  - '**/*.md'
+  - docs/**/*
+  - '!CHANGELOG.md'
+
+# Build system
+build:
+  - src/utils/build/**/*
+  - build.config.ts
+  - babel.config.js
+  - tsconfig*.json
+
+# Tests
+tests:
+  - src/__tests__/**/*
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - vitest.config.ts
+
+# Examples
+examples:
+  - examples/**/*
+
+# Configuration
+config:
+  - .github/**/*
+  - .husky/**/*
+  - .lintstagedrc.js
+  - .prettierrc
+  - eslint.config.js
+  - package.json
+  - package-lock.json
