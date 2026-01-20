@@ -100,7 +100,7 @@ jobs:
           head -1 dist/utils/build/create-app.js | grep -q "#!/usr/bin/env node" || exit 1
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dist
           path: dist/
