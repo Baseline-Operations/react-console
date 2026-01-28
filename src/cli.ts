@@ -39,6 +39,7 @@ export {
   useCommand,
   useCommandPath,
   useCommandParams,
+  useCommandParamsArray,
   useCommandOptions,
   useRoute,
   useRouteParams,

@@ -963,6 +963,7 @@ export abstract class Node {
       supportsMutation: true,
       supportsPersistence: false,
       supportsHydration: false,
+      isPrimaryRenderer: true,
       NotPendingTransition: null,
       HostTransitionContext: null,
       requestPostPaintCallback,
@@ -984,6 +985,15 @@ export abstract class Node {
   }
   
   /**
+   * Navigation options for interactive mode
+   */
+  static navigationOptions: {
+    arrowKeyNavigation?: boolean;
+    verticalArrowNavigation?: boolean;
+    horizontalArrowNavigation?: boolean;
+  } = {};
+
+  /**
    * Main render entry point - renders React elements to console
    * This is the primary API for users
    */
@@ -994,8 +1004,15 @@ export abstract class Node {
       fullscreen?: boolean;
       onUpdate?: () => void;
       appId?: string;
+      navigation?: {
+        arrowKeyNavigation?: boolean;
+        verticalArrowNavigation?: boolean;
+        horizontalArrowNavigation?: boolean;
+      };
     }
   ): string | void {
+    // Store navigation options
+    Node.navigationOptions = options?.navigation || {};
     // Lazy imports to avoid circular dependency with reconciler
     // Note: reconciler.ts imports Node, creating a circular dependency.
     // We use require() here which handles circular deps at runtime.
@@ -1028,7 +1045,7 @@ export abstract class Node {
     const { getTerminalDimensions, onTerminalResizeDebounced, setRenderMode } = require('../../utils/terminal');
     const { reportError, ErrorType } = require('../../utils/errors');
     const { initializeStorage } = require('../../utils/storage');
-    const { scheduleBatchedUpdate } = require('../../renderer/batching');
+    const { scheduleBatchedUpdate, flushBatchedUpdatesSync } = require('../../renderer/batching');
     const { BoxNode } = require('../primitives/BoxNode');
     const {
       collectInteractiveComponents,
@@ -1119,6 +1136,13 @@ export abstract class Node {
     
     // Apply stored focus state to components after re-render
     const applyFocusState = (components: Node[]): void => {
+      // First, clear focus from ALL components to ensure clean state
+      for (const comp of components) {
+        if ('focused' in comp) {
+          (comp as any).focused = false;
+        }
+      }
+      
       if (focusedNodeId) {
         for (const comp of components) {
           if (comp.id === focusedNodeId) {
@@ -1193,17 +1217,29 @@ export abstract class Node {
           
           isFirstRender = false;
           
-          // Position cursor at focused input if any
+          // Position cursor at focused component if any
           if (focusedNodeId && isInteractive) {
             const components = getInteractiveComponents(rootContainer);
             const focusedComponent = components.find(c => c.id === focusedNodeId);
-            if (focusedComponent && focusedComponent.type === 'input') {
+            if (focusedComponent) {
               const registeredBounds = componentBoundsRegistry.get(focusedComponent as any);
               if (registeredBounds) {
                 const { moveCursor } = require('../../renderer/ansi');
-                const inputValue = (focusedComponent as any).value || '';
-                const cursorX = registeredBounds.x + 2 + inputValue.length; // +2 for "[ " prefix
-                const cursorY = registeredBounds.y;
+                let cursorX: number;
+                let cursorY: number = registeredBounds.y;
+                
+                if (focusedComponent.type === 'input') {
+                  // Position cursor: x = bounds.x + prefix(2) + text length, y = bounds.y
+                  const inputValue = (focusedComponent as any).value || '';
+                  cursorX = registeredBounds.x + 2 + inputValue.length; // +2 for "[ " prefix
+                } else if (focusedComponent.type === 'button') {
+                  // Position cursor at button: x = bounds.x + prefix(2), y = bounds.y
+                  cursorX = registeredBounds.x + 2; // +2 for "> " prefix
+                } else {
+                  // Default: position at start of component
+                  cursorX = registeredBounds.x;
+                }
+                
                 process.stdout.write(moveCursor(cursorX, cursorY));
               }
             }
@@ -1288,6 +1324,29 @@ export abstract class Node {
       });
     };
     
+    // Flush all pending React updates synchronously
+    // This ensures the component tree is up-to-date before navigation
+    const flushSyncReactUpdates = (): void => {
+      // First flush our batched updates
+      flushBatchedUpdatesSync();
+      
+      // Then force React to process any pending work synchronously
+      if (currentElement && rootFiber) {
+        if (typeof (reconciler as any).updateContainerSync === 'function') {
+          (reconciler as any).updateContainerSync(currentElement, rootFiber, null, () => {});
+          if (typeof (reconciler as any).flushSyncWork === 'function') {
+            (reconciler as any).flushSyncWork();
+          }
+        } else {
+          // Fallback: use regular updateContainer
+          reconciler.updateContainer(currentElement, rootFiber, null, () => {});
+        }
+        
+        // Perform a render to update node properties from React props
+        performRender();
+      }
+    };
+    
     // Setup input handling for interactive components
     const setupInputHandling = (root: Node): void => {
       const interactiveComponents = getInteractiveComponents(root);
@@ -1323,7 +1382,8 @@ export abstract class Node {
           focusedNodeId = first.id;
           terminal.setFocusedComponent(first as any);
           if ('onFocus' in first && (first as any).onFocus) {
-            (first as any).onFocus();
+            const focusEvent = { target: first, nativeEvent: { target: first } };
+            (first as any).onFocus(focusEvent);
           }
           needsRerender = true;
         }
@@ -1347,9 +1407,47 @@ export abstract class Node {
           
           if (key) {
             if (key.tab) {
-              handleTabNavigation(currentComponents, key.shift, scheduleUpdate, root);
+              // Flush all pending React updates to ensure component states are current
+              flushSyncReactUpdates();
+              // Re-collect components after flush to get updated states
+              const freshComponents = getInteractiveComponents(root);
+              applyFocusState(freshComponents);
+              
+              handleTabNavigation(freshComponents, key.shift, scheduleUpdate, root);
               // Update focusedNodeId after tab navigation
-              const newFocused = currentComponents.find((comp) => 'focused' in comp && (comp as any).focused);
+              const newFocused = freshComponents.find((comp) => 'focused' in comp && (comp as any).focused);
+              focusedNodeId = newFocused?.id || null;
+              return;
+            }
+            
+            // Arrow key navigation (if enabled)
+            const navOpts = Node.navigationOptions;
+            const arrowNav = navOpts.arrowKeyNavigation;
+            const verticalNav = navOpts.verticalArrowNavigation ?? arrowNav;
+            const horizontalNav = navOpts.horizontalArrowNavigation ?? arrowNav;
+            
+            if ((key.upArrow || key.leftArrow) && (verticalNav && key.upArrow || horizontalNav && key.leftArrow)) {
+              // Flush all pending React updates to ensure component states are current
+              flushSyncReactUpdates();
+              const freshComponents = getInteractiveComponents(root);
+              applyFocusState(freshComponents);
+              
+              // Navigate backwards (like Shift+Tab)
+              handleTabNavigation(freshComponents, true, scheduleUpdate, root);
+              const newFocused = freshComponents.find((comp) => 'focused' in comp && (comp as any).focused);
+              focusedNodeId = newFocused?.id || null;
+              return;
+            }
+            
+            if ((key.downArrow || key.rightArrow) && (verticalNav && key.downArrow || horizontalNav && key.rightArrow)) {
+              // Flush all pending React updates to ensure component states are current
+              flushSyncReactUpdates();
+              const freshComponents = getInteractiveComponents(root);
+              applyFocusState(freshComponents);
+              
+              // Navigate forwards (like Tab)
+              handleTabNavigation(freshComponents, false, scheduleUpdate, root);
+              const newFocused = freshComponents.find((comp) => 'focused' in comp && (comp as any).focused);
               focusedNodeId = newFocused?.id || null;
               return;
             }
@@ -1385,6 +1483,23 @@ export abstract class Node {
                   if ('handleKeyboardEvent' in focused) {
                     (focused as any).handleKeyboardEvent(keyboardEvent);
                   }
+                  
+                  // Handle submitButtonId on Enter for input components
+                  if (key.tab === false && key.return && focused.type === 'input') {
+                    const submitButtonId = (focused as any).submitButtonId;
+                    if (submitButtonId) {
+                      // Find the button with the given ID and trigger its onClick
+                      const submitButton = currentComponents.find(
+                        comp => comp.type === 'button' && comp.id === submitButtonId
+                      );
+                      if (submitButton && 'onClick' in submitButton && (submitButton as any).onClick) {
+                        const buttonDisabled = 'disabled' in submitButton ? (submitButton as any).disabled : false;
+                        if (!buttonDisabled) {
+                          (submitButton as any).onClick({ target: submitButton });
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1406,7 +1521,8 @@ export abstract class Node {
                 focusedNodeId = first.id;
                 terminal.setFocusedComponent(first as any);
                 if ('onFocus' in first && (first as any).onFocus) {
-                  (first as any).onFocus();
+                  const focusEvent = { target: first, nativeEvent: { target: first } };
+                  (first as any).onFocus(focusEvent);
                 }
                 scheduleUpdate();
               }
@@ -1423,8 +1539,14 @@ export abstract class Node {
     };
     
     // Start input listener if interactive
+    // Use setImmediate/setTimeout to ensure React has fully committed the tree
     if (isInteractive) {
-      setupInputHandling(rootContainer);
+      const startInput = () => setupInputHandling(rootContainer);
+      if (typeof setImmediate !== 'undefined') {
+        setImmediate(startInput);
+      } else {
+        setTimeout(startInput, 0);
+      }
     }
   }
   

@@ -69,7 +69,12 @@ export function handleTabNavigation(
     (current as any).focused = false;
     terminal.setFocusedComponent(null);
     if ('onBlur' in current && (current as any).onBlur) {
-      (current as any).onBlur();
+      // Create blur event similar to React Native
+      const blurEvent = {
+        target: current,
+        nativeEvent: { target: current },
+      };
+      (current as any).onBlur(blurEvent);
     }
   }
 
@@ -93,7 +98,12 @@ export function handleTabNavigation(
   (next as any).focused = true;
   terminal.setFocusedComponent(next as any);
   if ('onFocus' in next && (next as any).onFocus) {
-    (next as any).onFocus();
+    // Create focus event similar to React Native
+    const focusEvent = {
+      target: next,
+      nativeEvent: { target: next },
+    };
+    (next as any).onFocus(focusEvent);
   }
   scheduleUpdate();
 }

@@ -22,19 +22,27 @@ import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
  * </Button>
  * 
  * <Button
+ *   id="submit-btn"
  *   label="Submit"
  *   onClick={handleSubmit}
  *   disabled={!isValid}
  *   style={{ backgroundColor: 'blue', color: 'white' }}
+ *   disabledStyle={{ color: 'gray', backgroundColor: 'darkGray' }}
  * />
  * ```
  */
 export interface ButtonProps extends StyleProps, ComponentEventHandlers {
   children?: ReactNode;
+  id?: string; // Unique identifier for the button (used with submitButtonId)
   style?: ViewStyle | ViewStyle[]; // CSS-like style (similar to React Native)
   disabled?: boolean;
   label?: string; // Alternative to children for simple text buttons
   tabIndex?: number; // Tab order (auto-assigned if not set)
+  // State-specific styles (override default styles for each state)
+  disabledStyle?: ViewStyle; // Style when disabled
+  focusedStyle?: ViewStyle; // Style when focused
+  pressedStyle?: ViewStyle; // Style when pressed
+  hoveredStyle?: ViewStyle; // Style when hovered
 }
 
 /**
@@ -62,10 +70,15 @@ export interface ButtonProps extends StyleProps, ComponentEventHandlers {
  */
 function ButtonComponent({ 
   children, 
+  id,
   label, 
   disabled = false, 
   tabIndex, 
-  onClick, 
+  onClick,
+  disabledStyle,
+  focusedStyle,
+  pressedStyle,
+  hoveredStyle,
   className,
   style,
   ...styleProps 
@@ -79,12 +92,17 @@ function ButtonComponent({
   // The reconciler will call onClick when Enter/Space is pressed while focused
   // or when mouse is clicked on the button (if terminal supports mouse events)
   return createConsoleNode('button', {
+    id,
     label: displayText,
     content: displayText,
     style: mergedStyle,
     styles: mergedStyle,
     disabled,
     tabIndex,
+    disabledStyle,
+    focusedStyle,
+    pressedStyle,
+    hoveredStyle,
     onClick: disabled ? undefined : onClick,
   });
 }

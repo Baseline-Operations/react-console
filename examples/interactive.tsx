@@ -1,5 +1,6 @@
 /**
  * Interactive example - Input component with JSX-style event handlers
+ * Demonstrates: focus/blur events, validation, disabled button, submitButtonId
  */
 
 import React, { useState } from 'react';
@@ -8,6 +9,44 @@ import { render, Text, View, Input, Button, LineBreak } from '../src/index';
 function App() {
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+
+  // Validate name
+  const validateName = (value: string): string | null => {
+    if (!value.trim()) {
+      return 'Name is required';
+    }
+    if (value.trim().length < 2) {
+      return 'Name must be at least 2 characters';
+    }
+    return null;
+  };
+
+  // Handle input focus
+  const handleFocus = () => {
+    // Mark as touched when focused
+    setTouched(true);
+  };
+
+  // Handle input blur - validate when leaving the field
+  const handleBlur = () => {
+    const validationError = validateName(name);
+    setError(validationError);
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    const validationError = validateName(name);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setSubmitted(true);
+  };
+
+  // Determine if button should be disabled
+  const isButtonDisabled = !name.trim();
 
   return (
     <View padding={2}>
@@ -20,28 +59,42 @@ function App() {
           <Input
             value={name}
             onChange={(event) => {
-              setName(event.value as string);
-            }}
-            onKeyDown={(event) => {
-              if (event.key.return) {
-                setSubmitted(true);
+              const newValue = event.value as string;
+              setName(newValue);
+              // Clear error when user types
+              if (touched && error) {
+                const validationError = validateName(newValue);
+                setError(validationError);
               }
             }}
-            onSubmit={(_event) => {
-              setSubmitted(true);
-            }}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             placeholder="Type your name and press Enter"
             autoFocus
+            submitButtonId="submit-btn"
           />
+          
+          {/* Show error message if validation failed */}
+          {error && touched && (
+            <>
+              <Text color="red">{error}</Text>
+            </>
+          )}
+          
           <LineBreak />
           <Button
-            onClick={() => {
-              if (name) {
-                setSubmitted(true);
-              }
-            }}
+            id="submit-btn"
+            onClick={handleSubmit}
             label="Submit"
+            disabled={isButtonDisabled}
+            disabledStyle={{ color: '#666666', backgroundColor: '#333333' }}
           />
+          
+          {/* Help text */}
+          <LineBreak />
+          <Text color="gray" dim>
+            Press Tab to switch between input and button. Press Enter to submit.
+          </Text>
         </>
       ) : (
         <>
@@ -53,4 +106,13 @@ function App() {
   );
 }
 
-render(<App />, { mode: 'interactive' });
+render(<App />, { 
+  mode: 'interactive',
+  navigation: {
+    // Enable arrow key navigation between focusable elements
+    arrowKeyNavigation: true,
+    // Or configure separately:
+    // verticalArrowNavigation: true,  // up/down arrows
+    // horizontalArrowNavigation: false, // left/right arrows (disabled)
+  }
+});

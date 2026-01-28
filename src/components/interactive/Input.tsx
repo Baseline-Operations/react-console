@@ -92,6 +92,8 @@ export interface InputProps extends ComponentEventHandlers, StyleProps {
   pattern?: string | RegExp; // Regex pattern for validation
   // Display formatting
   displayFormat?: string; // Format string for display (e.g., "currency", "percentage", "date")
+  // Submit behavior
+  submitButtonId?: string; // ID of button to trigger on Enter (if not set, Enter doesn't trigger any button)
 }
 
 /**
@@ -143,6 +145,7 @@ export function Input({
   formatValue,
   pattern,
   displayFormat,
+  submitButtonId,
   onChange,
   onKeyDown,
   onKeyUp,
@@ -181,6 +184,7 @@ export function Input({
     formatValue,
     pattern,
     displayFormat,
+    submitButtonId,
     onChange,
     onKeyDown,
     onKeyUp,

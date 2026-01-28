@@ -60,7 +60,9 @@ export class InputNode extends Stylable(Renderable(Interactive(Node as any))) {
     const displayValue = this.getDisplayValue();
     const textWidth = measureText(displayValue || this.placeholder);
     const borderWidth = this.border.width;
-    const totalWidth = textWidth + borderWidth.left + borderWidth.right + this.padding.left + this.padding.right + 1; // +1 for cursor
+    // +4 for focus indicators (prefix "[ " or "  " = 2, suffix " ]" or "  " = 2)
+    // +1 for cursor block
+    const totalWidth = textWidth + borderWidth.left + borderWidth.right + this.padding.left + this.padding.right + 4 + 1;
     const totalHeight = 1 + borderWidth.top + borderWidth.bottom + this.padding.top + this.padding.bottom;
     
     const dimensions: Dimensions = {
@@ -270,9 +272,9 @@ export class InputNode extends Stylable(Renderable(Interactive(Node as any))) {
     const cursor = isFocused ? applyStyles('█', { color: '#00ff00' }) : ' ';
     const displayText = styledText + cursor;
     
-    // Add focus indicator brackets
-    const prefix = isFocused ? applyStyles('[', { color: '#00ff00' }) : ' ';
-    const suffix = isFocused ? applyStyles(']', { color: '#00ff00' }) : ' ';
+    // Add focus indicator brackets (always same width for consistent layout)
+    const prefix = isFocused ? applyStyles('[ ', { color: '#00ff00' }) : '  ';
+    const suffix = isFocused ? applyStyles(' ]', { color: '#00ff00' }) : '  ';
     
     buffer.lines[y] = padToVisibleColumn(currentLine, x) + prefix + displayText + suffix;
   }

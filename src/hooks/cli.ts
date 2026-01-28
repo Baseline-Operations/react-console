@@ -44,11 +44,29 @@ export function useCommandPath(): string[] {
 }
 
 /**
- * Hook to get parsed command parameters (positional args)
- * Returns empty array if no commands or no parameters
- * Parameters are typed based on command definition (string, number, boolean)
+ * Hook to get parsed command parameters as a named object
+ * Returns empty object if no commands or no parameters
+ * Parameter names come from the command definition
+ * 
+ * @example
+ * ```tsx
+ * // With command params: [{ name: 'env', type: 'string' }, { name: 'target', type: 'string' }]
+ * const params = useCommandParams();
+ * console.log(params.env); // 'production'
+ * console.log(params.target); // 'web'
+ * ```
  */
-export function useCommandParams(): (string | number | boolean)[] {
+export function useCommandParams(): Record<string, string | number | boolean> {
+  const { namedParams } = useCLIContext();
+  return namedParams;
+}
+
+/**
+ * Hook to get parsed command parameters as a positional array
+ * Returns empty array if no commands or no parameters
+ * Use useCommandParams() for named access instead
+ */
+export function useCommandParamsArray(): (string | number | boolean)[] {
   const { params } = useCLIContext();
   return params;
 }

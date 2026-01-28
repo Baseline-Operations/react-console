@@ -24,6 +24,8 @@ export interface HelpAppInfo {
  */
 export interface HelpCommandInfo {
   /** Current command name */
+  name?: string;
+  /** Current command name (alias for name) */
   command?: string;
   /** Full command path */
   commandPath: string[];

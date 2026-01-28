@@ -101,9 +101,16 @@ export class NodeFactory {
         node = new FragmentNode() as unknown as Node;
         break;
         
+      case 'linebreak':
+      case 'LineBreak':
+        // LineBreak is just a text node with a newline
+        node = new TextNode() as unknown as Node;
+        node.setContent('\n');
+        break;
+        
       case 'input':
       case 'Input':
-        const inputNode = new InputNode();
+        const inputNode = new InputNode(props.id);
         if (props.value !== undefined) {
           inputNode.setValue(String(props.value));
         }
@@ -148,12 +155,16 @@ export class NodeFactory {
         if (props.onBlur) {
           (inputNode as any).onBlur = props.onBlur;
         }
+        // Set submitButtonId for Enter key behavior
+        if (props.submitButtonId) {
+          (inputNode as any).submitButtonId = props.submitButtonId;
+        }
         node = inputNode as unknown as Node;
         break;
         
       case 'button':
       case 'Button':
-        const buttonNode = new ButtonNode();
+        const buttonNode = new ButtonNode(props.id);
         if (props.label) {
           buttonNode.setLabel(props.label);
         } else if (props.content) {
@@ -183,6 +194,19 @@ export class NodeFactory {
         }
         if (props.onBlur) {
           (buttonNode as any).onBlur = props.onBlur;
+        }
+        // Set state-specific style overrides
+        if (props.disabledStyle) {
+          (buttonNode as any).disabledStyle = props.disabledStyle;
+        }
+        if (props.focusedStyle) {
+          (buttonNode as any).focusedStyle = props.focusedStyle;
+        }
+        if (props.pressedStyle) {
+          (buttonNode as any).pressedStyle = props.pressedStyle;
+        }
+        if (props.hoveredStyle) {
+          (buttonNode as any).hoveredStyle = props.hoveredStyle;
         }
         // Set style if provided
         if (props.style) {

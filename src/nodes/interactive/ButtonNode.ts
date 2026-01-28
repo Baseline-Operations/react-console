@@ -13,12 +13,27 @@ import { applyStyles } from '../../renderer/ansi';
 import type { CellBuffer } from '../../buffer/CellBuffer';
 
 /**
+ * State-specific style overrides
+ */
+interface ButtonStateStyle {
+  color?: string;
+  backgroundColor?: string;
+  bold?: boolean;
+}
+
+/**
  * Button node - clickable button
  */
 export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
   private label: string = '';
   private _isHovered: boolean = false;
   private _isPressed: boolean = false;
+  
+  // State-specific style overrides (customizable via props)
+  public disabledStyle?: ButtonStateStyle;
+  public focusedStyle?: ButtonStateStyle;
+  public pressedStyle?: ButtonStateStyle;
+  public hoveredStyle?: ButtonStateStyle;
   
   constructor(id?: string) {
     super(id);
@@ -98,7 +113,8 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     const text = this.label || this.content || '';
     const textWidth = measureText(text);
     const borderWidth = this.border.width;
-    const totalWidth = textWidth + borderWidth.left + borderWidth.right + this.padding.left + this.padding.right;
+    // +4 for focus indicators (prefix "> " or "  " = 2, suffix " <" or "  " = 2)
+    const totalWidth = textWidth + borderWidth.left + borderWidth.right + this.padding.left + this.padding.right + 4;
     const totalHeight = 1 + borderWidth.top + borderWidth.bottom + this.padding.top + this.padding.bottom;
     
     const dimensions: Dimensions = {
@@ -176,38 +192,97 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     nodeId: string | null;
     zIndex: number;
   }): void {
-    const { buffer, x, y, maxWidth, maxHeight, layerId, nodeId, zIndex } = context;
-    const stateStyle = this.getStateStyle();
+    const { buffer, x, y, maxWidth, layerId, nodeId, zIndex } = context;
     const text = this.label || this.content || '';
+    const isFocused = this.focused;
+    const isDisabled = this.disabled;
     
-    // Calculate button width (text + padding)
-    const textWidth = measureText(text);
-    const buttonWidth = Math.min(maxWidth, textWidth + this.padding.left + this.padding.right);
-    const buttonHeight = Math.min(maxHeight, 1 + this.padding.top + this.padding.bottom);
+    // Default colors for each state
+    const defaultDisabledStyle = { color: '#666666', backgroundColor: '#222222', bold: false };
+    const defaultPressedStyle = { color: '#ffffff', backgroundColor: '#005500', bold: true };
+    const defaultFocusedStyle = { color: '#00ff00', backgroundColor: '#333333', bold: true };
+    const defaultHoveredStyle = { color: '#00ffff', backgroundColor: '#222222', bold: false };
     
-    // Fill background for entire button area
-    buffer.fillBackground(
-      x, y, buttonWidth, buttonHeight,
-      stateStyle.backgroundColor,
-      layerId,
-      nodeId,
-      zIndex
-    );
+    // Determine colors based on state (with custom style overrides)
+    let fgColor: string;
+    let bgColor: string;
+    let bold = false;
     
-    // Render button text with styling
-    const textX = x + this.padding.left;
-    const textY = y + this.padding.top;
+    if (isDisabled) {
+      const style = { ...defaultDisabledStyle, ...this.disabledStyle };
+      fgColor = style.color!;
+      bgColor = style.backgroundColor!;
+      bold = style.bold!;
+    } else if (this._isPressed) {
+      const style = { ...defaultPressedStyle, ...this.pressedStyle };
+      fgColor = style.color!;
+      bgColor = style.backgroundColor!;
+      bold = style.bold!;
+    } else if (isFocused) {
+      const style = { ...defaultFocusedStyle, ...this.focusedStyle };
+      fgColor = style.color!;
+      bgColor = style.backgroundColor!;
+      bold = style.bold!;
+    } else if (this._isHovered) {
+      const style = { ...defaultHoveredStyle, ...this.hoveredStyle };
+      fgColor = style.color!;
+      bgColor = style.backgroundColor!;
+      bold = style.bold!;
+    } else {
+      // Normal state
+      const stateStyle = this.getStateStyle();
+      fgColor = stateStyle.color;
+      bgColor = stateStyle.backgroundColor;
+      bold = stateStyle.bold;
+    }
     
-    for (let i = 0; i < text.length && textX + i < x + maxWidth; i++) {
-      buffer.setCell(textX + i, textY, {
-        char: text[i],
-        foreground: stateStyle.color,
-        background: stateStyle.backgroundColor,
-        bold: stateStyle.bold,
+    // Focus indicator prefix/suffix
+    const prefix = isFocused ? '> ' : '  ';
+    const suffix = isFocused ? ' <' : '  ';
+    const indicatorColor = isFocused ? '#00ff00' : undefined;
+    
+    let currentX = x;
+    
+    // Render prefix
+    for (let i = 0; i < prefix.length && currentX < x + maxWidth; i++) {
+      buffer.setCell(currentX, y, {
+        char: prefix[i],
+        foreground: indicatorColor,
+        background: bgColor,
+        bold: isFocused,
         layerId,
         nodeId,
         zIndex,
       });
+      currentX++;
+    }
+    
+    // Render button text
+    for (let i = 0; i < text.length && currentX < x + maxWidth - suffix.length; i++) {
+      buffer.setCell(currentX, y, {
+        char: text[i],
+        foreground: fgColor,
+        background: bgColor,
+        bold,
+        layerId,
+        nodeId,
+        zIndex,
+      });
+      currentX++;
+    }
+    
+    // Render suffix
+    for (let i = 0; i < suffix.length && currentX < x + maxWidth; i++) {
+      buffer.setCell(currentX, y, {
+        char: suffix[i],
+        foreground: indicatorColor,
+        background: bgColor,
+        bold: isFocused,
+        layerId,
+        nodeId,
+        zIndex,
+      });
+      currentX++;
     }
   }
   

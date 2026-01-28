@@ -71,6 +71,7 @@ export interface CLIStateContextValue {
   command: string[];
   options: Record<string, string | number | boolean | string[]>;
   params: (string | number | boolean)[];
+  namedParams: Record<string, string | number | boolean>; // Named params from command definition
   route?: string;
   routeParams?: Record<string, string>;
   isDefault: boolean;
@@ -271,11 +272,28 @@ export function CommandRouter({
     }
   }, [matchedMetadata, normalizedArgs, matchResult.isDefault, middlewareResult.shouldStop]);
 
+  // Create named params from positional params based on command definition
+  const namedParams = useMemo<Record<string, string | number | boolean>>(() => {
+    const result: Record<string, string | number | boolean> = {};
+    if (matchedMetadata?.params && normalizedArgs.params) {
+      matchedMetadata.params.forEach((paramDef, index) => {
+        if (index < normalizedArgs.params.length) {
+          const value = normalizedArgs.params[index];
+          if (value !== undefined) {
+            result[paramDef.name] = value;
+          }
+        }
+      });
+    }
+    return result;
+  }, [matchedMetadata?.params, normalizedArgs.params]);
+
   // Create context value (use normalized args for options)
   const contextValue: CLIStateContextValue = {
     command: normalizedArgs.command,
     options: normalizedArgs.options,
     params: normalizedArgs.params,
+    namedParams,
     route: matchResult.route,
     routeParams: matchResult.routeParams,
     isDefault: matchResult.isDefault,
@@ -325,6 +343,7 @@ export function CommandRouter({
   
   // Build command info if command exists
   const commandInfo: HelpProps['command'] | undefined = specificHelp?.type === 'command' && specificHelp.name ? {
+    name: specificHelp.name,
     command: specificHelp.name,
     commandPath: normalizedArgs.command,
     aliases: specificHelp.aliases,
@@ -333,6 +352,7 @@ export function CommandRouter({
     subcommands: specificHelp.children?.filter(c => c.type === 'command'),
     defaultComponent: specificHelp.children?.find(c => c.type === 'default'),
   } : normalizedArgs.command.length > 0 ? {
+    name: normalizedArgs.command[0],
     command: normalizedArgs.command[0],
     commandPath: normalizedArgs.command,
     description: specificHelp?.description,

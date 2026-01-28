@@ -68,6 +68,24 @@ export function parseKeyPress(chunk: string): KeyPress {
     };
   }
 
+  // Shift+Tab (Back-tab): \x1b[Z
+  if (chunk === '\x1b[Z') {
+    return {
+      tab: true,
+      shift: true,
+      ctrl: false,
+      meta: false,
+      return: false,
+      escape: false,
+      backspace: false,
+      delete: false,
+      upArrow: false,
+      downArrow: false,
+      leftArrow: false,
+      rightArrow: false,
+    };
+  }
+
   if (chunk === '\x7f' || chunk === '\b') {
     // Backspace
     return {
@@ -348,8 +366,8 @@ export function startInputListener(
     if (inputBuffer.startsWith('\x1b[')) {
       // Escape sequence - check if complete
       // eslint-disable-next-line no-control-regex
-      if (inputBuffer.match(/^\x1b\[[ABCD]/)) {
-        // Complete arrow key sequence
+      if (inputBuffer.match(/^\x1b\[[ABCDZ]/)) {
+        // Complete arrow key sequence or Shift+Tab (Z)
         const key = parseKeyPress(inputBuffer);
         if (inputListener) {
           inputListener(inputBuffer, key, null);

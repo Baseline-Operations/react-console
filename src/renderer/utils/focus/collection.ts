@@ -23,7 +23,7 @@ import type { Node } from '../../../nodes/base/Node';
  * // components now contains all interactive components
  * ```
  */
-export function collectInteractiveComponents(node: Node, result: Node[]): void {
+export function collectInteractiveComponents(node: Node, result: Node[], _depth: number = 0): void {
   // Collect all interactive component types:
   // - input: Text/number inputs
   // - button: Clickable buttons
@@ -47,8 +47,11 @@ export function collectInteractiveComponents(node: Node, result: Node[]): void {
     result.push(node);
   }
 
-  for (const child of node.children) {
-    collectInteractiveComponents(child, result);
+  // Recursively check all children
+  if (node.children && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      collectInteractiveComponents(child, result, _depth + 1);
+    }
   }
 }
 
