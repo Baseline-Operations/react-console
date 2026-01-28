@@ -4,7 +4,8 @@
  */
 
 import { useEffect, type ReactNode } from 'react';
-import { exit } from '../../../renderer/render';
+import { Node } from '../../../nodes/base/Node';
+const exit = Node.exit.bind(Node);
 import { Box } from '../../../components/primitives/Box';
 
 export interface HelpWrapperProps {

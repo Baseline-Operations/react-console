@@ -3,16 +3,16 @@
  * Demonstrates various animation types and patterns
  */
 
-import { render } from '../src/index';
-import { Animated, Text, View, Button } from '../src/index';
+import React, { useState, useEffect } from 'react';
+import { render, Text, View, Button } from '../src/index';
+import { Animated } from '../src/components/Animated';
 import { useAnimatedValue, useAnimatedColor, useAnimatedStyle } from '../src/animations';
-import { useState, useEffect } from 'react';
 
 function App() {
   return (
     <View padding={2}>
-      <Text bold color="cyan" size="large">Animation Examples</Text>
-      <View marginTop={1}>
+      <Text bold color="cyan">Animation Examples</Text>
+      <View style={{ margin: { top: 1 } }}>
         <FadeExample />
         <PulseExample />
         <ColorTransitionExample />
@@ -28,7 +28,7 @@ function FadeExample() {
   const [visible, setVisible] = useState(true);
   
   return (
-    <View marginTop={1}>
+    <View style={{ margin: { top: 1 } }}>
       <Text bold>Fade Animation</Text>
       {visible && (
         <Animated
@@ -48,7 +48,7 @@ function FadeExample() {
 // Pulse animation
 function PulseExample() {
   return (
-    <View marginTop={1}>
+    <View style={{ margin: { top: 1 } }}>
       <Text bold>Pulse Animation</Text>
       <Animated
         type="pulse"
@@ -71,12 +71,12 @@ function ColorTransitionExample() {
   }, [targetColor, start]);
   
   return (
-    <View marginTop={1}>
+    <View style={{ margin: { top: 1 } }}>
       <Text bold>Color Transition</Text>
       <Text color={color}>
         Color transitions smoothly
       </Text>
-      <View marginTop={1}>
+      <View style={{ margin: { top: 1 } }}>
         <Button onClick={() => setTargetColor('red')}>Red</Button>
         <Button onClick={() => setTargetColor('green')}>Green</Button>
         <Button onClick={() => setTargetColor('blue')}>Blue</Button>
@@ -95,10 +95,10 @@ function AnimatedValueExample() {
   }, [target, start]);
   
   return (
-    <View marginTop={1}>
+    <View style={{ margin: { top: 1 } }}>
       <Text bold>Animated Value</Text>
       <Text>Value: {Math.round(value)}</Text>
-      <View marginTop={1}>
+      <View style={{ margin: { top: 1 } }}>
         <Button onClick={() => setTarget(100)}>Animate to 100</Button>
         <Button onClick={() => setTarget(0)}>Reset</Button>
       </View>
@@ -120,7 +120,7 @@ function AnimatedStyleExample() {
   }, [expanded, start]);
   
   return (
-    <View marginTop={1}>
+    <View style={{ margin: { top: 1 } }}>
       <Text bold>Animated Style</Text>
       <View style={style} border>
         <Text>Animated box</Text>

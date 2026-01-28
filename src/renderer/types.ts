@@ -4,8 +4,7 @@
  */
 
 import type { ConsoleNode } from '../types';
-
-// Note: OutputBuffer is defined in output.ts to avoid circular dependencies
+import type { CellBuffer } from '../buffer';
 
 /**
  * Render position result
@@ -53,18 +52,11 @@ export interface LayoutContext {
 
 /**
  * Node render function signature
- * Type for functions that render a specific node type to a buffer
- */
-// Note: OutputBuffer type is imported from output.ts where it's defined
-import type { OutputBuffer } from './output';
-
-/**
- * Node render function signature
- * Type for functions that render a specific node type to a buffer
+ * Type for functions that render a specific node type to a CellBuffer
  */
 export type NodeRenderFunction = (
   node: ConsoleNode,
-  buffer: OutputBuffer,
+  buffer: CellBuffer,
   x: number,
   y: number,
   maxWidth: number,

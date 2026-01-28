@@ -4,11 +4,37 @@
 
 import type { TerminalDimensions } from '../types';
 
+// Global render mode state
+let currentRenderMode: 'static' | 'interactive' | 'fullscreen' = 'static';
+
+/**
+ * Set the current render mode (used by render.ts)
+ */
+export function setRenderMode(mode: 'static' | 'interactive' | 'fullscreen'): void {
+  currentRenderMode = mode;
+}
+
+/**
+ * Get the current render mode
+ */
+export function getRenderMode(): 'static' | 'interactive' | 'fullscreen' {
+  return currentRenderMode;
+}
+
+/**
+ * Check if we're in static render mode
+ */
+export function isStaticMode(): boolean {
+  return currentRenderMode === 'static';
+}
+
 /**
  * Get terminal dimensions (columns and rows)
  * 
  * Returns the current terminal size. Falls back to 80x24 if dimensions
  * are not available (e.g., when not in a TTY).
+ * 
+ * For static mode, rows is set to a large value to allow unlimited height.
  * 
  * @returns Terminal dimensions with columns and rows
  * 
@@ -20,7 +46,9 @@ import type { TerminalDimensions } from '../types';
  */
 export function getTerminalDimensions(): TerminalDimensions {
   const columns = process.stdout.columns ?? 80;
-  const rows = process.stdout.rows ?? 24;
+  // For static mode, allow unlimited height (use large number)
+  // For interactive mode, use actual terminal rows
+  const rows = currentRenderMode === 'static' ? 10000 : (process.stdout.rows ?? 24);
   return { columns, rows };
 }
 

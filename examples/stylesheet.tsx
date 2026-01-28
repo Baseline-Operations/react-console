@@ -3,8 +3,8 @@
  * Similar to React Native StyleSheet but for terminals
  */
 
-import React, { useState } from 'react';
-import { render, Text, View, StyleSheet, getTerminalDimensions } from '../src/index';
+import React from 'react';
+import { render, exit, Text, View, StyleSheet, getTerminalDimensions } from '../src/index';
 
 const styles = StyleSheet.create({
   container: {
@@ -15,7 +15,18 @@ const styles = StyleSheet.create({
   title: {
     color: 'cyan',
     bold: true,
+    underline: true,
     textAlign: 'center',
+  },
+  terminalBox: {
+    color: 'red',
+    italic: true,
+    textAlign: 'right',
+  },
+  strikethroughText: {
+    strikethrough: true,
+    textDecoration: 'line-through',
+    color: 'green',
   },
   box: {
     padding: 1,
@@ -38,32 +49,49 @@ const styles = StyleSheet.create({
     left: 10,
     top: 2,
     padding: 1,
+    width: 50,
     backgroundColor: 'green',
     color: 'white',
   },
   dynamicBox: {
-    padding: 1,
     margin: 1,
+  },
+  // Card with badge - demonstrates absolute positioning within a container
+  card: {
+    position: 'relative', // Creates positioning context for absolute children
+    padding: 1,
+    margin: { top: 1 },
+    backgroundColor: 'gray',
+    color: 'black',
+    width: 40,
+  },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: 'red',
+    color: 'white',
   },
 });
 
 function App() {
-  const [highlighted, setHighlighted] = useState(false);
   const dims = getTerminalDimensions();
 
-  // Dynamic styles based on state
+  // Dynamic styles example (in a real app, this could be based on state)
   const dynamicStyle = {
     ...styles.dynamicBox,
-    backgroundColor: highlighted ? 'red' : 'blue',
-    color: highlighted ? 'white' : 'yellow',
-    bold: highlighted,
+    backgroundColor: 'blue',
+    color: 'yellow',
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>StyleSheet Example</Text>
-      <Text>Terminal Size: {dims.columns} x {dims.rows}</Text>
-      
+      <Text style={styles.terminalBox}>
+        Terminal Size: {dims.columns} x {dims.rows}
+      </Text>
+      <Text style={styles.strikethroughText}>This text is strikethrough</Text>
+
       <View style={styles.box}>
         <Text>50% Width Box with StyleSheet</Text>
         <Text>This box uses responsive sizing</Text>
@@ -75,8 +103,8 @@ function App() {
       </View>
 
       <View style={dynamicStyle}>
-        <Text>Dynamic Style Box (click to toggle)</Text>
-        <Text>Background changes based on state!</Text>
+        <Text>Dynamic Style Box</Text>
+        <Text>Styles can be computed at runtime</Text>
       </View>
 
       <View style={styles.absoluteBox}>
@@ -84,17 +112,31 @@ function App() {
         <Text>Top: 5, Right: 10</Text>
       </View>
 
-      <Text style={{ color: 'green', bold: true, margin: { top: 2 } }}>
-        Multiple styles can be combined:
-      </Text>
-      <View style={StyleSheet.flatten([
-        styles.box,
-        { backgroundColor: 'magenta', color: 'white' },
-      ])}>
+      <View style={{ margin: { top: 2 } }}>
+        <Text style={{ color: 'green', bold: true }}>Multiple styles can be combined:</Text>
+      </View>
+      <View
+        style={
+          StyleSheet.flatten([styles.box, { backgroundColor: 'magenta', color: 'white' }]) ??
+          undefined
+        }
+      >
         <Text>Flattened styles example</Text>
+      </View>
+
+      <View style={{ margin: { top: 2 } }}>
+        <Text style={{ color: 'green', bold: true }}>Absolute positioning within container:</Text>
+      </View>
+      <View style={styles.card}>
+        <Text>Card Title</Text>
+        <Text>Card content goes here</Text>
+        <View style={styles.badge}>
+          <Text>NEW</Text>
+        </View>
       </View>
     </View>
   );
 }
 
-render(<App />, { mode: 'interactive' });
+render(<App />, { mode: 'static' });
+exit();

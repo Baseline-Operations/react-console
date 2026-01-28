@@ -91,7 +91,7 @@ function App() {
             border: 'single',
             borderColor: 'green',
             padding: { top: 1, bottom: 1, left: 2, right: 2 },
-            marginTop: 1,
+            margin: { top: 1 },
           }}
         >
           <Text color="cyan" bold>Submitted Data:</Text>
@@ -197,8 +197,7 @@ function App() {
           border: 'single',
           borderColor: 'yellow',
           padding: { top: 1, bottom: 1, left: 2, right: 2 },
-          marginTop: 1,
-          marginBottom: 1,
+          margin: { top: 1, bottom: 1 },
         }}
       >
         <Text color="yellow" bold>Validation Summary:</Text>
@@ -214,7 +213,7 @@ function App() {
       <Button
         onClick={handleSubmit}
         label="Submit Form"
-        style={{ marginTop: 1 }}
+        style={{ margin: { top: 1 } }}
       />
 
       <LineBreak />

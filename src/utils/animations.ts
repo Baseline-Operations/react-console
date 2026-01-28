@@ -70,6 +70,58 @@ export function interpolate(
  * @param easingFn - Optional easing function (default: linear)
  * @returns Interpolated color (simplified - returns closest named color)
  */
+/**
+ * Parse a color string to RGB values
+ */
+function parseColor(color: string): { r: number; g: number; b: number } | null {
+  // Named colors
+  const namedColors: Record<string, { r: number; g: number; b: number }> = {
+    black: { r: 0, g: 0, b: 0 },
+    red: { r: 255, g: 0, b: 0 },
+    green: { r: 0, g: 255, b: 0 },
+    yellow: { r: 255, g: 255, b: 0 },
+    blue: { r: 0, g: 0, b: 255 },
+    magenta: { r: 255, g: 0, b: 255 },
+    cyan: { r: 0, g: 255, b: 255 },
+    white: { r: 255, g: 255, b: 255 },
+    gray: { r: 128, g: 128, b: 128 },
+    grey: { r: 128, g: 128, b: 128 },
+  };
+  
+  const lowerColor = color.toLowerCase();
+  if (namedColors[lowerColor]) {
+    return namedColors[lowerColor];
+  }
+  
+  // Hex color (#RGB or #RRGGBB)
+  if (color.startsWith('#')) {
+    const hex = color.slice(1);
+    if (hex.length === 3) {
+      return {
+        r: parseInt(hex[0]! + hex[0], 16),
+        g: parseInt(hex[1]! + hex[1], 16),
+        b: parseInt(hex[2]! + hex[2], 16),
+      };
+    } else if (hex.length === 6) {
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16),
+      };
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Convert RGB to hex color string
+ */
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 export function interpolateColor(
   start: string,
   end: string,
@@ -78,20 +130,20 @@ export function interpolateColor(
 ): string {
   const eased = easingFn(Math.max(0, Math.min(1, progress)));
   
-  // Simple color interpolation - maps to nearest named color
-  // In a full implementation, this could do actual color space interpolation
-  const colorMap: Record<string, number> = {
-    black: 0, red: 1, green: 2, yellow: 3, blue: 4, magenta: 5, cyan: 6, white: 7,
-    gray: 8, grey: 8,
-  };
+  const startRgb = parseColor(start);
+  const endRgb = parseColor(end);
   
-  const startIdx = colorMap[start.toLowerCase()] ?? 0;
-  const endIdx = colorMap[end.toLowerCase()] ?? 7;
-  
-  if (eased < 0.5) {
-    return Object.keys(colorMap).find(k => colorMap[k] === startIdx) || start;
+  if (!startRgb || !endRgb) {
+    // Fallback: return end color if progress > 0.5, else start
+    return eased >= 0.5 ? end : start;
   }
-  return Object.keys(colorMap).find(k => colorMap[k] === endIdx) || end;
+  
+  // Linear interpolation in RGB space
+  const r = startRgb.r + (endRgb.r - startRgb.r) * eased;
+  const g = startRgb.g + (endRgb.g - startRgb.g) * eased;
+  const b = startRgb.b + (endRgb.b - startRgb.b) * eased;
+  
+  return rgbToHex(r, g, b);
 }
 
 /**
@@ -113,19 +165,21 @@ export class FrameRateController {
    * @param callback - Function to call on next frame
    */
   requestAnimationFrame(callback: (timestamp: number) => void): void {
+    // Cancel any pending frame
+    if (this.animationFrameId !== null) {
+      clearTimeout(this.animationFrameId);
+    }
+    
     const now = Date.now();
     const elapsed = now - this.lastFrameTime;
+    const delay = Math.max(0, this.frameInterval - elapsed);
     
-    if (elapsed >= this.frameInterval) {
-      this.lastFrameTime = now - (elapsed % this.frameInterval);
-      callback(now);
-    } else {
-      const delay = this.frameInterval - elapsed;
-      this.animationFrameId = setTimeout(() => {
-        this.lastFrameTime = Date.now();
-        callback(Date.now());
-      }, delay) as unknown as number;
-    }
+    // Always use setTimeout to ensure we don't block and allow React to process
+    this.animationFrameId = setTimeout(() => {
+      this.lastFrameTime = Date.now();
+      this.animationFrameId = null;
+      callback(Date.now());
+    }, delay) as unknown as number;
   }
   
   /**

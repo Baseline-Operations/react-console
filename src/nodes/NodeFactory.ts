@@ -1,0 +1,264 @@
+/**
+ * Node factory - creates node instances from React elements
+ * Uses mixin composition for type-safe node creation
+ */
+
+import type { ReactElement } from 'react';
+import { TextNode } from './primitives/TextNode';
+import { BoxNode } from './primitives/BoxNode';
+import { FragmentNode } from './primitives/FragmentNode';
+import { InputNode } from './interactive/InputNode';
+import { ButtonNode } from './interactive/ButtonNode';
+import { CommandRouterNode } from './cli/CommandRouterNode';
+import { CommandNode } from './cli/CommandNode';
+import { RouteNode } from './cli/RouteNode';
+import { DefaultNode } from './cli/DefaultNode';
+import type { Node } from './base/Node';
+
+/**
+ * Node factory - creates node instances from React elements
+ */
+export class NodeFactory {
+  /**
+   * Create node from React element
+   */
+  static createNode(element: ReactElement, _parent?: Node): Node {
+    const type = element.type;
+    const props = element.props as Record<string, any>;
+    
+    // Normalize type to string
+    let typeString: string;
+    if (typeof type === 'string') {
+      typeString = type;
+    } else if (typeof type === 'function') {
+      typeString = type.name || (type as any).displayName || 'Box';
+    } else if (type && typeof type === 'object' && 'type' in type) {
+      // Nested element - extract inner type
+      const innerType = (type as any).type;
+      if (typeof innerType === 'string') {
+        typeString = innerType;
+      } else if (typeof innerType === 'function') {
+        typeString = innerType.name || innerType.displayName || 'Box';
+      } else {
+        typeString = 'Box';
+      }
+    } else {
+      // Fallback to Box for unknown types
+      typeString = 'Box';
+    }
+    
+    let node: Node;
+    
+    // Use TSX-friendly component names
+    switch (typeString) {
+      case 'text':
+      case 'Text':
+        node = new TextNode() as unknown as Node;
+        // Extract text content from children
+        // React may pass children as a string, number, array, or React element
+        if (props.children !== undefined && props.children !== null) {
+          if (typeof props.children === 'string' || typeof props.children === 'number') {
+            node.setContent(String(props.children));
+          } else if (Array.isArray(props.children)) {
+            // Concatenate all string/number children, ignore React elements
+            const textParts: string[] = [];
+            for (const child of props.children) {
+              if (typeof child === 'string' || typeof child === 'number') {
+                textParts.push(String(child));
+              } else if (child && typeof child === 'object' && 'props' in child && child.props && 'children' in child.props) {
+                // Nested Text element - extract its children
+                const nestedChildren = child.props.children;
+                if (typeof nestedChildren === 'string' || typeof nestedChildren === 'number') {
+                  textParts.push(String(nestedChildren));
+                }
+              }
+            }
+            if (textParts.length > 0) {
+              node.setContent(textParts.join(''));
+            }
+          } else if (props.children && typeof props.children === 'object' && 'props' in props.children) {
+            // Single React element child - try to extract text
+            const childProps = (props.children as any).props;
+            if (childProps && childProps.children) {
+              if (typeof childProps.children === 'string' || typeof childProps.children === 'number') {
+                node.setContent(String(childProps.children));
+              }
+            }
+          }
+        }
+        break;
+        
+      case 'view':
+      case 'box':
+      case 'View':
+      case 'Box':
+        node = new BoxNode() as unknown as Node;
+        break;
+        
+      case 'fragment':
+      case 'Fragment':
+        node = new FragmentNode() as unknown as Node;
+        break;
+        
+      case 'input':
+      case 'Input':
+        const inputNode = new InputNode();
+        if (props.value !== undefined) {
+          inputNode.setValue(String(props.value));
+        }
+        if (props.placeholder) {
+          inputNode.setPlaceholder(props.placeholder);
+        }
+        if (props.maxLength) {
+          inputNode.setMaxLength(props.maxLength);
+        }
+        if (props.multiline) {
+          inputNode.setMultiline(props.multiline);
+        }
+        if (props.mask) {
+          inputNode.setMask(props.mask);
+        }
+        if (props.type) {
+          inputNode.setInputType(props.type === 'number' ? 'number' : 'text');
+        }
+        node = inputNode as unknown as Node;
+        break;
+        
+      case 'button':
+      case 'Button':
+        const buttonNode = new ButtonNode();
+        if (props.label) {
+          buttonNode.setLabel(props.label);
+        } else if (props.content) {
+          buttonNode.setContent(String(props.content));
+        } else if (props.children) {
+          buttonNode.setContent(String(props.children));
+        }
+        // Set event handlers
+        if (props.onClick) {
+          buttonNode.onClick = props.onClick as (event: any) => void;
+        }
+        if (props.onPress) {
+          buttonNode.onPress = props.onPress as (event: any) => void;
+        }
+        if (props.disabled !== undefined) {
+          buttonNode.disabled = Boolean(props.disabled);
+        }
+        // Set style if provided
+        if (props.style) {
+          buttonNode.setStyle(props.style as any);
+        }
+        node = buttonNode as unknown as Node;
+        break;
+        
+      case 'commandrouter':
+      case 'CommandRouter':
+        node = new CommandRouterNode(props as any) as unknown as Node;
+        break;
+        
+      case 'command':
+      case 'Command':
+        node = new CommandNode(props as any) as unknown as Node;
+        break;
+        
+      case 'route':
+      case 'Route':
+        node = new RouteNode(props as any) as unknown as Node;
+        break;
+        
+      case 'default':
+      case 'Default':
+        node = new DefaultNode(props as any) as unknown as Node;
+        break;
+        
+      case 'radio':
+      case 'Radio':
+        const { RadioNode } = require('./selection/RadioNode');
+        node = new RadioNode() as unknown as Node;
+        if (props.options) {
+          (node as any).setOptions(props.options);
+        }
+        if (props.value !== undefined) {
+          (node as any).setValue(props.value);
+        }
+        break;
+        
+      case 'checkbox':
+      case 'Checkbox':
+        const { CheckboxNode } = require('./selection/CheckboxNode');
+        node = new CheckboxNode() as unknown as Node;
+        if (props.options) {
+          (node as any).setOptions(props.options);
+        }
+        if (props.value !== undefined) {
+          (node as any).setValue(props.value);
+        }
+        break;
+        
+      case 'dropdown':
+      case 'Dropdown':
+        const { DropdownNode } = require('./selection/DropdownNode');
+        node = new DropdownNode() as unknown as Node;
+        if (props.options) {
+          (node as any).setOptions(props.options);
+        }
+        if (props.value !== undefined) {
+          (node as any).setValue(props.value);
+        }
+        break;
+        
+      case 'list':
+      case 'List':
+        const { ListNode } = require('./selection/ListNode');
+        node = new ListNode() as unknown as Node;
+        if (props.options) {
+          (node as any).setOptions(props.options);
+        }
+        if (props.value !== undefined) {
+          (node as any).setValue(props.value);
+        }
+        break;
+        
+      default:
+        // Default to BoxNode for unknown types
+        // This handles custom components and unknown types gracefully
+        node = new BoxNode() as unknown as Node;
+    }
+    
+    // Apply props using TSX-friendly APIs
+    if (props.style && 'setStyle' in node) {
+      (node as any).setStyle(props.style);
+    }
+    
+    if (props.className && 'setClassName' in node) {
+      (node as any).setClassName(props.className);
+    }
+    
+    // Add event handlers
+    if (props.onClick && 'onClick' in node) {
+      (node as any).onClick = props.onClick;
+    }
+    if (props.onKeyDown && 'onKeyDown' in node) {
+      (node as any).onKeyDown = props.onKeyDown;
+    }
+    if (props.onKeyPress && 'onKeyPress' in node) {
+      (node as any).onKeyPress = props.onKeyPress;
+    }
+    if (props.onChange && 'onChange' in node) {
+      (node as any).onChange = props.onChange;
+    }
+    if (props.onFocus && 'onFocus' in node) {
+      (node as any).onFocus = props.onFocus;
+    }
+    if (props.onBlur && 'onBlur' in node) {
+      (node as any).onBlur = props.onBlur;
+    }
+    
+    // NOTE: Children are NOT added here - React's reconciler handles child addition
+    // via appendChild/appendInitialChild. Adding them here would cause duplication.
+    // TextNode content is set above from props.children, but children nodes are
+    // added by the reconciler.
+    
+    return node;
+  }
+}

@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, View, Text, StyleSheet } from '../src/index';
+import { render, exit, View, Text, StyleSheet } from '../src/index';
 
 const styles = StyleSheet.create({
   container: {
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   customPlacement: {
     display: 'grid',
     gridTemplateColumns: [15, 15, 15, 15],
-    gridTemplateRows: [3, 3, 3],
+    gridTemplateRows: [5, 5, 5], // Must be at least 5 to fit items with border + padding
     gap: 1,
     padding: 1,
     margin: { top: 1 },
@@ -158,4 +158,5 @@ function App() {
   );
 }
 
-render(<App />, { mode: 'interactive' });
+render(<App />, { mode: 'static' });
+exit();

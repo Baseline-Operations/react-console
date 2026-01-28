@@ -37,7 +37,7 @@ function App() {
         autoFocus
       />
       {keyEvents.length > 0 && (
-        <Box style={{ border: 'single', padding: 1, marginTop: 1 } as any}>
+        <Box style={{ border: 'single', padding: 1, margin: { top: 1 } }}>
           <Text color="gray" dim>Recent keyboard events:</Text>
           {keyEvents.map((event, i) => (
             <Text key={i} color="gray">{event}</Text>
@@ -85,7 +85,7 @@ function App() {
         onBlur={() => setFocusEvents(prev => ['Input 2 blurred', ...prev].slice(0, 5))}
       />
       {focusEvents.length > 0 && (
-        <Box style={{ border: 'single', padding: 1, marginTop: 1 } as any}>
+        <Box style={{ border: 'single', padding: 1, margin: { top: 1 } }}>
           <Text color="gray" dim>Recent focus events:</Text>
           {focusEvents.map((event, i) => (
             <Text key={i} color="gray">{event}</Text>

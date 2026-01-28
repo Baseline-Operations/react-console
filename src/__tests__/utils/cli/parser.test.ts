@@ -4,7 +4,6 @@
 
 import { describe, it, expect } from 'vitest';
 import { parseCommandLineArgs, extractPathParams, matchRoutePath } from '../../../utils/cli/parser';
-import type { ParsedArgs } from '../../../utils/cli/parser';
 
 describe('parseCommandLineArgs', () => {
   it('should parse simple command', () => {

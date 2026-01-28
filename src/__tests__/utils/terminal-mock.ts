@@ -5,11 +5,14 @@
  * for unit and integration testing.
  */
 
+import { setRenderMode } from '../../utils/terminal';
+
 /**
  * Mock terminal dimensions
  * 
  * Sets up mock terminal dimensions for testing.
  * Can be used to simulate different terminal sizes.
+ * Also sets render mode to 'interactive' so actual dimensions are returned.
  * 
  * @param columns - Number of columns (default: 80)
  * @param rows - Number of rows (default: 24)
@@ -22,6 +25,9 @@
  * ```
  */
 export function mockTerminalDimensions(columns: number = 80, rows: number = 24): void {
+  // Set to interactive mode so getTerminalDimensions returns actual rows
+  setRenderMode('interactive');
+  
   // Mock process.stdout.columns and rows
   Object.defineProperty(process.stdout, 'columns', {
     value: columns,

@@ -17,7 +17,7 @@ describe('levenshteinDistance', () => {
 
   it('should calculate distance for similar strings', () => {
     expect(levenshteinDistance('build', 'buil')).toBe(1);
-    expect(levenshteinDistance('build', 'builx')).toBe(2);
+    expect(levenshteinDistance('build', 'builx')).toBe(1); // Only 1 substitution (d->x)
   });
 
   it('should calculate distance for different strings', () => {

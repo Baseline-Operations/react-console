@@ -74,5 +74,9 @@ export function applyThemeToStyle(
     resolved.borderColor = resolveColor(resolved.borderColor);
   }
   
+  if (resolved.borderBackgroundColor && typeof resolved.borderBackgroundColor === 'string' && resolved.borderBackgroundColor in theme.colors) {
+    resolved.borderBackgroundColor = resolveColor(resolved.borderBackgroundColor);
+  }
+  
   return resolved;
 }

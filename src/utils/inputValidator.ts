@@ -337,7 +337,7 @@ export class InputValidator {
 
       case 'phone':
         // Basic phone number validation (supports various formats)
-        const phonePattern = /^[\d\s\-\(\)\+]+$/;
+        const phonePattern = /^[\d\s\-()+]+$/;
         if (!phonePattern.test(input) || input.replace(/\D/g, '').length < 10) {
           return {
             valid: false,

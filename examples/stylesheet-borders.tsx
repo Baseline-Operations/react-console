@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, Text, View, StyleSheet } from '../src/index';
+import { render, exit, Text, View, StyleSheet } from '../src/index';
 
 const styles = StyleSheet.create({
   container: {
@@ -120,4 +120,5 @@ function App() {
   );
 }
 
-render(<App />, { mode: 'interactive' });
+render(<App />, { mode: 'static' });
+exit();

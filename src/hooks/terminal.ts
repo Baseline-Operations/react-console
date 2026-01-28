@@ -122,7 +122,8 @@ export function useFocus(componentRef?: ConsoleNode | null): {
       import('../renderer/utils/navigation').then(({ focusComponent }) => {
         const interactiveComponents: ConsoleNode[] = [];
         // Collect interactive components (simplified - in real implementation would get from tree)
-        focusComponent(componentRef, interactiveComponents, () => {
+        // Cast ConsoleNode to Node since they are compatible
+        focusComponent(componentRef as unknown as import('../nodes/base/Node').Node, interactiveComponents as unknown as import('../nodes/base/Node').Node[], () => {
           // Trigger re-render
           setFocusedComponent(terminal.focusedComponent);
         });

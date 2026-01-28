@@ -58,12 +58,12 @@ export interface FormProps extends StyleProps {
 export function Form({
   children,
   style,
-  className,
-  onSubmit,
-  onValidate,
-  initialValues = {},
-  validateOnChange = false,
-  validateOnBlur = true,
+  className: _className,
+  onSubmit: _onSubmit,
+  onValidate: _onValidate,
+  initialValues: _initialValues = {},
+  validateOnChange: _validateOnChange = false,
+  validateOnBlur: _validateOnBlur = true,
   showErrors = true,
   errorStyle,
   ...handlers

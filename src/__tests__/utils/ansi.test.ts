@@ -20,8 +20,10 @@ describe('ansi utilities', () => {
 
     it('should apply text styles', () => {
       const result = applyStyles('Hello', { bold: true, underline: true });
-      expect(result).toContain('\x1b[1m'); // bold
-      expect(result).toContain('\x1b[4m'); // underline
+      // Implementation combines codes: \x1b[1;4m instead of separate \x1b[1m\x1b[4m
+      expect(result).toMatch(/\x1b\[\d+(;\d+)*m.*Hello/); // has ANSI codes before Hello
+      expect(result).toContain('1'); // bold code
+      expect(result).toContain('4'); // underline code
     });
 
     it('should reset styles at the end', () => {

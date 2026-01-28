@@ -15,6 +15,33 @@ import {
 } from '../utils/animations';
 import type { ViewStyle, TextStyle } from '../types';
 
+// Import reconciler for discrete updates
+// This ensures state updates trigger proper re-renders
+let reconciler: any = null;
+try {
+  reconciler = require('../renderer/reconciler').reconciler;
+} catch {
+  // Reconciler may not be available in all contexts
+}
+
+/**
+ * Helper to update state with proper reconciler integration
+ * Uses flushSyncFromReconciler to ensure state changes trigger immediate re-renders
+ */
+function updateState<T>(setter: (value: T | ((prev: T) => T)) => void, value: T | ((prev: T) => T)): void {
+  if (reconciler?.flushSyncFromReconciler) {
+    reconciler.flushSyncFromReconciler(() => {
+      setter(value);
+    });
+  } else if (reconciler?.discreteUpdates) {
+    reconciler.discreteUpdates(() => {
+      setter(value);
+    });
+  } else {
+    setter(value);
+  }
+}
+
 /**
  * Hook for animating numeric values
  * 
@@ -61,7 +88,7 @@ export function useAnimatedValue(
 
   const reset = useCallback(() => {
     stop();
-    setValue(from);
+    updateState(setValue, from);
   }, [from, stop]);
 
   const start = useCallback(() => {
@@ -84,7 +111,7 @@ export function useAnimatedValue(
       const eased = (animationConfig.easing || easing.linear)(progress);
       const newValue = interpolate(startVal, endVal, eased);
       
-      setValue(newValue);
+      updateState(setValue, newValue);
 
       // Continue animation if not complete
       if (progress < 1 || animationConfig.iterations === Infinity) {
@@ -153,7 +180,7 @@ export function useAnimatedColor(
 
   const reset = useCallback(() => {
     stop();
-    setColor(from);
+    updateState(setColor, from);
   }, [from, stop]);
 
   const start = useCallback(() => {
@@ -174,7 +201,7 @@ export function useAnimatedColor(
       const progress = calculateAnimationProgress(elapsed, animationConfig);
       
       const newColor = interpolateColor(startColor, endColor, progress, animationConfig.easing);
-      setColor(newColor);
+      updateState(setColor, newColor);
 
       // Continue animation if not complete
       if (progress < 1 || animationConfig.iterations === Infinity) {
@@ -244,7 +271,7 @@ export function useAnimatedStyle(
 
   const reset = useCallback(() => {
     stop();
-    setStyle(from);
+    updateState(setStyle, from);
   }, [from, stop]);
 
   const start = useCallback(() => {
@@ -282,7 +309,7 @@ export function useAnimatedStyle(
         }
       }
       
-      setStyle(newStyle);
+      updateState(setStyle, newStyle);
 
       // Continue animation if not complete
       if (progress < 1 || animationConfig.iterations === Infinity) {

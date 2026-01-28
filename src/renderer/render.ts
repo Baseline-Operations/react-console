@@ -1,52 +1,20 @@
 /**
- * Main render function - renders React elements to console
- * 
- * This is the primary entry point for rendering React components to the terminal.
- * Supports three rendering modes: static (one-time output), interactive (with input),
- * and fullscreen (takes over entire terminal).
- * 
- * @param element - React element to render (JSX component tree)
- * @param options - Render options
- * @param options.mode - Rendering mode: 'static' (one-time), 'interactive' (with input), or 'fullscreen' (full terminal)
- * @param options.fullscreen - Enable fullscreen mode (takes over entire terminal, alias for mode: 'fullscreen')
- * @param options.onUpdate - Callback called after each render update (useful for testing or monitoring)
- * @param options.appId - Optional app ID for storage namespace (auto-generated if not provided)
- * 
- * @example
- * ```tsx
- * // Static one-time render (CLI output)
- * render(<App />, { mode: 'static' });
- * 
- * // Interactive application (forms, menus)
- * render(
- *   <App />,
- *   { 
- *     mode: 'interactive',
- *     onUpdate: () => console.log('UI updated')
- *   }
- * );
- * 
- * // Fullscreen application (dashboards, editors)
- * render(<App />, { mode: 'fullscreen' });
- * ```
+ * Main render function - renders React elements to console using new Node architecture
+ * Uses the multi-buffer rendering system for all output
  */
 
 import { reconciler } from './reconciler';
 import type { ReactElement } from 'react';
-import type { ConsoleNode, RenderMode, KeyPress } from '../types';
-import { createOutputBuffer, flushOutput, startRendering, stopRendering } from './output';
-import { renderNodeToBuffer } from './layout';
+import type { RenderMode } from '../types';
+import { getBufferRenderer, resetBufferRenderer } from '../buffer';
+import { hideCursor, showCursor } from './ansi';
 import { startInputListener, stopInputListener } from './input';
-import { getTerminalDimensions, onTerminalResizeDebounced } from '../utils/terminal';
+import { getTerminalDimensions, onTerminalResizeDebounced, setRenderMode } from '../utils/terminal';
 import { reportError, ErrorType } from '../utils/errors';
-import { handleInputComponent } from '../components/interactive/Input';
-import { handleButtonComponent } from '../components/interactive/Button';
-import { handleBoxComponent } from '../components/interactive/BoxHandler';
-import { handleRadioComponent } from '../components/selection/Radio';
-import { handleCheckboxComponent } from '../components/selection/Checkbox';
-import { handleDropdownComponent } from '../components/selection/Dropdown';
-import { handleListComponent } from '../components/selection/List';
-import { dispatchHandler, type HandlerRegistry } from '../types/handlers';
+import { initializeStorage } from '../utils/storage';
+import { scheduleBatchedUpdate } from './batching';
+import type { Node } from '../nodes/base/Node';
+import { BoxNode } from '../nodes/primitives/BoxNode';
 import {
   collectInteractiveComponents,
   assignTabIndexes,
@@ -57,52 +25,85 @@ import {
 } from './utils/navigation';
 import { componentBoundsRegistry } from './utils/componentBounds';
 import { terminal, updateTerminalDimensions } from '../utils/globalTerminal';
-import { initializeStorage } from '../utils/storage';
-import { scheduleBatchedUpdate } from './batching';
 
-let rootContainer: ConsoleNode | null = null;
+let rootContainer: Node | null = null;
 let rootFiber: ReturnType<typeof reconciler.createContainer> | null = null;
+let errorHandlersInstalled = false;
+
+/**
+ * Emergency cleanup function for crashes
+ * Ensures terminal state is restored even on errors
+ */
+function emergencyCleanup(): void {
+  try {
+    // Disable mouse tracking
+    const { disableMouseTracking } = require('../utils/mouse');
+    disableMouseTracking();
+  } catch {
+    // Ignore errors during cleanup
+  }
+  
+  try {
+    // Show cursor
+    showCursor();
+  } catch {
+    // Ignore errors during cleanup
+  }
+  
+  try {
+    // Exit raw mode
+    const { exitRawMode } = require('../utils/terminal');
+    exitRawMode();
+  } catch {
+    // Ignore errors during cleanup
+  }
+}
+
+/**
+ * Install global error handlers to ensure cleanup on crash
+ */
+function installErrorHandlers(): void {
+  if (errorHandlersInstalled) return;
+  errorHandlersInstalled = true;
+  
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    emergencyCleanup();
+    // eslint-disable-next-line no-console
+    console.error('Uncaught exception:', error);
+    process.exit(1);
+  });
+  
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason) => {
+    emergencyCleanup();
+    // eslint-disable-next-line no-console
+    console.error('Unhandled rejection:', reason);
+    process.exit(1);
+  });
+  
+  // Handle SIGINT (Ctrl+C)
+  process.on('SIGINT', () => {
+    emergencyCleanup();
+    process.exit(0);
+  });
+  
+  // Handle SIGTERM
+  process.on('SIGTERM', () => {
+    emergencyCleanup();
+    process.exit(0);
+  });
+}
 let currentElement: ReactElement | null = null;
 let isInteractive = false;
 let renderCallback: (() => void) | null = null;
 let resizeCleanup: (() => void) | null = null;
-let previousFocusedComponent: ConsoleNode | null = null; // For focus restoration when overlays close
-let overlayStack: ConsoleNode[] = []; // Stack of open overlays for focus restoration
+let previousFocusedComponent: Node | null = null;
+let overlayStack: Node[] = [];
+let isFirstRender = true;
 
 /**
- * Render a React element to console
- * 
- * Main entry point for rendering React components to the terminal. Supports three modes:
- * - `'static'` - One-time render (useful for CLI output)
- * - `'interactive'` - Interactive mode with keyboard and mouse input
- * - `'fullscreen'` - Fullscreen application mode
- * 
- * Automatically handles terminal resizing, input events, and reactive updates.
- * Uses React 19's reconciliation for efficient updates.
- * 
- * @param element - React element to render (JSX component tree)
- * @param options - Render options
- * @param options.mode - Rendering mode: 'static', 'interactive', or 'fullscreen' (default: 'static')
- * @param options.fullscreen - Enable fullscreen mode (takes over entire terminal)
- * @param options.onUpdate - Callback called after each render update
- * 
- * @example
- * ```tsx
- * // Static one-time render
- * render(<App />, { mode: 'static' });
- * 
- * // Interactive application
- * render(
- *   <App />,
- *   { 
- *     mode: 'interactive',
- *     onUpdate: () => console.log('UI updated')
- *   }
- * );
- * 
- * // Fullscreen application
- * render(<App />, { mode: 'fullscreen' });
- * ```
+ * Render a React element to console using new Node architecture
  */
 export function render(
   element: ReactElement,
@@ -110,80 +111,99 @@ export function render(
     mode?: RenderMode;
     fullscreen?: boolean;
     onUpdate?: () => void;
-    appId?: string; // Optional app ID for storage namespace (auto-generated if not provided)
+    appId?: string;
   }
 ): void {
   const mode = options?.mode || 'static';
   const fullscreen = options?.fullscreen || false;
   renderCallback = options?.onUpdate || null;
 
-  // Initialize storage automatically (if appId provided, use it; otherwise auto-generate)
-  // Storage is automatically created on first access, but we initialize it here for early access
+  // Install global error handlers for safe cleanup on crashes
+  installErrorHandlers();
+
+  // Set the render mode for terminal dimensions calculation
+  setRenderMode(mode);
+  
+  // Reset buffer renderer to pick up new dimensions (especially for static mode)
+  resetBufferRenderer();
+  
   initializeStorage(options?.appId);
 
-  // Notify application start hooks (only on first render)
   if (!rootFiber) {
     try {
       const { notifyAppStart } = require('../hooks/lifecycle');
       notifyAppStart();
     } catch {
-      // Hooks module may not be loaded yet, ignore
+      // Hooks module may not be loaded yet
     }
   }
 
   isInteractive = mode === 'interactive' || mode === 'fullscreen';
-  
-  // Store current element for reactive updates
   currentElement = element;
 
-  // Create root container if not provided
+  // Create root container using new Node system
   if (!rootContainer) {
-    rootContainer = {
-      type: 'box',
-      children: [],
-      fullscreen: fullscreen || mode === 'fullscreen',
-    };
-  } else {
-    rootContainer.fullscreen = fullscreen || mode === 'fullscreen';
+    rootContainer = new BoxNode() as unknown as Node;
+    if (fullscreen || mode === 'fullscreen') {
+      // Set fullscreen style if needed
+      if ('setStyle' in rootContainer) {
+        (rootContainer as any).setStyle({ width: '100%', height: '100%' });
+      }
+    }
   }
 
   // Create reconciler container
   if (!rootFiber) {
+    // Use LegacyRoot (0) for all modes - ConcurrentRoot has scheduling issues
+    const rootTag = 0;
+    
     rootFiber = reconciler.createContainer(
       rootContainer,
-      0,
+      rootTag,
       null,
       false,
       false,
       '',
-      () => {
-        // On update callback - re-render after React reconciliation
-        // This is called when React state changes trigger reconciliation
-        // Note: We use performRender() directly here (not batched) because
-        // React's reconciliation already batches updates internally
-        performRender();
+      (error: Error) => {
+        reportError(error, ErrorType.RENDER);
       },
       null
     );
   }
 
-  // Update the root through React reconciliation
-  // For initial render, we don't batch (need immediate render)
-  reconciler.updateContainer(element, rootFiber, null, () => {
-    // After reconciliation completes, perform the actual render
-    performRender();
-  });
+  // Update through React reconciliation
+  try {
+    // Use synchronous update path for both static and interactive modes
+    // This ensures the render callback fires immediately
+    if (typeof (reconciler as any).updateContainerSync === 'function') {
+      (reconciler as any).updateContainerSync(element, rootFiber, null, () => {
+        performRender();
+      });
+      if (typeof (reconciler as any).flushSyncWork === 'function') {
+        (reconciler as any).flushSyncWork();
+      }
+    } else {
+      // Fallback for older react-reconciler versions
+      reconciler.updateContainer(element, rootFiber, null, () => {
+        performRender();
+      });
+      // Try to flush any pending work
+      if (typeof (reconciler as any).flushSync === 'function') {
+        (reconciler as any).flushSync(() => {});
+      }
+    }
+  } catch (error) {
+    reportError(error, ErrorType.RENDER);
+    throw error;
+  }
 
-  // Set up terminal resize listener for reactive updates
+  // Set up terminal resize listener
   if (resizeCleanup) {
     resizeCleanup();
   }
-  // Use debounced resize to prevent excessive reconciliation
   resizeCleanup = onTerminalResizeDebounced(() => {
-    // Update global terminal dimensions on resize
     updateTerminalDimensions();
     
-    // Terminal resized - re-run React reconciliation to update responsive sizes
     if (currentElement && rootFiber) {
       reconciler.updateContainer(currentElement, rootFiber, null, () => {
         performRender();
@@ -194,145 +214,188 @@ export function render(
   // Start input listener if interactive
   if (isInteractive) {
     setupInputHandling(rootContainer);
+    
+    // Start a work loop that periodically processes React's pending updates
+    // This is necessary because React's scheduler doesn't automatically trigger
+    // re-renders in custom renderers without explicit work processing
+    startWorkLoop();
+  }
+}
+
+// Work loop for processing React updates
+let workLoopInterval: ReturnType<typeof setInterval> | null = null;
+
+function startWorkLoop(): void {
+  if (workLoopInterval) return;
+  
+  workLoopInterval = setInterval(() => {
+    try {
+      // Use flushSync to trigger React's work processing
+      // This forces React to process any pending state updates
+      if (typeof (reconciler as any).flushSync === 'function') {
+        (reconciler as any).flushSync(() => {});
+      }
+      
+      // Also flush passive effects (useEffect callbacks)
+      if (typeof (reconciler as any).flushPassiveEffects === 'function') {
+        (reconciler as any).flushPassiveEffects();
+      }
+    } catch (error) {
+      // Ignore errors in work loop
+    }
+  }, 16); // ~60fps
+}
+
+function stopWorkLoop(): void {
+  if (workLoopInterval) {
+    clearInterval(workLoopInterval);
+    workLoopInterval = null;
   }
 }
 
 /**
- * Perform the actual render to console after React reconciliation
+ * Perform the actual render using new Renderer
  */
 function performRender(): void {
   if (rootContainer) {
-    renderToConsole(rootContainer);
-    
-    // Call custom update callback if provided
-    if (renderCallback) {
-      renderCallback();
+    try {
+      renderToConsole(rootContainer);
+      
+      if (renderCallback) {
+        renderCallback();
+      }
+    } catch (error) {
+      try {
+        process.stdout.write('\n[Render Error: ' + String(error) + ']\n');
+      } catch {
+        console.error('Render error:', error);
+      }
     }
+  } else {
+    process.stdout.write('\n[No root container to render]\n');
   }
 }
 
 /**
- * Render console node tree to console output
- * Wrapped with error handling for render errors
+ * Render node tree to console using multi-buffer system
  */
-function renderToConsole(node: ConsoleNode): void {
+function renderToConsole(root: Node): void {
   try {
-    startRendering();
+    // Hide cursor during render
+    process.stdout.write(hideCursor());
 
-    // Clear component bounds registry before rendering (fresh render)
     componentBoundsRegistry.clear();
 
     const dims = getTerminalDimensions();
-    // Update global terminal dimensions
     terminal.dimensions = dims;
     
     // Track overlay changes for focus restoration
-    const currentOverlays = findAllOverlays(node);
+    const currentOverlays = findAllOverlays(root);
     const previousOverlayCount = overlayStack.length;
     const currentOverlayCount = currentOverlays.length;
     
-    // If overlay was just opened (count increased), save previous focus
     if (currentOverlayCount > previousOverlayCount && previousFocusedComponent === null) {
-      previousFocusedComponent = terminal.focusedComponent;
+      previousFocusedComponent = terminal.focusedComponent as Node | null;
     }
     
-    // If overlay was just closed (count decreased), restore focus
     if (currentOverlayCount < previousOverlayCount && previousFocusedComponent) {
-      const interactiveComponents: ConsoleNode[] = [];
-      collectInteractiveComponents(node, interactiveComponents);
+      const interactiveComponents: Node[] = [];
+      collectInteractiveComponents(root, interactiveComponents);
       if (previousFocusedComponent && interactiveComponents.includes(previousFocusedComponent)) {
         focusComponent(previousFocusedComponent, interactiveComponents, scheduleUpdate);
       }
       previousFocusedComponent = null;
     }
     
-    // Update overlay stack
     overlayStack = currentOverlays;
     
-    const width = node.fullscreen ? dims.columns : dims.columns;
-    const height = node.fullscreen ? dims.rows : undefined;
-
-    const buffer = createOutputBuffer();
-    renderNodeToBuffer(node, buffer, 0, 0, width, height);
-    flushOutput(buffer, true);
-
-    stopRendering();
-  } catch (error) {
-    reportError(error, ErrorType.RENDER, { 
-      nodeType: node.type,
-      fullscreen: node.fullscreen,
-    });
-    // Try to stop rendering even if there was an error
-    try {
-      stopRendering();
-    } catch {
-      // Ignore cleanup errors
+    // Build component tree, layouts, stacking contexts, and viewports
+    // These are still needed for the node system
+    if ('buildComponentTree' in root) {
+      (root as any).buildComponentTree();
     }
-    // Re-throw to let caller know render failed
-    throw error;
+    if ('calculateLayouts' in root) {
+      (root as any).calculateLayouts();
+    }
+    if ('buildStackingContexts' in root) {
+      (root as any).buildStackingContexts();
+    }
+    if ('buildViewports' in root) {
+      (root as any).buildViewports();
+    }
+    
+    // Use the multi-buffer renderer
+    const bufferRenderer = getBufferRenderer();
+    bufferRenderer.render(root, {
+      mode: isInteractive ? 'interactive' : 'static',
+      fullRedraw: isFirstRender,
+      clearScreen: isInteractive && isFirstRender,
+    });
+    
+    isFirstRender = false;
+
+    // Show cursor after render
+    process.stdout.write(showCursor());
+  } catch (error) {
+    try {
+      process.stdout.write('\n[Render Error: ' + String(error) + ']\n');
+      process.stdout.write(showCursor());
+    } catch {
+      console.error('Render error:', error);
+    }
+    reportError(error, ErrorType.RENDER, { 
+      nodeType: root.type,
+    });
   }
 }
 
 /**
  * Setup input handling for interactive components
- * Wrapped with error handling for input parsing errors
  */
-function setupInputHandling(node: ConsoleNode): void {
-  // Find all input components and buttons
-  const interactiveComponents: ConsoleNode[] = [];
-  collectInteractiveComponents(node, interactiveComponents);
+function setupInputHandling(root: Node): void {
+  const interactiveComponents: Node[] = [];
+  collectInteractiveComponents(root, interactiveComponents);
 
-  // Auto-assign tab indexes to interactive components
   assignTabIndexes(interactiveComponents);
 
-  // Auto-focus first component if it has autoFocus prop (works for all component types)
   const firstAutoFocusComponent = interactiveComponents.find(
-    (comp) => comp.autoFocus && !comp.disabled
+    (comp) => ('autoFocus' in comp && (comp as any).autoFocus) && ('disabled' in comp && !(comp as any).disabled)
   );
   if (firstAutoFocusComponent) {
-    firstAutoFocusComponent.focused = true;
-    terminal.setFocusedComponent(firstAutoFocusComponent);
-    firstAutoFocusComponent.onFocus?.();
+    (firstAutoFocusComponent as any).focused = true;
+    terminal.setFocusedComponent(firstAutoFocusComponent as any);
+    if ('onFocus' in firstAutoFocusComponent && (firstAutoFocusComponent as any).onFocus) {
+      (firstAutoFocusComponent as any).onFocus();
+    }
   }
 
-  // Set up input listener (keyboard and mouse)
   startInputListener((_chunk, key, mouse) => {
     try {
-      // Handle mouse events
       if (mouse) {
         handleMouseEvent(mouse, interactiveComponents, scheduleUpdate);
         return;
       }
 
-      // Handle keyboard input
       if (key) {
-        // Handle Tab key for navigation (with focus trapping support)
         if (key.tab) {
-          handleTabNavigation(interactiveComponents, key.shift, scheduleUpdate, node);
+          handleTabNavigation(interactiveComponents, key.shift, scheduleUpdate, root);
           return;
         }
 
-        // Handle global Escape key (close dropdowns, modals)
         if (key.escape) {
-          // Close all open dropdowns
           for (const comp of interactiveComponents) {
-            if (comp.type === 'dropdown' && comp.isOpen) {
-              comp.isOpen = false;
+            if (comp.type === 'dropdown' && 'isOpen' in comp && (comp as any).isOpen) {
+              (comp as any).isOpen = false;
               scheduleUpdate();
-              return; // Don't process further if we closed a dropdown
+              return;
             }
           }
-          // Could also handle modal closing here in the future
         }
 
-        // Handle input for focused component
-        const focused = interactiveComponents.find((comp) => comp.focused);
+        const focused = interactiveComponents.find((comp) => 'focused' in comp && (comp as any).focused);
 
         if (focused) {
-          // Skip input handling for disabled components
-          if (!focused.disabled) {
-            // First, trigger onKeyDown event with propagation support
-            // This allows components to handle keyboard events before default behavior
+          if (!('disabled' in focused) || !(focused as any).disabled) {
             const keyboardEvent: import('../types').KeyboardEvent = {
               key,
               _propagationStopped: false,
@@ -340,33 +403,36 @@ function setupInputHandling(node: ConsoleNode): void {
                 keyboardEvent._propagationStopped = true;
               },
               preventDefault: () => {
-                // Prevent default behavior (can be implemented later if needed)
+                // Prevent default behavior
               },
             };
 
-            // Call onKeyDown handler if it exists (event propagation - component level)
-            if (focused.onKeyDown) {
-              focused.onKeyDown(keyboardEvent);
+            if ('onKeyDown' in focused && (focused as any).onKeyDown) {
+              (focused as any).onKeyDown(keyboardEvent);
             }
 
-            // Only continue with default handling if propagation wasn't stopped
             if (!keyboardEvent._propagationStopped) {
               handleComponentInput(focused, _chunk, key);
             }
           }
         }
 
-        // If no focused component, focus first input/button
         if (!focused && interactiveComponents.length > 0) {
-          const focusableComponents = interactiveComponents.filter(
-            (comp) => !comp.disabled && (comp.tabIndex === undefined || comp.tabIndex >= 0)
-          );
+          const focusableComponents = interactiveComponents.filter((comp) => {
+            const disabled = 'disabled' in comp ? (comp as any).disabled : false;
+            const tabIndex = 'tabIndex' in comp ? (comp as any).tabIndex : undefined;
+            return !disabled && (tabIndex === undefined || tabIndex >= 0);
+          });
           if (focusableComponents.length > 0) {
-            const sorted = [...focusableComponents].sort((a, b) => (a.tabIndex || 0) - (b.tabIndex || 0));
+            const sorted = [...focusableComponents].sort((a, b) => 
+              ((a as any).tabIndex || 0) - ((b as any).tabIndex || 0)
+            );
             const first = sorted[0]!;
-            first.focused = true;
-            terminal.setFocusedComponent(first);
-            first.onFocus?.();
+            (first as any).focused = true;
+            terminal.setFocusedComponent(first as any);
+            if ('onFocus' in first && (first as any).onFocus) {
+              (first as any).onFocus();
+            }
             scheduleUpdate();
           }
         }
@@ -381,85 +447,47 @@ function setupInputHandling(node: ConsoleNode): void {
   });
 }
 
-
-/**
- * Handler registry for component input handlers
- * Type-safe mapping of component types to their handlers
- */
-const componentHandlers: HandlerRegistry = {
-  input: handleInputComponent,
-  button: handleButtonComponent,
-  box: handleBoxComponent, // For Pressable and Focusable components
-  radio: handleRadioComponent,
-  checkbox: handleCheckboxComponent,
-  dropdown: handleDropdownComponent,
-  list: handleListComponent,
-};
-
 /**
  * Handle input for a component
- * Dispatches to component-specific handlers using type-safe registry
- * Disabled components are skipped (should not receive input)
  */
-function handleComponentInput(component: ConsoleNode, _chunk: string, key: KeyPress): void {
-  // Disabled components should not process input
-  if (component.disabled) {
+function handleComponentInput(component: Node, _chunk: string, key: import('../types').KeyPress): void {
+  if ('disabled' in component && (component as any).disabled) {
     return;
   }
-  dispatchHandler(componentHandlers, component, _chunk, key, scheduleUpdate);
+  
+  // Handle keyboard events on interactive nodes
+  if ('handleKeyboardEvent' in component) {
+    (component as any).handleKeyboardEvent(key);
+  }
 }
 
 /**
  * Schedule an update/re-render
- * This triggers React reconciliation with the current element, which will then
- * call performRender() through the reconciler's update callback
- * 
- * Uses batched updates to prevent flicker from rapid state changes
  */
 function scheduleUpdate(): void {
-  // Batch the update to prevent flicker from rapid state changes
   scheduleBatchedUpdate(() => {
-    // Trigger React reconciliation if we have a current element
-    // This ensures all updates go through React's reconciliation system
     if (currentElement && rootFiber) {
-      // Update through React reconciliation - this will trigger the onUpdate callback
-      // which will then call performRender()
       reconciler.updateContainer(currentElement, rootFiber, null, () => {
         performRender();
       });
     } else if (rootContainer) {
-      // Fallback: direct render if no React element (shouldn't happen normally)
       performRender();
     }
   });
 }
 
 /**
- * Unmount the rendered tree
- */
-/**
- * Unmount the rendered React application from the terminal
- * 
- * Cleans up all listeners, stops input handling, and removes the rendered content.
- * Call this when your application is done or needs to be completely removed.
- * 
- * @example
- * ```tsx
- * // Render app
- * render(<App />, { mode: 'interactive' });
- * 
- * // Later, cleanup
- * unmount();
- * ```
+ * Unmount the rendered React application
  */
 export function unmount(): void {
-  // Clean up resize listener
+  // Stop the work loop first
+  stopWorkLoop();
+  
   if (resizeCleanup) {
     resizeCleanup();
     resizeCleanup = null;
   }
 
-  // Clean up batched updates
   const { clearBatchedUpdates } = require('./batching');
   clearBatchedUpdates();
 
@@ -475,72 +503,27 @@ export function unmount(): void {
 
   currentElement = null;
   renderCallback = null;
+  isFirstRender = true;
 
-  stopRendering();
+  // Reset the buffer renderer
+  resetBufferRenderer();
+  
+  // Show cursor
+  process.stdout.write(showCursor());
 }
 
 /**
  * Exit the application after rendering
- * 
- * Unmounts the rendered tree, cleans up all resources, persists storage to disk,
- * and exits the Node.js process with the specified exit code.
- * 
- * This is the recommended way to exit a terminal application after initial render.
- * Ensures proper cleanup of resources (input listeners, resize handlers, etc.)
- * and persistence of storage data before exiting.
- * 
- * @param exitCode - Exit code for the process (default: 0 for success, non-zero for error)
- * 
- * @example
- * ```tsx
- * // Static CLI application - render and exit
- * import { render, exit } from 'react-console';
- * 
- * function App() {
- *   return <Text>Hello, World!</Text>;
- * }
- * 
- * render(<App />, { mode: 'static' });
- * exit(); // Clean exit after render
- * 
- * // Exit with error code
- * render(<App />, { mode: 'static' });
- * exit(1); // Exit with error code 1
- * ```
- * 
- * @example
- * ```tsx
- * // Exit from event handler
- * import { render, exit } from 'react-console';
- * import { Button } from 'react-console';
- * 
- * function App() {
- *   return (
- *     <Button onClick={() => exit()}>
- *       Exit Application
- *     </Button>
- *   );
- * }
- * 
- * render(<App />, { mode: 'interactive' });
- * ```
  */
 export function exit(exitCode: number = 0): void {
-  // Notify application exit hooks
   try {
     const { notifyAppExit } = require('../hooks/lifecycle');
     notifyAppExit();
   } catch {
-    // Hooks module may not be loaded yet, ignore
+    // Hooks module may not be loaded yet
   }
 
-  // Unmount and clean up renderer resources
   unmount();
 
-  // Storage persistence is handled automatically on process exit
-  // via process.on('exit') listeners in storage.ts, but we can
-  // ensure it's persisted if needed (it already has exit listeners)
-
-  // Exit the process
   process.exit(exitCode);
 }

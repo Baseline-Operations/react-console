@@ -12,9 +12,9 @@ function App() {
   // Custom help component for the app
   const CustomAppHelp = (props: HelpProps) => (
     <View padding={1}>
-      <Text bold color="cyan" size="large">{props.app.name} v{props.app.version}</Text>
+      <Text bold color="cyan">{props.app.name} v{props.app.version}</Text>
       <Text>{props.app.description}</Text>
-      <View marginTop={1}>
+      <View style={{ margin: { top: 1 } }}>
         <Text bold>Custom Help Display</Text>
         <Text>This is a custom help component!</Text>
       </View>

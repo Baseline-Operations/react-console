@@ -45,7 +45,7 @@ export function UnknownCommandError({
   return (
     <Box style={{ padding: 1 }}>
       <Text style={{ color: 'red' }}>Error:</Text>
-      <Text>Unknown command: '{fullCommand}'</Text>
+      <Text>Unknown command: &apos;{fullCommand}&apos;</Text>
       <Text></Text>
       
       {suggestions.length > 0 && (
@@ -58,7 +58,7 @@ export function UnknownCommandError({
         </>
       )}
       
-      <Text>Use '{appNameOrApp} --help' to see all available commands.</Text>
+      <Text>Use &apos;{appNameOrApp} --help&apos; to see all available commands.</Text>
     </Box>
   );
 }

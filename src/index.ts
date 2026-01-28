@@ -3,8 +3,20 @@
  * React 19+ TypeScript library for building console/terminal applications using JSX
  */
 
-// Renderer
-export { render, unmount, exit } from './renderer/render';
+// IMPORTANT: Patch React hooks FIRST before any other imports
+// This ensures useState/useReducer work correctly in console apps
+import './patchReact';
+
+// Re-export patched React hooks for users who import React before this library
+// Users should preferably use: import { useState } from 'react-console-log'
+// instead of: import { useState } from 'react'
+export { useState, useReducer } from './patchReact';
+
+// Renderer - integrated into Node class
+import { Node } from './nodes/base/Node';
+export const render = Node.render.bind(Node);
+export const unmount = Node.unmount.bind(Node);
+export const exit = Node.exit.bind(Node);
 
 // Components - Primitives
 export { Text } from './components/primitives/Text';
@@ -314,6 +326,9 @@ export {
   type LayoutWarning,
 } from './utils/layoutDebug';
 
+// StyleSheet (React Native–like API for terminal styles)
+export { StyleSheet } from './utils/StyleSheet';
+
 // className support for style libraries
 export {
   registerClassNames,
@@ -323,3 +338,23 @@ export {
   createStyleLibrary,
   classNameRegistry,
 } from './utils/className';
+
+// Multi-Buffer Rendering System
+// Advanced cell-based rendering with z-index layering and efficient diff updates
+export {
+  BufferRenderer,
+  CellBuffer,
+  CompositeBuffer,
+  DisplayBuffer,
+  Layer,
+  LayerManager,
+  ANSIGenerator,
+  getBufferRenderer,
+  resetBufferRenderer,
+  type Cell,
+  type CellRenderContext,
+  type BoundingBox as BufferBoundingBox,
+  type CellDiff,
+  type LayerInfo,
+  type BufferRenderOptions,
+} from './buffer';

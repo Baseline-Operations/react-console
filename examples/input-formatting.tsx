@@ -152,7 +152,7 @@ function App() {
           border: 'single',
           borderColor: 'cyan',
           padding: { top: 1, bottom: 1, left: 2, right: 2 },
-          marginTop: 2,
+          margin: { top: 2 },
         }}
       >
         <Text color="cyan" bold>Formatting Summary:</Text>
@@ -168,7 +168,7 @@ function App() {
           border: 'single',
           borderColor: 'yellow',
           padding: { top: 1, bottom: 1, left: 2, right: 2 },
-          marginTop: 1,
+          margin: { top: 1 },
         }}
       >
         <Text color="yellow" bold>Notes:</Text>

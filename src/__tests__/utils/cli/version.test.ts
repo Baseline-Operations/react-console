@@ -52,15 +52,15 @@ describe('getAppVersion', () => {
     expect(getAppVersion()).toBe('1.2.3');
   });
 
-  it('should return default version when not set', () => {
-    expect(getAppVersion()).toBe('1.0.0');
+  it('should return undefined when not set', () => {
+    expect(getAppVersion()).toBeUndefined();
   });
 
-  it('should return default version when metadata exists but no version', () => {
+  it('should return undefined when metadata exists but no version', () => {
     originalGlobal.__react_console_cli_app__ = {
       name: 'test-app',
     };
 
-    expect(getAppVersion()).toBe('1.0.0');
+    expect(getAppVersion()).toBeUndefined();
   });
 });

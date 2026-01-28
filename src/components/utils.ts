@@ -4,6 +4,7 @@
  * Reduces need for `as unknown as ReactElement` assertions
  */
 
+import React from 'react';
 import type { ReactNode, ReactElement } from 'react';
 import type { ConsoleNode, ViewStyle, TextStyle } from '../types';
 
@@ -11,7 +12,7 @@ import type { ConsoleNode, ViewStyle, TextStyle } from '../types';
  * Convert ReactNode children to ConsoleNode[] array
  * Handles single child, array of children, or undefined
  */
-function normalizeChildren(children?: ReactNode): ConsoleNode[] | undefined {
+export function normalizeChildren(children?: ReactNode): ConsoleNode[] | undefined {
   if (!children) {
     return undefined;
   }
@@ -51,17 +52,11 @@ export function createConsoleNode<T extends ConsoleNode['type']>(
     [key: string]: unknown;
   }
 ): ReactElement {
-  const node: ConsoleNode = {
-    type,
-    children: normalizeChildren(props.children),
-    ...Object.fromEntries(
-      Object.entries(props).filter(([key]) => key !== 'children')
-    ),
-  } as ConsoleNode;
-
-  // Type assertion required: ConsoleNode -> ReactElement bridge for reconciler
-  // This is safe because hostConfig handles the actual conversion
-  return node as unknown as ReactElement;
+  // Use React.createElement to create a proper React element
+  // This ensures React 19 compatibility with correct $$typeof symbol
+  // The type is a string (like 'box', 'text') which React will process
+  // The reconciler's hostConfig.createInstance will be called with this type
+  return React.createElement(type as any, props as any);
 }
 
 /**

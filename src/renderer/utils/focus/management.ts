@@ -22,18 +22,16 @@ import { terminal } from '../../../utils/globalTerminal';
  * const topmost = overlays[0]; // Highest z-index overlay
  * ```
  */
-export function findAllOverlays(root: ConsoleNode): ConsoleNode[] {
-  const overlays: Array<{ node: ConsoleNode; zIndex: number }> = [];
+export function findAllOverlays(root: import('../../../nodes/base/Node').Node): import('../../../nodes/base/Node').Node[] {
+  const overlays: Array<{ node: import('../../../nodes/base/Node').Node; zIndex: number }> = [];
 
-  function traverse(node: ConsoleNode): void {
+  function traverse(node: import('../../../nodes/base/Node').Node): void {
     if (node.type === 'overlay') {
-      const zIndex = node.zIndex || 0;
+      const zIndex = ('zIndex' in node ? (node as any).zIndex : 0) || 0;
       overlays.push({ node, zIndex });
     }
-    if (node.children) {
-      for (const child of node.children) {
-        traverse(child);
-      }
+    for (const child of node.children) {
+      traverse(child);
     }
   }
 
@@ -47,7 +45,7 @@ export function findAllOverlays(root: ConsoleNode): ConsoleNode[] {
  * Find the topmost overlay (highest z-index) in the component tree
  * Returns the overlay node if found, or null if no overlay exists
  */
-export function findTopmostOverlay(root: ConsoleNode): ConsoleNode | null {
+export function findTopmostOverlay(root: import('../../../nodes/base/Node').Node): import('../../../nodes/base/Node').Node | null {
   const overlays = findAllOverlays(root);
   return overlays.length > 0 ? overlays[0]! : null;
 }
@@ -70,25 +68,32 @@ export function findTopmostOverlay(root: ConsoleNode): ConsoleNode | null {
  * ```
  */
 export function focusComponent(
-  component: ConsoleNode,
-  interactiveComponents: ConsoleNode[],
+  component: import('../../../nodes/base/Node').Node,
+  interactiveComponents: import('../../../nodes/base/Node').Node[],
   scheduleUpdate: () => void
 ): void {
-  if (component.disabled) {
+  const disabled = 'disabled' in component ? (component as any).disabled : false;
+  if (disabled) {
     return; // Don't focus disabled components
   }
 
   // Blur currently focused component
-  const currentlyFocused = interactiveComponents.find((comp) => comp.focused);
+  const currentlyFocused = interactiveComponents.find((comp) => 
+    'focused' in comp && (comp as any).focused
+  );
   if (currentlyFocused && currentlyFocused !== component) {
-    currentlyFocused.focused = false;
-    currentlyFocused.onBlur?.();
+    (currentlyFocused as any).focused = false;
+    if ('onBlur' in currentlyFocused && (currentlyFocused as any).onBlur) {
+      (currentlyFocused as any).onBlur();
+    }
   }
 
   // Focus target component
-  component.focused = true;
-  terminal.setFocusedComponent(component);
-  component.onFocus?.();
+  (component as any).focused = true;
+  terminal.setFocusedComponent(component as any);
+  if ('onFocus' in component && (component as any).onFocus) {
+    (component as any).onFocus();
+  }
   scheduleUpdate();
 }
 

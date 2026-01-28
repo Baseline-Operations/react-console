@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, Text, View, LineBreak, getTerminalDimensions } from '../src/index';
+import { render, exit, Text, View, LineBreak, getTerminalDimensions } from '../src/index';
 
 function App() {
   const dims = getTerminalDimensions();
@@ -37,4 +37,5 @@ function App() {
   );
 }
 
-render(<App />);
+render(<App />, { mode: 'static' });
+exit();

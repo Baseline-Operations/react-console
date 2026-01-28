@@ -26,6 +26,9 @@ export default [
       },
       globals: {
         ...globals.node,
+        JSX: 'readonly',
+        React: 'readonly',
+        NodeJS: 'readonly',
       }
     },
     plugins: {
@@ -43,7 +46,16 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // Allow require() for lazy loading to avoid circular deps
+      '@typescript-eslint/no-require-imports': 'off',
+      // Allow control chars in regex (needed for ANSI codes)
+      'no-control-regex': 'off',
+      // Allow lexical declarations in case blocks
+      'no-case-declarations': 'off',
+      // Allow type/enum with same name pattern (common in TypeScript)
+      'no-redeclare': 'off',
+      '@typescript-eslint/no-redeclare': 'off',
     },
     settings: {
       react: {

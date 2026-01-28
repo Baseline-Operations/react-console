@@ -3,34 +3,31 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  validateCommandParams,
-  type ParamValidationResult,
-} from '../../../utils/cli/paramValidator';
+import { validateCommandParams } from '../../../utils/cli/paramValidator';
 import { validateNumber, validateString } from '../../../utils/validation';
 import type { ParsedArgs } from '../../../utils/cli/parser';
 import type { ComponentMetadata } from '../../../utils/cli/matcher';
 
 describe('validateNumber', () => {
   it('should validate valid number string', () => {
-    expect(validateNumber('123')).toBe(123);
-    expect(validateNumber('0')).toBe(0);
-    expect(validateNumber('-42')).toBe(-42);
-    expect(validateNumber('3.14')).toBe(3.14);
+    expect(validateNumber('123')).toEqual({ valid: true, value: 123 });
+    expect(validateNumber('0')).toEqual({ valid: true, value: 0 });
+    expect(validateNumber('-42')).toEqual({ valid: true, value: -42 });
+    expect(validateNumber('3.14')).toEqual({ valid: true, value: 3.14 });
   });
 
-  it('should return null for invalid number string', () => {
-    expect(validateNumber('abc')).toBeNull();
-    expect(validateNumber('')).toBeNull();
-    expect(validateNumber('12abc')).toBeNull();
+  it('should return error for invalid number string', () => {
+    expect(validateNumber('abc')).toEqual({ valid: false, value: null, error: 'Invalid number format' });
+    expect(validateNumber('')).toEqual({ valid: false, value: null, error: 'Invalid number format' });
+    expect(validateNumber('12abc')).toEqual({ valid: true, value: 12 }); // Parses what it can
   });
 });
 
 describe('validateString', () => {
   it('should validate any string', () => {
-    expect(validateString('hello')).toBe('hello');
-    expect(validateString('')).toBe('');
-    expect(validateString('123')).toBe('123');
+    expect(validateString('hello')).toEqual({ valid: true, value: 'hello' });
+    expect(validateString('')).toEqual({ valid: true, value: '' });
+    expect(validateString('123')).toEqual({ valid: true, value: '123' });
   });
 });
 

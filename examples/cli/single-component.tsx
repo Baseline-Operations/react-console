@@ -26,9 +26,9 @@ function SimpleAppComponent() {
   
   return (
     <View padding={2}>
-      <Text bold color="cyan" size="large">Simple CLI Application</Text>
+      <Text bold color="cyan">Simple CLI Application</Text>
       <Text>This is a single-component app with no routing.</Text>
-      <View marginTop={1}>
+      <View style={{ margin: { top: 1 } }}>
         <Text>Enter your name:</Text>
         <Input
           value={name}
@@ -45,7 +45,7 @@ function SimpleAppComponent() {
         </Button>
       </View>
       {greeting && (
-        <View marginTop={1}>
+        <View style={{ margin: { top: 1 } }}>
           <Text bold color="green">{greeting}</Text>
         </View>
       )}

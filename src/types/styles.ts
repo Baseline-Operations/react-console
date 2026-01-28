@@ -15,6 +15,10 @@ export interface StyleProps {
   strikethrough?: boolean;
   inverse?: boolean;
   className?: string | string[]; // Class names for style libraries (e.g., Tailwind-like)
+  
+  // CSS-like text styling alternatives
+  fontWeight?: 'normal' | 'bold' | number; // 'bold' or 700+ = bold
+  fontStyle?: 'normal' | 'italic'; // 'italic' = italic
 }
 
 export interface LayoutProps {
@@ -89,7 +93,8 @@ export interface ViewStyle extends StyleProps, LayoutProps {
     left?: boolean;
   };
   borderColor?: Color;
-  borderStyle?: 'single' | 'double' | 'thick' | 'dashed' | 'dotted';
+  borderBackgroundColor?: Color; // Background color for border area (defaults to backgroundColor if not set)
+  borderStyle?: 'single' | 'double' | 'thick' | 'dashed' | 'dotted' | 'ascii';
   borderWidth?: number | {
     top?: number;
     right?: number;

@@ -49,7 +49,7 @@ export function generateEnhancedCompletions(
   const {
     fuzzyMatch = true,
     maxSuggestions = 10,
-    includeDescriptions: _includeDescriptions = false,
+    // includeDescriptions could be used for richer completions in the future
     filterByPrefix = true,
   } = options;
 

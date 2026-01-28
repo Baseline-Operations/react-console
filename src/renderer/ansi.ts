@@ -5,12 +5,9 @@
 import type { Color, StyleProps } from '../types';
 
 const ANSI_RESET = '\x1b[0m';
-const ANSI_BOLD = '\x1b[1m';
-const ANSI_DIM = '\x1b[2m';
-const ANSI_ITALIC = '\x1b[3m';
-const ANSI_UNDERLINE = '\x1b[4m';
-const ANSI_STRIKETHROUGH = '\x1b[9m';
-const ANSI_INVERSE = '\x1b[7m';
+
+// ANSI style codes (used via numeric values in applyStyles):
+// Bold: 1, Dim: 2, Italic: 3, Underline: 4, Inverse: 7, Strikethrough: 9
 
 const ANSI_FG_COLORS: Record<string, number> = {
   black: 30,
@@ -34,6 +31,22 @@ const ANSI_BG_COLORS: Record<string, number> = {
   magenta: 45,
   cyan: 46,
   white: 47,
+  // Bright/light variants
+  brightBlack: 100,
+  brightRed: 101,
+  brightGreen: 102,
+  brightYellow: 103,
+  brightBlue: 104,
+  brightMagenta: 105,
+  brightCyan: 106,
+  brightWhite: 107,
+  // Common aliases
+  gray: 100,    // brightBlack (dark gray)
+  grey: 100,    // alias for gray
+  lightGray: 47, // white
+  lightGrey: 47, // alias
+  darkGray: 100, // brightBlack
+  darkGrey: 100, // alias
 };
 
 /**
@@ -161,36 +174,129 @@ export function getBackgroundColorCode(color?: Color): string {
  * @example
  * ```ts
  * applyStyles('Hello', { color: 'red', bold: true });
- * // '\x1b[31m\x1b[1mHello\x1b[0m'
+ * // '\x1b[1;31mHello\x1b[0m' (combined codes)
  * 
  * applyStyles('World', { backgroundColor: 'blue', underline: true });
- * // '\x1b[44m\x1b[4mWorld\x1b[0m'
+ * // '\x1b[4;44mWorld\x1b[0m' (combined codes)
  * ```
  */
 export function applyStyles(text: string, styles?: StyleProps): string {
   if (!styles) return text;
 
-  const codes: string[] = [];
+  // Collect numeric codes to combine into a single escape sequence
+  // This produces \x1b[1;37;100m instead of \x1b[1m\x1b[37m\x1b[100m
+  // which renders more cleanly in terminals
+  const params: number[] = [];
 
-  // Text styles
-  if (styles.bold) codes.push(ANSI_BOLD);
-  if (styles.dim) codes.push(ANSI_DIM);
-  if (styles.italic) codes.push(ANSI_ITALIC);
-  if (styles.underline) codes.push(ANSI_UNDERLINE);
-  if (styles.strikethrough) codes.push(ANSI_STRIKETHROUGH);
-  if (styles.inverse) codes.push(ANSI_INVERSE);
+  // Text styles (these are simple numeric codes)
+  if (styles.bold) params.push(1);
+  if (styles.dim) params.push(2);
+  if (styles.italic) params.push(3);
+  if (styles.underline) params.push(4);
+  if (styles.strikethrough) params.push(9);
+  if (styles.inverse) params.push(7);
 
-  // Colors
-  const fgColor = getForegroundColorCode(styles.color);
-  if (fgColor) codes.push(fgColor);
+  // For colors, we need to handle different formats
+  // Simple colors (30-37, 40-47, 90-97, 100-107) can be combined
+  // Extended colors (38;5;N or 38;2;R;G;B) need special handling
+  const fgParams = getForegroundColorParams(styles.color);
+  const bgParams = getBackgroundColorParams(styles.backgroundColor);
 
-  const bgColor = getBackgroundColorCode(styles.backgroundColor);
-  if (bgColor) codes.push(bgColor);
+  if (params.length === 0 && fgParams.length === 0 && bgParams.length === 0) {
+    return text;
+  }
 
-  if (codes.length === 0) return text;
+  // Combine all params into single escape sequence
+  const allParams = [...params, ...fgParams, ...bgParams];
+  const openCode = `\x1b[${allParams.join(';')}m`;
+  return `${openCode}${text}${ANSI_RESET}`;
+}
 
-  const openCodes = codes.join('');
-  return `${openCodes}${text}${ANSI_RESET}`;
+/**
+ * Apply styles to text WITHOUT the trailing reset.
+ * Useful for continuous style transitions where the next content
+ * will apply its own styles (avoids [0m][XXm flicker in some terminals).
+ */
+export function applyStylesNoReset(text: string, styles?: StyleProps): string {
+  if (!styles) return text;
+
+  const params: number[] = [];
+
+  if (styles.bold) params.push(1);
+  if (styles.dim) params.push(2);
+  if (styles.italic) params.push(3);
+  if (styles.underline) params.push(4);
+  if (styles.strikethrough) params.push(9);
+  if (styles.inverse) params.push(7);
+
+  const fgParams = getForegroundColorParams(styles.color);
+  const bgParams = getBackgroundColorParams(styles.backgroundColor);
+
+  if (params.length === 0 && fgParams.length === 0 && bgParams.length === 0) {
+    return text;
+  }
+
+  const allParams = [...params, ...fgParams, ...bgParams];
+  const openCode = `\x1b[${allParams.join(';')}m`;
+  return `${openCode}${text}`;
+}
+
+/**
+ * Get foreground color as numeric parameters (for combining in single escape sequence)
+ */
+function getForegroundColorParams(color?: Color): number[] {
+  if (!color) return [];
+
+  // Named colors
+  if (color in ANSI_FG_COLORS) {
+    return [ANSI_FG_COLORS[color]!];
+  }
+
+  // Hex colors -> 256 color
+  if (color.startsWith('#')) {
+    const code = hexToAnsi256(color);
+    return [38, 5, code];
+  }
+
+  // RGB format
+  const rgbMatch = color.match(/rgb\((\d+),(\d+),(\d+)\)/);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]!, 10);
+    const g = parseInt(rgbMatch[2]!, 10);
+    const b = parseInt(rgbMatch[3]!, 10);
+    return [38, 2, r, g, b];
+  }
+
+  return [];
+}
+
+/**
+ * Get background color as numeric parameters (for combining in single escape sequence)
+ */
+function getBackgroundColorParams(color?: Color): number[] {
+  if (!color) return [];
+
+  // Named colors
+  if (color in ANSI_BG_COLORS) {
+    return [ANSI_BG_COLORS[color]!];
+  }
+
+  // Hex colors -> 256 color
+  if (color.startsWith('#')) {
+    const code = hexToAnsi256(color);
+    return [48, 5, code];
+  }
+
+  // RGB format
+  const rgbMatch = color.match(/rgb\((\d+),(\d+),(\d+)\)/);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]!, 10);
+    const g = parseInt(rgbMatch[2]!, 10);
+    const b = parseInt(rgbMatch[3]!, 10);
+    return [48, 2, r, g, b];
+  }
+
+  return [];
 }
 
 /**

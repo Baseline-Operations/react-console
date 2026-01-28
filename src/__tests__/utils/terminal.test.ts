@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getTerminalDimensions, supportsColor, enterRawMode, exitRawMode, onTerminalResize } from '../../utils/terminal';
+import { getTerminalDimensions, supportsColor, enterRawMode, exitRawMode, onTerminalResize, setRenderMode } from '../../utils/terminal';
 
 describe('terminal utilities', () => {
   const originalEnv = process.env;
@@ -21,6 +21,8 @@ describe('terminal utilities', () => {
   beforeEach(() => {
     process.env = { ...originalEnv };
     vi.clearAllMocks();
+    // Set to interactive mode to get actual terminal dimensions in tests
+    setRenderMode('interactive');
   });
 
   afterEach(() => {
@@ -35,10 +37,12 @@ describe('terminal utilities', () => {
     process.stdin.setEncoding = originalSetEncoding;
     process.stdout.on = originalOn;
     process.stdout.removeListener = originalRemoveListener;
+    // Reset to static mode (default)
+    setRenderMode('static');
   });
 
   describe('getTerminalDimensions', () => {
-    it('should return actual terminal dimensions when available', () => {
+    it('should return actual terminal dimensions when available in interactive mode', () => {
       process.stdout.columns = 120;
       process.stdout.rows = 40;
       const dims = getTerminalDimensions();
@@ -46,7 +50,7 @@ describe('terminal utilities', () => {
       expect(dims.rows).toBe(40);
     });
 
-    it('should return default dimensions when columns not available', () => {
+    it('should return default dimensions when columns not available in interactive mode', () => {
       process.stdout.columns = undefined;
       process.stdout.rows = 24;
       const dims = getTerminalDimensions();
@@ -54,7 +58,7 @@ describe('terminal utilities', () => {
       expect(dims.rows).toBe(24);
     });
 
-    it('should return default dimensions when rows not available', () => {
+    it('should return default dimensions when rows not available in interactive mode', () => {
       process.stdout.columns = 80;
       process.stdout.rows = undefined;
       const dims = getTerminalDimensions();
@@ -62,12 +66,21 @@ describe('terminal utilities', () => {
       expect(dims.rows).toBe(24);
     });
 
-    it('should return default dimensions when both not available', () => {
+    it('should return default dimensions when both not available in interactive mode', () => {
       process.stdout.columns = undefined;
       process.stdout.rows = undefined;
       const dims = getTerminalDimensions();
       expect(dims.columns).toBe(80);
       expect(dims.rows).toBe(24);
+    });
+    
+    it('should return large row count in static mode', () => {
+      setRenderMode('static');
+      process.stdout.columns = 80;
+      process.stdout.rows = 24;
+      const dims = getTerminalDimensions();
+      expect(dims.columns).toBe(80);
+      expect(dims.rows).toBe(10000); // Static mode allows unlimited height
     });
   });
 

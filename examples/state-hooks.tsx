@@ -4,31 +4,22 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { 
-  render, 
-  Text, 
-  View, 
-  Input, 
-  Button, 
-  Radio,
-  Checkbox,
-  LineBreak,
-  Box,
+import { render, Text, View, Input, Button, LineBreak, Box } from '../src/index';
+import {
   useTerminalDimensions,
   useTerminalConfig,
-  useTheme,
-  useStorage,
   useOptimisticTerminal,
   useActionStateTerminal,
   useAsyncWithFallback,
-  ThemeProvider,
-} from '../src/index';
+} from '../src/hooks';
+import { useTheme, ThemeProvider } from '../src/theme';
+import { useStorage } from '../src/storage';
 
 function TerminalDimensionsExample() {
   const dimensions = useTerminalDimensions();
   
   return (
-    <Box style={{ border: 'single', padding: 1 } as any}>
+    <Box style={{ border: true, borderStyle: 'single', padding: 1 }}>
       <Text color="cyan" bold>Terminal Dimensions Hook</Text>
       <Text>Columns: {dimensions.columns}</Text>
       <Text>Rows: {dimensions.rows}</Text>
@@ -41,7 +32,7 @@ function TerminalConfigExample() {
   const config = useTerminalConfig();
   
   return (
-    <Box style={{ border: 'single', padding: 1 } as any}>
+    <Box style={{ border: true, borderStyle: 'single', padding: 1 }}>
       <Text color="cyan" bold>Terminal Config Hook</Text>
       <Text>Supports Color: {config.supportsColor ? 'Yes' : 'No'}</Text>
       <Text>Supports Mouse: {config.supportsMouse ? 'Yes' : 'No'}</Text>
@@ -57,7 +48,7 @@ function ThemeExample() {
     <View>
       <Text color="yellow" bold>Theme Hook</Text>
       <Text>Current theme: {theme.name}</Text>
-      <Text style={{ color: colors.primary } as any}>
+      <Text style={{ color: colors.primary as string }}>
         Primary color text
       </Text>
     </View>
@@ -65,7 +56,7 @@ function ThemeExample() {
 }
 
 function StorageExample() {
-  const [stored, setStored] = useStorage('example-key', 'default');
+  const [stored, setStored] = useStorage<string>('example-key', 'default');
   
   return (
     <View>

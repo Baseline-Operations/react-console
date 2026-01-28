@@ -8,6 +8,14 @@ import { componentBoundsRegistry } from '../componentBounds';
 import { isArrayValue } from '../../../types/guards';
 import { terminal } from '../../../utils/globalTerminal';
 
+// Import reconciler for discrete updates (ensures state changes are committed)
+let reconciler: any = null;
+try {
+  reconciler = require('../../reconciler').reconciler;
+} catch {
+  // Reconciler may not be available
+}
+
 // Track mouse drag state (global state for drag tracking across components)
 interface DragState {
   isDragging: boolean;
@@ -28,6 +36,9 @@ let dragState: DragState = {
   lastY: 0,
   button: 0,
 };
+
+// Track hover state for mouse enter/leave events
+let hoveredComponent: ConsoleNode | null = null;
 
 /**
  * Handle mouse click on selection component option
@@ -172,11 +183,41 @@ function handleSelectionComponentClick(
  */
 export function handleMouseEvent(
   mouse: MouseEvent,
-  interactiveComponents: ConsoleNode[],
+  interactiveComponents: import('../../../nodes/base/Node').Node[],
   scheduleUpdate: () => void
 ): void {
   // Use component bounds registry for hit testing
   const target = componentBoundsRegistry.findAt(mouse.x, mouse.y);
+
+  // Handle hover (mouse enter/leave) events
+  // This works for all mouse events including move events from 1003h mode
+  if (target !== hoveredComponent) {
+    // Mouse left previous component
+    if (hoveredComponent) {
+      if ('onMouseLeave' in hoveredComponent && typeof (hoveredComponent as any).onMouseLeave === 'function') {
+        (hoveredComponent as any).onMouseLeave();
+      }
+      // Reset hover/pressed state on ButtonNodes
+      if ('isHovered' in hoveredComponent) {
+        (hoveredComponent as any).isHovered = false;
+        (hoveredComponent as any).isPressed = false;
+      }
+    }
+    
+    // Mouse entered new component
+    if (target) {
+      if ('onMouseEnter' in target && typeof (target as any).onMouseEnter === 'function') {
+        (target as any).onMouseEnter();
+      }
+      // Set hover state on ButtonNodes
+      if ('isHovered' in target) {
+        (target as any).isHovered = true;
+      }
+    }
+    
+    hoveredComponent = target;
+    scheduleUpdate();
+  }
 
   // Handle drag events (mouse move while button is pressed)
   if (mouse.eventType === 'press' || (dragState.isDragging && mouse.eventType !== 'release')) {
@@ -299,7 +340,7 @@ export function handleMouseEvent(
   // Handle click outside open dropdowns (close them)
   // Check if any dropdowns are open
   const openDropdowns = interactiveComponents.filter(
-    (comp) => comp.type === 'dropdown' && comp.isOpen
+    (comp) => comp.type === 'dropdown' && (comp as any).isOpen
   );
   if (openDropdowns.length > 0) {
     // Check if click is on a dropdown (button or options area)
@@ -308,7 +349,7 @@ export function handleMouseEvent(
     // If click is outside all dropdowns, close all open dropdowns
     if (!clickedDropdown) {
       for (const dropdown of openDropdowns) {
-        dropdown.isOpen = false;
+        (dropdown as any).isOpen = false;
       }
       scheduleUpdate();
       // If click was completely outside any component, return early
@@ -337,19 +378,19 @@ export function handleMouseEvent(
   if (mouse.button === 0) {
     // Left click
     // Focus component on click
-    if (!target.focused) {
+    if (!(target as any).focused) {
       // Blur currently focused component
-      const currentlyFocused = interactiveComponents.find((comp) => comp.focused);
+      const currentlyFocused = interactiveComponents.find((comp) => (comp as any).focused);
       if (currentlyFocused) {
-        currentlyFocused.focused = false;
+        (currentlyFocused as any).focused = false;
         terminal.setFocusedComponent(null);
-        currentlyFocused.onBlur?.();
+        (currentlyFocused as any).onBlur?.();
       }
       
       // Focus clicked component
-      target.focused = true;
+      (target as any).focused = true;
       terminal.setFocusedComponent(target);
-      target.onFocus?.();
+      (target as any).onFocus?.();
     }
 
     // Handle selection component clicks (radio, checkbox, dropdown, list)
@@ -358,17 +399,64 @@ export function handleMouseEvent(
       return; // Selection components handle their own clicks
     }
 
+    // Set pressed state for visual feedback
+    if ('isPressed' in target) {
+      (target as any).isPressed = true;
+    }
+    
     // Trigger mouse events for other components
-    if (target.onMouseDown) {
-      target.onMouseDown(mouse);
+    // Wrap in discreteUpdates to ensure any state changes from handlers are committed
+    const triggerEvents = () => {
+      try {
+        if (target.onMouseDown) {
+          target.onMouseDown(mouse);
+        }
+        if (target.onClick) {
+          target.onClick(mouse);
+        }
+        if (target.onPress) {
+          // onPress is alias for onClick (React Native pattern)
+          target.onPress(mouse);
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error in click handler:', error);
+      }
+    };
+    
+    try {
+      // Use flushSyncFromReconciler to ensure state updates trigger re-renders
+      if (reconciler?.flushSyncFromReconciler) {
+        reconciler.flushSyncFromReconciler(triggerEvents);
+      } else if (reconciler?.discreteUpdates) {
+        reconciler.discreteUpdates(triggerEvents);
+      } else {
+        triggerEvents();
+      }
+      
+      // Flush any pending work after the event
+      reconciler?.flushSyncWork?.();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error in click handler:', error);
     }
-    if (target.onClick) {
-      target.onClick(mouse);
-    }
-    if (target.onPress) {
-      // onPress is alias for onClick (React Native pattern)
-      target.onPress(mouse);
-    }
+    
+    // Reset pressed state after a short delay (visual feedback)
+    setTimeout(() => {
+      try {
+        if ('isPressed' in target) {
+          (target as any).isPressed = false;
+        }
+        // Flush the pressed state change
+        if (reconciler?.flushSyncFromReconciler) {
+          reconciler.flushSyncFromReconciler(() => {});
+        }
+        scheduleUpdate();
+      } catch (error) {
+        // Ignore errors during cleanup
+      }
+    }, 100);
+    
     scheduleUpdate();
   } else if (mouse.button === 1) {
     // Middle click

@@ -1,9 +1,10 @@
 /**
  * Focus collection utilities
  * Functions for collecting and organizing interactive components
+ * Updated to work with new Node architecture
  */
 
-import type { ConsoleNode } from '../../../types';
+import type { Node } from '../../../nodes/base/Node';
 
 /**
  * Collect all interactive components from tree
@@ -12,17 +13,17 @@ import type { ConsoleNode } from '../../../types';
  * (input, button, radio, checkbox, dropdown, list, and boxes with onClick/onPress).
  * Used for tab navigation and focus management.
  * 
- * @param node - Root ConsoleNode to traverse
+ * @param node - Root Node to traverse
  * @param result - Array to populate with interactive components (modified in place)
  * 
  * @example
  * ```ts
- * const components: ConsoleNode[] = [];
+ * const components: Node[] = [];
  * collectInteractiveComponents(rootNode, components);
  * // components now contains all interactive components
  * ```
  */
-export function collectInteractiveComponents(node: ConsoleNode, result: ConsoleNode[]): void {
+export function collectInteractiveComponents(node: Node, result: Node[]): void {
   // Collect all interactive component types:
   // - input: Text/number inputs
   // - button: Clickable buttons
@@ -31,22 +32,21 @@ export function collectInteractiveComponents(node: ConsoleNode, result: ConsoleN
   // - dropdown: Dropdown selects
   // - list: Selectable lists
   // - box: Boxes with onClick/onPress (Pressable, Focusable)
-  if (
+  const isInteractive = 
     node.type === 'input' ||
     node.type === 'button' ||
     node.type === 'radio' ||
     node.type === 'checkbox' ||
     node.type === 'dropdown' ||
     node.type === 'list' ||
-    (node.type === 'box' && (node.onClick || node.onPress))
-  ) {
+    (node.type === 'box' && (('onClick' in node && (node as any).onClick) || ('onPress' in node && (node as any).onPress)));
+  
+  if (isInteractive) {
     result.push(node);
   }
 
-  if (node.children) {
-    for (const child of node.children) {
-      collectInteractiveComponents(child, result);
-    }
+  for (const child of node.children) {
+    collectInteractiveComponents(child, result);
   }
 }
 
@@ -68,25 +68,36 @@ export function collectInteractiveComponents(node: ConsoleNode, result: ConsoleN
  * // Components without explicit tabIndex now have auto-assigned values
  * ```
  */
-export function assignTabIndexes(components: ConsoleNode[]): void {
+export function assignTabIndexes(components: Node[]): void {
   // Filter out disabled components and those with negative tabIndex
   const focusableComponents = components.filter(
-    (comp) => !comp.disabled && (comp.tabIndex === undefined || comp.tabIndex >= 0)
+    (comp) => {
+      const disabled = 'disabled' in comp ? (comp as any).disabled : false;
+      const tabIndex = 'tabIndex' in comp ? (comp as any).tabIndex : undefined;
+      return !disabled && (tabIndex === undefined || tabIndex >= 0);
+    }
   );
 
   // Sort by existing tabIndex (if any), then by document order
-  const withTabIndex = focusableComponents.filter((comp) => comp.tabIndex !== undefined);
-  const withoutTabIndex = focusableComponents.filter((comp) => comp.tabIndex === undefined);
+  const withTabIndex = focusableComponents.filter((comp) => 
+    'tabIndex' in comp && (comp as any).tabIndex !== undefined
+  );
+  const withoutTabIndex = focusableComponents.filter((comp) => 
+    !('tabIndex' in comp) || (comp as any).tabIndex === undefined
+  );
 
   // Sort components with explicit tabIndex
-  withTabIndex.sort((a, b) => (a.tabIndex || 0) - (b.tabIndex || 0));
+  withTabIndex.sort((a, b) => 
+    (('tabIndex' in a ? (a as any).tabIndex : 0) || 0) - 
+    (('tabIndex' in b ? (b as any).tabIndex : 0) || 0)
+  );
 
   // Auto-assign tab indexes starting from the highest explicit tabIndex + 1
   const maxTabIndex = withTabIndex.length > 0 
-    ? Math.max(...withTabIndex.map((c) => c.tabIndex || 0)) 
+    ? Math.max(...withTabIndex.map((c) => ('tabIndex' in c ? (c as any).tabIndex : 0) || 0)) 
     : -1;
 
   withoutTabIndex.forEach((comp, index) => {
-    comp.tabIndex = maxTabIndex + 1 + index;
+    (comp as any).tabIndex = maxTabIndex + 1 + index;
   });
 }

@@ -3,11 +3,11 @@
  */
 
 import React from 'react';
-import { render, Text, Box } from '../src/index';
+import { render, exit, Text, Box } from '../src/index';
 
 function App() {
   return (
-    <Box padding={1}>
+    <Box>
       <Text color="cyan" bold>Welcome to React Console!</Text>
       <Text>This is a simple example using React 19+ in the terminal.</Text>
       <Text color="green">✓ React</Text>
@@ -18,4 +18,5 @@ function App() {
   );
 }
 
-render(<App />);
+render(<App />, { mode: 'static' });
+exit();

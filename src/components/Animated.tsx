@@ -3,7 +3,7 @@
  * Provides animation capabilities for terminal components
  */
 
-import { type ReactNode, useState, useEffect, useRef } from 'react';
+import React, { type ReactNode, useEffect, useRef } from 'react';
 import type { ViewStyle, TextStyle, StyleProps } from '../types';
 import { createConsoleNode } from './utils';
 import {
@@ -12,8 +12,31 @@ import {
   calculateAnimationProgress,
   FrameRateController,
   easing,
+  interpolateColor,
 } from '../utils/animations';
 import { mergeClassNameAndStyle } from './utils';
+
+// Grayscale colors for fade effect (dark to bright)
+const FADE_COLORS = [
+  '#1a1a1a', // Very dark gray (almost black)
+  '#333333', // Dark gray
+  '#4d4d4d', // Medium-dark gray
+  '#666666', // Medium gray
+  '#808080', // Gray
+  '#999999', // Medium-light gray
+  '#b3b3b3', // Light gray
+  '#cccccc', // Very light gray
+  '#e6e6e6', // Near white
+  '#ffffff', // White
+];
+
+// Import reconciler for discrete updates
+let reconciler: any = null;
+try {
+  reconciler = require('../renderer/reconciler').reconciler;
+} catch {
+  // Reconciler may not be available
+}
 
 export interface AnimatedProps extends StyleProps {
   children?: ReactNode;
@@ -72,7 +95,8 @@ export function Animated({
     direction,
   });
   
-  const [, setProgress] = useState(0);
+  // Use React.useState directly to ensure we get the patched version
+  const [, setProgress] = React.useState(0);
   const frameController = useRef(new FrameRateController(10)).current;
   const animationRef = useRef<{
     startTime: number;
@@ -95,12 +119,42 @@ export function Animated({
     );
     
     switch (type) {
-      case 'fade':
-        // Fade in/out using color intensity (dim property)
+      case 'fade': {
+        // Fade in/out using color interpolation
+        // For fade-in: interpolate from dark (invisible) to the target color
+        // For fade-out: interpolate from the target color to dark (invisible)
+        const targetColor = (baseStyle as any).color || '#ffffff';
+        const darkColor = '#000000'; // Start from black (invisible against dark bg)
+        
+        let fadeProgress = animatedProgress;
+        if (direction === 'out') {
+          fadeProgress = 1 - animatedProgress;
+        } else if (direction === 'inOut') {
+          // Fade in first half, fade out second half
+          fadeProgress = animatedProgress < 0.5 
+            ? animatedProgress * 2 
+            : 2 - animatedProgress * 2;
+        }
+        
+        // Use grayscale interpolation for a smoother fade effect
+        const colorIndex = Math.min(
+          FADE_COLORS.length - 1, 
+          Math.floor(fadeProgress * FADE_COLORS.length)
+        );
+        const fadeColor = FADE_COLORS[colorIndex];
+        
+        // If there's a specific target color, interpolate towards it
+        const finalColor = targetColor !== '#ffffff' && targetColor !== 'white'
+          ? interpolateColor(darkColor, targetColor, fadeProgress)
+          : fadeColor;
+        
         return {
           ...baseStyle,
-          dim: direction === 'out' ? animatedProgress > 0.5 : animatedProgress < 0.5,
+          color: finalColor,
+          // Also use dim for very low progress to enhance the effect
+          dim: fadeProgress < 0.3,
         } as ViewStyle | TextStyle;
+      }
         
       case 'slide':
         // Slide animation (would need position changes - simplified here)
@@ -149,6 +203,7 @@ export function Animated({
       const elapsed = timestamp - (animationRef.current.startTime || 0);
       const currentProgress = calculateAnimationProgress(elapsed, animationConfig);
       
+      // Just call setProgress - React.useState is already patched
       setProgress(currentProgress);
       
       // Check if animation completed
@@ -187,11 +242,44 @@ export function Animated({
     };
   }, [autoPlay]); // Only depend on autoPlay
   
-  // Render children with animated style
-  // In a full implementation, this would properly wrap the children
-  // For now, we'll just return a box with the animated style
+  // Get animated style
+  const animatedStyle = getAnimatedStyle();
+  
+  // For fade animations, we need to apply color to text children
+  // Clone children and inject the animated style
+  const enhancedChildren = React.Children.map(children, (child) => {
+    if (!React.isValidElement(child)) {
+      return child;
+    }
+    
+    // For Text elements, merge the animated color/dim properties
+    const childProps = child.props as Record<string, unknown>;
+    const childType = child.type as { displayName?: string } | string;
+    const typeName = typeof childType === 'string' 
+      ? childType 
+      : childType.displayName || (childType as any).name || '';
+    
+    if (typeName === 'Text' || typeName === 'text') {
+      const mergedStyle = {
+        ...(childProps.style || {}),
+        color: (animatedStyle as any).color || (childProps.style as any)?.color,
+        dim: (animatedStyle as any).dim,
+      };
+      return React.cloneElement(child, {
+        ...childProps,
+        style: mergedStyle,
+        color: (animatedStyle as any).color || childProps.color,
+        dim: (animatedStyle as any).dim !== undefined ? (animatedStyle as any).dim : childProps.dim,
+      } as any);
+    }
+    
+    // For other elements, just pass through
+    return child;
+  });
+  
+  // Render children with animated style wrapper
   return createConsoleNode('box', {
-    style: getAnimatedStyle() as ViewStyle,
-    children,
+    style: animatedStyle as ViewStyle,
+    children: enhancedChildren,
   });
 }

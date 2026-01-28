@@ -3,7 +3,6 @@
  * Functions for handling keyboard-based focus navigation
  */
 
-import type { ConsoleNode } from '../../../types';
 import { terminal } from '../../../utils/globalTerminal';
 import { findTopmostOverlay } from './management';
 import { collectInteractiveComponents } from './collection';
@@ -28,21 +27,23 @@ import { collectInteractiveComponents } from './collection';
  * ```
  */
 export function handleTabNavigation(
-  components: ConsoleNode[],
+  components: import('../../../nodes/base/Node').Node[],
   shift: boolean,
   scheduleUpdate: () => void,
-  rootNode?: ConsoleNode // Root node for finding overlays
+  rootNode?: import('../../../nodes/base/Node').Node // Root node for finding overlays
 ): void {
-  let focusableComponents = components.filter(
-    (comp) => !comp.disabled && (comp.tabIndex === undefined || comp.tabIndex >= 0)
-  );
+  let focusableComponents = components.filter((comp) => {
+    const disabled = 'disabled' in comp ? (comp as any).disabled : false;
+    const tabIndex = 'tabIndex' in comp ? (comp as any).tabIndex : undefined;
+    return !disabled && (tabIndex === undefined || tabIndex >= 0);
+  });
 
   // Focus trapping: if there's a topmost overlay, only allow navigation within it
   if (rootNode) {
     const topmostOverlay = findTopmostOverlay(rootNode);
     if (topmostOverlay) {
       // Filter to only components within the overlay
-      const overlayComponents: ConsoleNode[] = [];
+      const overlayComponents: import('../../../nodes/base/Node').Node[] = [];
       collectInteractiveComponents(topmostOverlay, overlayComponents);
       focusableComponents = focusableComponents.filter((comp) => overlayComponents.includes(comp));
     }
@@ -51,17 +52,25 @@ export function handleTabNavigation(
   if (focusableComponents.length === 0) return;
 
   // Sort by tabIndex
-  const sorted = [...focusableComponents].sort((a, b) => (a.tabIndex || 0) - (b.tabIndex || 0));
+  const sorted = [...focusableComponents].sort((a, b) => {
+    const aTabIndex = 'tabIndex' in a ? (a as any).tabIndex : undefined;
+    const bTabIndex = 'tabIndex' in b ? (b as any).tabIndex : undefined;
+    return (aTabIndex || 0) - (bTabIndex || 0);
+  });
 
   // Find currently focused component index
-  const currentFocusedIndex = sorted.findIndex((comp) => comp.focused);
+  const currentFocusedIndex = sorted.findIndex((comp) => 
+    'focused' in comp && (comp as any).focused
+  );
 
   // Blur current component
   if (currentFocusedIndex >= 0) {
     const current = sorted[currentFocusedIndex]!;
-    current.focused = false;
+    (current as any).focused = false;
     terminal.setFocusedComponent(null);
-    current.onBlur?.();
+    if ('onBlur' in current && (current as any).onBlur) {
+      (current as any).onBlur();
+    }
   }
 
   // Get next/previous component
@@ -81,8 +90,10 @@ export function handleTabNavigation(
 
   // Focus next component
   const next = sorted[nextIndex]!;
-  next.focused = true;
-  terminal.setFocusedComponent(next);
-  next.onFocus?.();
+  (next as any).focused = true;
+  terminal.setFocusedComponent(next as any);
+  if ('onFocus' in next && (next as any).onFocus) {
+    (next as any).onFocus();
+  }
   scheduleUpdate();
 }
