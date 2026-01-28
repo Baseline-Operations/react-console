@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { render, Text, View, Input, Button, Radio, Checkbox, List, LineBreak, Box } from '../src/index';
+import { render, Text, View, Input, Button, Radio, Checkbox, LineBreak, Box } from '../src/index';
 
 function App() {
   const [keyEvents, setKeyEvents] = useState<string[]>([]);
@@ -136,7 +136,7 @@ function App() {
       <LineBreak />
 
       <Text color="yellow" bold>6. Disabled State</Text>
-      <Text>Disabled components don't receive events:</Text>
+      <Text>Disabled components don&apos;t receive events:</Text>
       <Button disabled onClick={() => setMouseEvents(prev => ['This should not fire', ...prev])}>
         Disabled Button
       </Button>

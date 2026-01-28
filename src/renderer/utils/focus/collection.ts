@@ -31,6 +31,7 @@ export function collectInteractiveComponents(node: Node, result: Node[]): void {
   // - checkbox: Checkbox groups
   // - dropdown: Dropdown selects
   // - list: Selectable lists
+  // - scrollview: Scrollable containers (keyboard navigation)
   // - box: Boxes with onClick/onPress (Pressable, Focusable)
   const isInteractive = 
     node.type === 'input' ||
@@ -39,6 +40,7 @@ export function collectInteractiveComponents(node: Node, result: Node[]): void {
     node.type === 'checkbox' ||
     node.type === 'dropdown' ||
     node.type === 'list' ||
+    node.type === 'scrollview' ||
     (node.type === 'box' && (('onClick' in node && (node as any).onClick) || ('onPress' in node && (node as any).onPress)));
   
   if (isInteractive) {

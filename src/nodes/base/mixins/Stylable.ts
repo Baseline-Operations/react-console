@@ -262,12 +262,40 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
      * Update box model properties from style
      */
     updateBoxModelFromStyle(style: StyleMap): void {
+      // Handle margin - object form or individual properties
       if (style.margin !== undefined) {
         this.margin = this.normalizeSpacing(style.margin) as Margin;
       }
+      // Individual margin properties override object form
+      if (style.marginTop !== undefined) this.margin.top = style.marginTop;
+      if (style.marginRight !== undefined) this.margin.right = style.marginRight;
+      if (style.marginBottom !== undefined) this.margin.bottom = style.marginBottom;
+      if (style.marginLeft !== undefined) this.margin.left = style.marginLeft;
+      if (style.marginHorizontal !== undefined) {
+        this.margin.left = style.marginHorizontal;
+        this.margin.right = style.marginHorizontal;
+      }
+      if (style.marginVertical !== undefined) {
+        this.margin.top = style.marginVertical;
+        this.margin.bottom = style.marginVertical;
+      }
       
+      // Handle padding - object form or individual properties
       if (style.padding !== undefined) {
         this.padding = this.normalizeSpacing(style.padding) as Padding;
+      }
+      // Individual padding properties override object form
+      if (style.paddingTop !== undefined) this.padding.top = style.paddingTop;
+      if (style.paddingRight !== undefined) this.padding.right = style.paddingRight;
+      if (style.paddingBottom !== undefined) this.padding.bottom = style.paddingBottom;
+      if (style.paddingLeft !== undefined) this.padding.left = style.paddingLeft;
+      if (style.paddingHorizontal !== undefined) {
+        this.padding.left = style.paddingHorizontal;
+        this.padding.right = style.paddingHorizontal;
+      }
+      if (style.paddingVertical !== undefined) {
+        this.padding.top = style.paddingVertical;
+        this.padding.bottom = style.paddingVertical;
       }
       
       if (style.border !== undefined) {

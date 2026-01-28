@@ -16,7 +16,7 @@ export interface SelectOption {
 }
 
 export interface ConsoleNode {
-  type: 'text' | 'box' | 'fragment' | 'newline' | 'linebreak' | 'input' | 'button' | 'scrollable' | 'overlay' | 'radio' | 'checkbox' | 'dropdown' | 'list';
+  type: 'text' | 'box' | 'fragment' | 'newline' | 'linebreak' | 'input' | 'button' | 'scrollable' | 'scrollview' | 'overlay' | 'radio' | 'checkbox' | 'dropdown' | 'list';
   customType?: string; // For custom registered components
   content?: string;
   styles?: StyleProps; // Legacy - use style prop instead

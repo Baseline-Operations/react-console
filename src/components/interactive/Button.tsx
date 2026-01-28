@@ -79,6 +79,7 @@ function ButtonComponent({
   // The reconciler will call onClick when Enter/Space is pressed while focused
   // or when mouse is clicked on the button (if terminal supports mouse events)
   return createConsoleNode('button', {
+    label: displayText,
     content: displayText,
     style: mergedStyle,
     styles: mergedStyle,

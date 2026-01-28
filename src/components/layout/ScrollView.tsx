@@ -8,70 +8,167 @@ import type { LayoutProps, StyleProps, ViewStyle } from '../../types';
 import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
 
 /**
+ * Scrollbar style configuration
+ */
+export interface ScrollbarStyle {
+  /** Scrollbar track color */
+  trackColor?: string;
+  /** Scrollbar thumb/indicator color */
+  thumbColor?: string;
+  /** Scrollbar width (1-3 characters, default: 1) */
+  width?: number;
+  /** Character to use for track (default: '│') */
+  trackChar?: string;
+  /** Character to use for thumb (default: '█') */
+  thumbChar?: string;
+}
+
+/**
  * Props for the ScrollView component
  * 
  * React Native-like scrollable container for overflow content.
- * Functionally identical to Scrollable but with React Native naming.
- * Supports horizontal and vertical scrolling with scroll indicators.
+ * Extends View with scrolling capability and optional scrollbar.
  * 
  * @example
  * ```tsx
- * <ScrollView scrollTop={10} maxHeight={20} horizontal={false}>
+ * // Basic usage
+ * <ScrollView maxHeight={20}>
  *   <Text>Long content that overflows</Text>
+ * </ScrollView>
+ * 
+ * // With scrollbar styling
+ * <ScrollView 
+ *   maxHeight={20} 
+ *   showsVerticalScrollIndicator
+ *   scrollbarStyle={{ thumbColor: 'cyan', trackColor: 'gray' }}
+ * >
+ *   <Text>Scrollable content</Text>
+ * </ScrollView>
+ * 
+ * // Controlled scroll position
+ * <ScrollView scrollTop={scrollY} onScroll={setScrollY}>
+ *   <Text>Content</Text>
  * </ScrollView>
  * ```
  */
 export interface ScrollViewProps extends LayoutProps, StyleProps {
   children?: ReactNode;
-  style?: ViewStyle | ViewStyle[]; // CSS-like style (similar to React Native)
-  scrollTop?: number; // Vertical scroll position (default: 0)
-  scrollLeft?: number; // Horizontal scroll position (default: 0)
-  maxHeight?: number; // Maximum visible height (constrains scrolling)
-  maxWidth?: number; // Maximum visible width (constrains scrolling)
-  horizontal?: boolean; // Scroll horizontally instead of vertically (default: false)
-  showsScrollIndicator?: boolean; // Show scroll indicators (default: true)
+  /** CSS-like style (similar to React Native) */
+  style?: ViewStyle | ViewStyle[];
+  /** Content container style */
+  contentContainerStyle?: ViewStyle;
+  
+  // Scroll position
+  /** Vertical scroll offset (default: 0) */
+  scrollTop?: number;
+  /** Horizontal scroll offset (default: 0) */
+  scrollLeft?: number;
+  /** Callback when scroll position changes */
+  onScroll?: (scrollTop: number, scrollLeft: number) => void;
+  
+  // Constraints
+  /** Maximum visible height (enables vertical scrolling) */
+  maxHeight?: number;
+  /** Maximum visible width (enables horizontal scrolling) */
+  maxWidth?: number;
+  
+  // Scroll direction
+  /** Enable horizontal scrolling (default: false) */
+  horizontal?: boolean;
+  
+  // Scroll indicators (React Native compatible naming)
+  /** Show vertical scroll indicator (default: true when content overflows) */
+  showsVerticalScrollIndicator?: boolean;
+  /** Show horizontal scroll indicator (default: true when content overflows) */
+  showsHorizontalScrollIndicator?: boolean;
+  /** Legacy: Show scroll indicator (maps to vertical/horizontal based on direction) */
+  showsScrollIndicator?: boolean;
+  
+  // Scrollbar styling
+  /** Custom scrollbar appearance */
+  scrollbarStyle?: ScrollbarStyle;
+  
+  // Behavior
+  /** Scroll to end when content changes (default: false) */
+  scrollToEnd?: boolean;
+  /** Enable keyboard scrolling when focused (default: true) */
+  keyboardScrollEnabled?: boolean;
+  /** Lines to scroll per key press (default: 1) */
+  scrollStep?: number;
 }
 
 /**
  * ScrollView component - React Native-like pattern for terminal
  * 
- * React Native-compatible scrollable container for overflow content.
- * Functionally identical to Scrollable but uses React Native naming conventions.
- * Supports horizontal and vertical scrolling with scroll position control.
+ * Extends View with scrolling capability. Content that exceeds maxHeight/maxWidth
+ * becomes scrollable. Supports both controlled (scrollTop prop) and uncontrolled modes.
  * 
  * @param props - ScrollView component props
  * @returns React element representing a scrollable container
  * 
  * @example
  * ```tsx
- * <ScrollView scrollTop={scrollPosition} maxHeight={20}>
- *   <Text>Long content that overflows</Text>
+ * // Simple scrollable list
+ * <ScrollView maxHeight={10}>
+ *   {items.map(item => <Text key={item.id}>{item.name}</Text>)}
+ * </ScrollView>
+ * 
+ * // With custom scrollbar
+ * <ScrollView 
+ *   maxHeight={15}
+ *   showsVerticalScrollIndicator
+ *   scrollbarStyle={{
+ *     thumbColor: 'blue',
+ *     trackColor: 'gray',
+ *     thumbChar: '●',
+ *     trackChar: '│'
+ *   }}
+ * >
+ *   <Text>Content here...</Text>
  * </ScrollView>
  * ```
- * 
- * @see Scrollable - For component with identical functionality
  */
 export function ScrollView({
   children,
+  style,
+  contentContainerStyle,
   scrollTop = 0,
   scrollLeft = 0,
+  onScroll,
   maxHeight,
   maxWidth,
   horizontal = false,
-  showsScrollIndicator: _showsScrollIndicator = true,
+  showsVerticalScrollIndicator,
+  showsHorizontalScrollIndicator,
+  showsScrollIndicator = true,
+  scrollbarStyle,
+  scrollToEnd = false,
+  keyboardScrollEnabled = true,
+  scrollStep = 1,
   className,
-  style,
   ...props
 }: ScrollViewProps) {
   // Merge className with style prop and legacy props
   const mergedStyle = mergeClassNameAndStyle(className, style, props);
   
-  // ScrollView is the same as Scrollable but with React Native naming
-  return createConsoleNode('scrollable', {
+  // Determine which indicators to show
+  const showVertical = showsVerticalScrollIndicator ?? (!horizontal && showsScrollIndicator);
+  const showHorizontal = showsHorizontalScrollIndicator ?? (horizontal && showsScrollIndicator);
+  
+  return createConsoleNode('scrollview', {
     scrollTop: horizontal ? scrollLeft : scrollTop,
     scrollLeft: horizontal ? scrollTop : scrollLeft,
+    onScroll,
     maxHeight,
     maxWidth,
+    horizontal,
+    showsVerticalScrollIndicator: showVertical,
+    showsHorizontalScrollIndicator: showHorizontal,
+    scrollbarStyle,
+    scrollToEnd,
+    keyboardScrollEnabled,
+    scrollStep,
+    contentContainerStyle,
     style: mergedStyle as ViewStyle,
     layout: mergedStyle as LayoutProps,
     styles: mergedStyle,

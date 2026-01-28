@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, Text, Box, View, Scrollable, getTerminalDimensions } from '../src/index';
+import { render, Text, Box, View, ScrollView, getTerminalDimensions } from '../src/index';
 
 function App() {
   const dims = getTerminalDimensions();
@@ -14,14 +14,14 @@ function App() {
         <Text bold>Full Screen Application</Text>
       </Box>
       
-      <Scrollable maxHeight={dims.rows - 5}>
+      <ScrollView maxHeight={dims.rows - 5} showsScrollIndicator>
         <Box padding={1}>
           <Text>This is a full-screen console application.</Text>
           <Text>It takes up the entire terminal.</Text>
           <Text>Scrollable content can go here...</Text>
           {/* Add more content to test scrolling */}
         </Box>
-      </Scrollable>
+      </ScrollView>
       
       <Box padding={1} backgroundColor="gray">
         <Text color="white">Footer - Status bar</Text>

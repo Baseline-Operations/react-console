@@ -3,6 +3,7 @@
  * Demonstrates a simple CLI app with commands and default component
  */
 
+import React from 'react';
 import { render } from '../../src/index';
 import { CLIApp, CommandRouter, Command, Default } from '../../src/cli';
 import { Text, View } from '../../src/index';
@@ -14,11 +15,11 @@ function App() {
         <Default description="Default interface">
           <HomeComponent />
         </Default>
-        
+
         <Command name="hello" description="Say hello">
           <HelloComponent />
         </Command>
-        
+
         <Command name="info" description="Show application info">
           <InfoComponent />
         </Command>
@@ -30,11 +31,13 @@ function App() {
 function HomeComponent() {
   return (
     <View padding={1}>
-      <Text bold color="cyan">Welcome to Basic CLI!</Text>
+      <Text bold color="cyan">
+        Welcome to Basic CLI!
+      </Text>
       <Text>Available commands:</Text>
-      <Text>  hello - Say hello</Text>
-      <Text>  info  - Show application info</Text>
-      <Text>Run 'basic-cli --help' for more information.</Text>
+      <Text> hello - Say hello</Text>
+      <Text> info - Show application info</Text>
+      <Text>Run &apos;basic-cli --help&apos; for more information.</Text>
     </View>
   );
 }
@@ -42,7 +45,9 @@ function HomeComponent() {
 function HelloComponent() {
   return (
     <View padding={1}>
-      <Text bold color="green">Hello, World!</Text>
+      <Text bold color="green">
+        Hello, World!
+      </Text>
       <Text>This is a simple command example.</Text>
     </View>
   );

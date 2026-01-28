@@ -25,6 +25,8 @@ export { Box } from './components/primitives/Box';
 export type { BoxProps } from './components/primitives/Box';
 export { View } from './components/primitives/View';
 export type { ViewProps } from './components/primitives/View';
+export { ScrollView } from './components/layout/ScrollView';
+export type { ScrollViewProps } from './components/layout/ScrollView';
 export { LineBreak } from './components/primitives/LineBreak';
 // Legacy support (deprecated - use LineBreak instead)
 export { Newline } from './components/primitives/Newline';
@@ -41,7 +43,17 @@ export type { FocusableProps } from './components/interactive/Focusable';
 export { Prompt } from './components/interactive/Prompt';
 export type { PromptProps } from './components/interactive/Prompt';
 
-// Selection components are available via 'react-console/selection'
+// Selection components
+export { Radio } from './components/selection/Radio';
+export type { RadioProps, RadioOption } from './components/selection/Radio';
+export { Checkbox } from './components/selection/Checkbox';
+export type { CheckboxProps, CheckboxOption } from './components/selection/Checkbox';
+export { Dropdown } from './components/selection/Dropdown';
+export type { DropdownProps, DropdownOption } from './components/selection/Dropdown';
+export { List } from './components/selection/List';
+export type { ListProps, ListOption } from './components/selection/List';
+
+// Selection components also available via 'react-console/selection'
 // See src/selection.ts for exports
 
 // Layout components are available via 'react-console/layout'
@@ -267,7 +279,7 @@ export type {
 export { getTerminalDimensions, supportsColor, enterRawMode, exitRawMode } from './utils/terminal';
 export { supportsMouse, enableMouseTracking, disableMouseTracking } from './utils/mouse';
 export { applyStyles, stripAnsiCodes, getVisibleLength } from './renderer/ansi';
-export { measureText, wrapText, truncateText } from './utils/measure';
+export { measureText, wrapText, truncateText, decodeHtmlEntities } from './utils/measure';
 export { resolveSize, resolveWidth, resolveHeight } from './utils/responsive';
 export type { ResponsiveSize } from './types';
 

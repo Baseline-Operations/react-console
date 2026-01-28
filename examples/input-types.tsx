@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { render, Text, View, Input, Button, LineBreak, Box } from '../src/index';
+import { render, Text, View, Input, LineBreak, Box } from '../src/index';
 
 function App() {
   const [textValue, setTextValue] = useState('');
@@ -30,7 +30,7 @@ function App() {
         autoFocus
         style={{ width: 40 }}
       />
-      {textValue && <Text color="gray">Value: "{textValue}"</Text>}
+      {textValue && <Text color="gray">Value: {textValue}</Text>}
       <LineBreak />
 
       <Text color="yellow" bold>2. Number Input</Text>
@@ -39,7 +39,7 @@ function App() {
         type="number"
         value={numberValue}
         onChange={(event) => {
-          setNumberValue(event.value);
+          setNumberValue(event.value as string | number);
         }}
         placeholder="0"
         step={0.5}
@@ -61,7 +61,7 @@ function App() {
         type="number"
         value={currencyValue}
         onChange={(event) => {
-          setCurrencyValue(event.value);
+          setCurrencyValue(event.value as string | number);
         }}
         placeholder="0.00"
         min={0}
@@ -125,10 +125,10 @@ function App() {
         }}
       >
         <Text color="cyan" bold>Summary:</Text>
-        <Text>Text: "{textValue}"</Text>
+        <Text>Text: {textValue || '(empty)'}</Text>
         <Text>Number: {numberValue !== '' ? numberValue : '(empty)'}</Text>
         <Text>Currency: {currencyValue !== '' ? `$${typeof currencyValue === 'string' ? parseFloat(currencyValue || '0').toFixed(2) : currencyValue.toFixed(2)}` : '(empty)'}</Text>
-        <Text>Multiline: {multilineValue ? `"${multilineValue.replace(/\n/g, '\\n')}"` : '(empty)'}</Text>
+        <Text>Multiline: {multilineValue ? multilineValue.replace(/\n/g, '\\n') : '(empty)'}</Text>
       </Box>
 
       <LineBreak />

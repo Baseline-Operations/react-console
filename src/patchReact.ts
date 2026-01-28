@@ -43,6 +43,7 @@ function patchedUseState<T>(initialState: T | (() => T)): [T, (value: T | ((prev
         originalSetState(value as any);
       });
     } else {
+      // Fallback: call setState directly
       originalSetState(value as any);
     }
   };

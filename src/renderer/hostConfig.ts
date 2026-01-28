@@ -289,6 +289,9 @@ const commitUpdate = (
   if (newProps.onChange && 'onChange' in instance) {
     (instance as any).onChange = newProps.onChange;
   }
+  if (newProps.onSubmit && 'onSubmit' in instance) {
+    (instance as any).onSubmit = newProps.onSubmit;
+  }
   if (newProps.onFocus && 'onFocus' in instance) {
     (instance as any).onFocus = newProps.onFocus;
   }
@@ -296,14 +299,38 @@ const commitUpdate = (
     (instance as any).onBlur = newProps.onBlur;
   }
   
+  // Update interactive properties
+  if (newProps.autoFocus !== undefined && 'autoFocus' in instance) {
+    (instance as any).autoFocus = Boolean(newProps.autoFocus);
+  }
+  if (newProps.tabIndex !== undefined && 'tabIndex' in instance) {
+    (instance as any).tabIndex = newProps.tabIndex;
+  }
+  if (newProps.disabled !== undefined && 'disabled' in instance) {
+    (instance as any).disabled = Boolean(newProps.disabled);
+  }
+  
   // Update content for text nodes
   if (newProps.children !== undefined && 'setContent' in instance) {
-    (instance as any).setContent(String(newProps.children));
+    // Handle array children (e.g., <Text>Hello, {name}!</Text> becomes ["Hello, ", name, "!"])
+    if (Array.isArray(newProps.children)) {
+      const textParts = newProps.children
+        .filter((child: unknown) => typeof child === 'string' || typeof child === 'number')
+        .map((child: unknown) => String(child));
+      (instance as any).setContent(textParts.join(''));
+    } else {
+      (instance as any).setContent(String(newProps.children));
+    }
   }
   
   // Update value for input nodes
   if (newProps.value !== undefined && 'setValue' in instance) {
     (instance as any).setValue(newProps.value);
+  }
+  
+  // Update placeholder for input nodes
+  if (newProps.placeholder !== undefined && 'setPlaceholder' in instance) {
+    (instance as any).setPlaceholder(newProps.placeholder);
   }
 };
 

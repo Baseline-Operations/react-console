@@ -11,7 +11,9 @@ import { useAnimatedValue, useAnimatedColor, useAnimatedStyle } from '../src/ani
 function App() {
   return (
     <View padding={2}>
-      <Text bold color="cyan">Animation Examples</Text>
+      <Text bold color="cyan">
+        Animation Examples
+      </Text>
       <View style={{ margin: { top: 1 } }}>
         <FadeExample />
         <PulseExample />
@@ -23,24 +25,23 @@ function App() {
   );
 }
 
-// Fade animation
+// Fade animation - keeps component mounted and toggles direction
 function FadeExample() {
-  const [visible, setVisible] = useState(true);
-  
+  const [direction, setDirection] = useState<'in' | 'out'>('in');
+  const [key, setKey] = useState(0); // Key to restart animation
+
+  const toggle = () => {
+    setDirection((prev) => (prev === 'in' ? 'out' : 'in'));
+    setKey((k) => k + 1); // Restart animation with new direction
+  };
+
   return (
     <View style={{ margin: { top: 1 } }}>
       <Text bold>Fade Animation</Text>
-      {visible && (
-        <Animated
-          type="fade"
-          duration={1000}
-        >
-          <Text>This text fades in</Text>
-        </Animated>
-      )}
-      <Button onClick={() => setVisible(!visible)}>
-        Toggle Fade
-      </Button>
+      <Animated key={key} type="fade" direction={direction} duration={1000}>
+        <Text>This text fades {direction}</Text>
+      </Animated>
+      <Button onClick={toggle}>Fade {direction === 'in' ? 'Out' : 'In'}</Button>
     </View>
   );
 }
@@ -50,11 +51,7 @@ function PulseExample() {
   return (
     <View style={{ margin: { top: 1 } }}>
       <Text bold>Pulse Animation</Text>
-      <Animated
-        type="pulse"
-        duration={500}
-        iterations="infinite"
-      >
+      <Animated type="pulse" duration={500} iterations={Infinity}>
         <Text color="green">Pulsing text</Text>
       </Animated>
     </View>
@@ -65,17 +62,15 @@ function PulseExample() {
 function ColorTransitionExample() {
   const [targetColor, setTargetColor] = useState('red');
   const [color, start] = useAnimatedColor('white', targetColor, { duration: 500 });
-  
+
   useEffect(() => {
     start();
   }, [targetColor, start]);
-  
+
   return (
     <View style={{ margin: { top: 1 } }}>
       <Text bold>Color Transition</Text>
-      <Text color={color}>
-        Color transitions smoothly
-      </Text>
+      <Text color={color}>Color transitions smoothly</Text>
       <View style={{ margin: { top: 1 } }}>
         <Button onClick={() => setTargetColor('red')}>Red</Button>
         <Button onClick={() => setTargetColor('green')}>Green</Button>
@@ -89,11 +84,11 @@ function ColorTransitionExample() {
 function AnimatedValueExample() {
   const [target, setTarget] = useState(0);
   const [value, start] = useAnimatedValue(0, target, { duration: 1000 });
-  
+
   useEffect(() => {
     start();
   }, [target, start]);
-  
+
   return (
     <View style={{ margin: { top: 1 } }}>
       <Text bold>Animated Value</Text>
@@ -114,20 +109,18 @@ function AnimatedStyleExample() {
     { width: expanded ? 50 : 20, height: expanded ? 10 : 5 },
     { duration: 500 }
   );
-  
+
   useEffect(() => {
     start();
   }, [expanded, start]);
-  
+
   return (
     <View style={{ margin: { top: 1 } }}>
       <Text bold>Animated Style</Text>
-      <View style={style} border>
+      <View style={{ ...style, border: true }}>
         <Text>Animated box</Text>
       </View>
-      <Button onClick={() => setExpanded(!expanded)}>
-        {expanded ? 'Collapse' : 'Expand'}
-      </Button>
+      <Button onClick={() => setExpanded(!expanded)}>{expanded ? 'Collapse' : 'Expand'}</Button>
     </View>
   );
 }

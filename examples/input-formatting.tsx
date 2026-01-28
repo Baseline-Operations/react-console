@@ -45,7 +45,7 @@ function App() {
         type="number"
         value={currencyValue}
         onChange={(event) => {
-          setCurrencyValue(event.value);
+          setCurrencyValue(event.value as string | number);
         }}
         placeholder="0.00"
         min={0}
@@ -68,7 +68,7 @@ function App() {
         type="number"
         value={percentageValue}
         onChange={(event) => {
-          setPercentageValue(event.value);
+          setPercentageValue(event.value as string | number);
         }}
         placeholder="0"
         min={0}
@@ -115,7 +115,7 @@ function App() {
         type="number"
         value={rawNumberValue}
         onChange={(event) => {
-          setRawNumberValue(event.value);
+          setRawNumberValue(event.value as string | number);
         }}
         placeholder="0"
         min={0}
@@ -135,7 +135,7 @@ function App() {
         type="number"
         value={rawNumberValue}
         onChange={(event) => {
-          setRawNumberValue(event.value);
+          setRawNumberValue(event.value as string | number);
         }}
         placeholder="0.000"
         allowDecimals
@@ -172,10 +172,10 @@ function App() {
         }}
       >
         <Text color="yellow" bold>Notes:</Text>
-        <Text color="dim">• formatDisplay: Formats for display only (doesn't change stored value)</Text>
-        <Text color="dim">• formatValue: Formats the actual value stored</Text>
-        <Text color="dim">• decimalPlaces: Enforces precision on number inputs</Text>
-        <Text color="dim">• step: Controls increment/decrement with arrow keys</Text>
+        <Text color="dim">&bull; formatDisplay: Formats for display only (doesn&apos;t change stored value)</Text>
+        <Text color="dim">&bull; formatValue: Formats the actual value stored</Text>
+        <Text color="dim">&bull; decimalPlaces: Enforces precision on number inputs</Text>
+        <Text color="dim">&bull; step: Controls increment/decrement with arrow keys</Text>
       </Box>
 
       <LineBreak />

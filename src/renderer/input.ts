@@ -408,14 +408,10 @@ export function startInputListener(
     // Regular keyboard input
     const key = parseKeyPress(inputBuffer);
 
-    // Handle Ctrl+C - exit (only if not handled by component)
+    // Handle Ctrl+C - exit cleanly
     // Note: Components can handle Ctrl+C via onKeyDown if they want custom behavior
     if (key.ctrl && inputBuffer === '\x03') {
-      // Let the input listener handle it first (components can prevent default)
-      if (inputListener) {
-        inputListener(inputBuffer, key, null);
-      }
-      // If we get here, no component handled it, so exit
+      // Clean exit - don't call listener to avoid errors during shutdown
       stopInputListener();
       process.exit(0);
       return;

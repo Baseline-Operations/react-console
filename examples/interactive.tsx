@@ -20,7 +20,7 @@ function App() {
           <Input
             value={name}
             onChange={(event) => {
-              setName(event.value);
+              setName(event.value as string);
             }}
             onKeyDown={(event) => {
               if (event.key.return) {

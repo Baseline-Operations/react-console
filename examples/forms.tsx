@@ -163,7 +163,7 @@ function App() {
         type="number"
         value={formData.age}
         onChange={(event) => {
-          setFormData({ ...formData, age: event.value });
+          setFormData({ ...formData, age: event.value as string | number });
           if (errors.age) {
             setErrors({ ...errors, age: undefined });
           }

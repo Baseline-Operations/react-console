@@ -16,32 +16,12 @@ import {
 } from '../utils/animations';
 import { mergeClassNameAndStyle } from './utils';
 
-// Grayscale colors for fade effect (dark to bright)
-const FADE_COLORS = [
-  '#1a1a1a', // Very dark gray (almost black)
-  '#333333', // Dark gray
-  '#4d4d4d', // Medium-dark gray
-  '#666666', // Medium gray
-  '#808080', // Gray
-  '#999999', // Medium-light gray
-  '#b3b3b3', // Light gray
-  '#cccccc', // Very light gray
-  '#e6e6e6', // Near white
-  '#ffffff', // White
-];
-
-// Import reconciler for discrete updates
-let reconciler: any = null;
-try {
-  reconciler = require('../renderer/reconciler').reconciler;
-} catch {
-  // Reconciler may not be available
-}
-
 export interface AnimatedProps extends StyleProps {
   children?: ReactNode;
   type?: AnimationType; // Animation type
   direction?: 'in' | 'out' | 'inOut'; // Animation direction
+  from?: 'left' | 'right' | 'top' | 'bottom'; // For slide: where to slide from
+  distance?: number; // For slide: how far to slide (in characters)
   duration?: number; // Duration in milliseconds
   delay?: number; // Delay before starting
   iterations?: number; // Number of iterations (Infinity for infinite)
@@ -75,6 +55,8 @@ export function Animated({
   children,
   type = 'fade',
   direction = 'in',
+  from = 'left',
+  distance = 20,
   duration = 1000,
   delay = 0,
   iterations = 1,
@@ -96,7 +78,11 @@ export function Animated({
   });
   
   // Use React.useState directly to ensure we get the patched version
-  const [, setProgress] = React.useState(0);
+  // Store the computed style directly to avoid batching issues
+  const [animatedState, setAnimatedState] = React.useState<{
+    progress: number;
+    style: ViewStyle | TextStyle;
+  }>({ progress: 0, style: {} });
   const frameController = useRef(new FrameRateController(10)).current;
   const animationRef = useRef<{
     startTime: number;
@@ -105,60 +91,68 @@ export function Animated({
     completed: boolean;
   } | null>(null);
   
-  // Calculate animated style based on type and progress
-  const getAnimatedStyle = (): ViewStyle | TextStyle => {
-    const baseStyle = mergeClassNameAndStyle(className, style, styleProps) || {};
-    
-    if (!animationRef.current?.isRunning) {
-      return baseStyle;
-    }
-    
-    const animatedProgress = calculateAnimationProgress(
-      Date.now() - (animationRef.current?.startTime || 0),
-      animationConfig
-    );
-    
+  const baseStyle = mergeClassNameAndStyle(className, style, styleProps) || {};
+  
+  // Compute style for a given progress value
+  const computeStyleForProgress = (animatedProgress: number): ViewStyle | TextStyle => {
     switch (type) {
       case 'fade': {
         // Fade in/out using color interpolation
-        // For fade-in: interpolate from dark (invisible) to the target color
-        // For fade-out: interpolate from the target color to dark (invisible)
+        // Note: calculateAnimationProgress already handles direction, so progress
+        // goes 0->1 for 'in' and 1->0 for 'out'. We always interpolate dark->bright.
         const targetColor = (baseStyle as any).color || '#ffffff';
-        const darkColor = '#000000'; // Start from black (invisible against dark bg)
+        const darkColor = '#000000';
         
-        let fadeProgress = animatedProgress;
-        if (direction === 'out') {
-          fadeProgress = 1 - animatedProgress;
-        } else if (direction === 'inOut') {
-          // Fade in first half, fade out second half
-          fadeProgress = animatedProgress < 0.5 
-            ? animatedProgress * 2 
-            : 2 - animatedProgress * 2;
-        }
-        
-        // Use grayscale interpolation for a smoother fade effect
-        const colorIndex = Math.min(
-          FADE_COLORS.length - 1, 
-          Math.floor(fadeProgress * FADE_COLORS.length)
-        );
-        const fadeColor = FADE_COLORS[colorIndex];
-        
-        // If there's a specific target color, interpolate towards it
-        const finalColor = targetColor !== '#ffffff' && targetColor !== 'white'
-          ? interpolateColor(darkColor, targetColor, fadeProgress)
-          : fadeColor;
+        // Always interpolate from dark to target based on progress
+        // For 'in': progress goes 0->1, so dark->bright
+        // For 'out': progress goes 1->0 (inverted by calculateAnimationProgress), so bright->dark
+        const finalColor = interpolateColor(darkColor, targetColor, animatedProgress);
         
         return {
           ...baseStyle,
           color: finalColor,
-          // Also use dim for very low progress to enhance the effect
-          dim: fadeProgress < 0.3,
+          // Use dim for low progress (dark colors) to enhance the effect
+          dim: animatedProgress < 0.3,
         } as ViewStyle | TextStyle;
       }
         
-      case 'slide':
-        // Slide animation (would need position changes - simplified here)
-        return baseStyle;
+      case 'slide': {
+        // Slide animation using margin/position offsets
+        // Note: calculateAnimationProgress already handles direction
+        // For 'in': progress 0->1, so off-screen -> on-screen
+        // For 'out': progress 1->0 (inverted), so on-screen -> off-screen
+        
+        // Calculate remaining distance: at progress=0 max distance, at progress=1 no distance
+        const remainingDistance = Math.round(distance * (1 - animatedProgress));
+        
+        let marginLeft = 0;
+        let marginTop = 0;
+        
+        switch (from) {
+          case 'left':
+            marginLeft = -remainingDistance;
+            break;
+          case 'right':
+            marginLeft = remainingDistance;
+            break;
+          case 'top':
+            marginTop = -remainingDistance;
+            break;
+          case 'bottom':
+            marginTop = remainingDistance;
+            break;
+        }
+        
+        // Use position: relative with offsets for smooth sliding
+        return {
+          ...baseStyle,
+          position: 'relative',
+          left: marginLeft,
+          top: marginTop,
+          // Also fade during slide for a nicer effect
+          dim: animatedProgress < 0.3,
+        } as ViewStyle | TextStyle;
+      }
         
       case 'pulse':
         // Pulse effect using dim/bright toggle
@@ -179,6 +173,28 @@ export function Animated({
       default:
         return baseStyle;
     }
+  };
+  
+  // Get the current animated style (uses stored state or computes initial/final state)
+  const getAnimatedStyle = (): ViewStyle | TextStyle => {
+    if (!animationRef.current?.isRunning) {
+      // Check if animation completed - return final state
+      // For 'in': completed at progress=1 (visible)
+      // For 'out': completed at progress=0 (hidden) - but calculateAnimationProgress inverts it
+      if (animationRef.current?.completed) {
+        // For 'out', animation ends at progress=0 (from inverted 1->0)
+        // For 'in', animation ends at progress=1
+        return computeStyleForProgress(direction === 'out' ? 0 : 1);
+      }
+      
+      // Initial state before animation starts
+      // For 'out': start visible (progress=1 before inversion makes it look like 1)
+      // For 'in': start hidden (progress=0)
+      return computeStyleForProgress(direction === 'out' ? 1 : 0);
+    }
+    
+    // Animation is running - use stored style from state
+    return animatedState.style || baseStyle;
   };
   
   const startAnimation = () => {
@@ -203,8 +219,11 @@ export function Animated({
       const elapsed = timestamp - (animationRef.current.startTime || 0);
       const currentProgress = calculateAnimationProgress(elapsed, animationConfig);
       
-      // Just call setProgress - React.useState is already patched
-      setProgress(currentProgress);
+      // Compute the animated style immediately with current progress
+      const computedStyle = computeStyleForProgress(currentProgress);
+      
+      // Update state with both progress and computed style
+      setAnimatedState({ progress: currentProgress, style: computedStyle });
       
       // Check if animation completed
       const iterations = animationConfig.iterations || 1;
@@ -245,36 +264,28 @@ export function Animated({
   // Get animated style
   const animatedStyle = getAnimatedStyle();
   
-  // For fade animations, we need to apply color to text children
+  // For fade animations, we need to apply color to all children
   // Clone children and inject the animated style
   const enhancedChildren = React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) {
       return child;
     }
     
-    // For Text elements, merge the animated color/dim properties
+    // Clone ALL children with the animated color/dim properties
+    // This ensures the animation affects Text elements and any custom components
     const childProps = child.props as Record<string, unknown>;
-    const childType = child.type as { displayName?: string } | string;
-    const typeName = typeof childType === 'string' 
-      ? childType 
-      : childType.displayName || (childType as any).name || '';
+    const mergedStyle = {
+      ...(childProps.style as object || {}),
+      color: (animatedStyle as any).color,
+      dim: (animatedStyle as any).dim,
+    };
     
-    if (typeName === 'Text' || typeName === 'text') {
-      const mergedStyle = {
-        ...(childProps.style || {}),
-        color: (animatedStyle as any).color || (childProps.style as any)?.color,
-        dim: (animatedStyle as any).dim,
-      };
-      return React.cloneElement(child, {
-        ...childProps,
-        style: mergedStyle,
-        color: (animatedStyle as any).color || childProps.color,
-        dim: (animatedStyle as any).dim !== undefined ? (animatedStyle as any).dim : childProps.dim,
-      } as any);
-    }
-    
-    // For other elements, just pass through
-    return child;
+    return React.cloneElement(child, {
+      ...childProps,
+      style: mergedStyle,
+      color: (animatedStyle as any).color,
+      dim: (animatedStyle as any).dim,
+    } as any);
   });
   
   // Render children with animated style wrapper

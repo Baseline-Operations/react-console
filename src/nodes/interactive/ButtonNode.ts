@@ -223,13 +223,44 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     }
     
     const currentLine = buffer.lines[y] || '';
+    
+    // Determine styling based on state: focused, hovered, pressed, disabled
+    const isFocused = this.focused;
+    const isHovered = this._isHovered;
+    const isPressed = this._isPressed;
+    const isDisabled = this.disabled;
+    
+    let bgColor = style.getBackgroundColor();
+    let fgColor = style.getColor() || '#ffffff';
+    let bold = style.getBold();
+    
+    if (isDisabled) {
+      fgColor = 'gray';
+      bgColor = undefined;
+    } else if (isPressed) {
+      bgColor = '#005500';
+      fgColor = '#ffffff';
+      bold = true;
+    } else if (isFocused) {
+      bgColor = '#333333';
+      fgColor = '#00ff00';
+      bold = true;
+    } else if (isHovered) {
+      bgColor = '#222222';
+      fgColor = '#00ffff';
+    }
+    
+    // Add focus indicator
+    const prefix = isFocused ? applyStyles('> ', { color: '#00ff00', bold: true }) : '  ';
+    const suffix = isFocused ? applyStyles(' <', { color: '#00ff00', bold: true }) : '  ';
+    
     const styledText = applyStyles(text, {
-      color: style.getColor(),
-      backgroundColor: style.getBackgroundColor(),
-      bold: style.getBold(),
+      color: fgColor,
+      backgroundColor: bgColor,
+      bold,
     });
     
-    buffer.lines[y] = padToVisibleColumn(currentLine, x) + styledText;
+    buffer.lines[y] = padToVisibleColumn(currentLine, x) + prefix + styledText + suffix;
   }
   
   // Override Interactive mixin methods for button-specific behavior

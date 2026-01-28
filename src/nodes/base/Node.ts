@@ -13,6 +13,7 @@ import type {
   Position,
 } from './types';
 import { Position as PositionEnum, BorderStyle } from './types';
+import { decodeHtmlEntities } from '../../utils/measure';
 
 /**
  * Generate unique ID for nodes
@@ -413,9 +414,10 @@ export abstract class Node {
   
   /**
    * Set content (for text nodes, etc.)
+   * Automatically decodes HTML entities (e.g., &amp;apos; -> ')
    */
   setContent(content: string | null): void {
-    this.content = content;
+    this.content = content ? decodeHtmlEntities(content) : content;
     this.onUpdate();
   }
   
@@ -885,7 +887,15 @@ export abstract class Node {
       }
       
       if (newProps.children !== undefined && 'setContent' in instance) {
-        (instance as any).setContent(String(newProps.children));
+        // Handle array children (e.g., <Text>Hello, {name}!</Text> becomes ["Hello, ", name, "!"])
+        if (Array.isArray(newProps.children)) {
+          const textParts = newProps.children
+            .filter((child: unknown) => typeof child === 'string' || typeof child === 'number')
+            .map((child: unknown) => String(child));
+          (instance as any).setContent(textParts.join(''));
+        } else {
+          (instance as any).setContent(String(newProps.children));
+        }
       }
       
       if (newProps.value !== undefined && 'setValue' in instance) {
@@ -1096,6 +1106,32 @@ export abstract class Node {
     // Track if this is first render
     let isFirstRender = true;
     
+    // Track which node ID is focused (survives across re-renders)
+    let focusedNodeId: string | null = null;
+    
+    // Get fresh interactive components from root
+    const getInteractiveComponents = (rootNode: Node): Node[] => {
+      const components: Node[] = [];
+      collectInteractiveComponents(rootNode, components);
+      assignTabIndexes(components);
+      return components;
+    };
+    
+    // Apply stored focus state to components after re-render
+    const applyFocusState = (components: Node[]): void => {
+      if (focusedNodeId) {
+        for (const comp of components) {
+          if (comp.id === focusedNodeId) {
+            (comp as any).focused = true;
+            terminal.setFocusedComponent(comp as any);
+            return;
+          }
+        }
+        // ID not found, clear it
+        focusedNodeId = null;
+      }
+    };
+    
     // Update through React reconciliation
     const performRender = (): string | void => {
       if (rootContainer) {
@@ -1141,6 +1177,12 @@ export abstract class Node {
             (rootContainer as any).buildViewports();
           }
           
+          // Apply focus state to components after React updates
+          if (focusedNodeId) {
+            const components = getInteractiveComponents(rootContainer);
+            applyFocusState(components);
+          }
+          
           // Use the multi-buffer renderer
           const bufferRenderer = getBufferRenderer();
           bufferRenderer.render(rootContainer, {
@@ -1150,6 +1192,22 @@ export abstract class Node {
           });
           
           isFirstRender = false;
+          
+          // Position cursor at focused input if any
+          if (focusedNodeId && isInteractive) {
+            const components = getInteractiveComponents(rootContainer);
+            const focusedComponent = components.find(c => c.id === focusedNodeId);
+            if (focusedComponent && focusedComponent.type === 'input') {
+              const registeredBounds = componentBoundsRegistry.get(focusedComponent as any);
+              if (registeredBounds) {
+                const { moveCursor } = require('../../renderer/ansi');
+                const inputValue = (focusedComponent as any).value || '';
+                const cursorX = registeredBounds.x + 2 + inputValue.length; // +2 for "[ " prefix
+                const cursorY = registeredBounds.y;
+                process.stdout.write(moveCursor(cursorX, cursorY));
+              }
+            }
+          }
           
           // Show cursor after render
           process.stdout.write(showCursor());
@@ -1224,49 +1282,80 @@ export abstract class Node {
     // Schedule update function (defined before setupInputHandling so it can be used there)
     const scheduleUpdate = (): void => {
       scheduleBatchedUpdate(() => {
-        if (currentElement && rootFiber) {
-          reconciler.updateContainer(currentElement, rootFiber, null, () => {
-            performRender();
-          });
-        } else if (rootContainer) {
-          performRender();
-        }
+        // Just call performRender directly - the host node state has changed
+        // (e.g., focused=true), we don't need React reconciliation
+        performRender();
       });
     };
     
     // Setup input handling for interactive components
     const setupInputHandling = (root: Node): void => {
-      const interactiveComponents: Node[] = [];
-      collectInteractiveComponents(root, interactiveComponents);
+      const interactiveComponents = getInteractiveComponents(root);
       
-      assignTabIndexes(interactiveComponents);
-      
+      // Find first autoFocus component that is not disabled
       const firstAutoFocusComponent = interactiveComponents.find(
-        (comp) => ('autoFocus' in comp && (comp as any).autoFocus) && ('disabled' in comp && !(comp as any).disabled)
+        (comp) => ('autoFocus' in comp && (comp as any).autoFocus) && !('disabled' in comp && (comp as any).disabled)
       );
+      
+      let needsRerender = false;
+      
       if (firstAutoFocusComponent) {
         (firstAutoFocusComponent as any).focused = true;
+        focusedNodeId = firstAutoFocusComponent.id;
         terminal.setFocusedComponent(firstAutoFocusComponent as any);
         if ('onFocus' in firstAutoFocusComponent && (firstAutoFocusComponent as any).onFocus) {
           (firstAutoFocusComponent as any).onFocus();
         }
+        needsRerender = true;
+      } else if (interactiveComponents.length > 0) {
+        // If no autoFocus, focus the first focusable component
+        const focusableComponents = interactiveComponents.filter((comp) => {
+          const isDisabled = 'disabled' in comp && (comp as any).disabled;
+          const tabIndex = 'tabIndex' in comp ? (comp as any).tabIndex : undefined;
+          return !isDisabled && (tabIndex === undefined || tabIndex >= 0);
+        });
+        if (focusableComponents.length > 0) {
+          const sorted = [...focusableComponents].sort((a, b) => 
+            ((a as any).tabIndex || 0) - ((b as any).tabIndex || 0)
+          );
+          const first = sorted[0]!;
+          (first as any).focused = true;
+          focusedNodeId = first.id;
+          terminal.setFocusedComponent(first as any);
+          if ('onFocus' in first && (first as any).onFocus) {
+            (first as any).onFocus();
+          }
+          needsRerender = true;
+        }
+      }
+      
+      // Schedule a re-render to show focus state
+      if (needsRerender) {
+        scheduleUpdate();
       }
       
       startInputListener((_chunk: string, key: any, mouse: any) => {
         try {
+          // Re-collect components to get current instances after any React updates
+          const currentComponents = getInteractiveComponents(root);
+          applyFocusState(currentComponents);
+          
           if (mouse) {
-            handleMouseEvent(mouse, interactiveComponents, scheduleUpdate);
+            handleMouseEvent(mouse, currentComponents, scheduleUpdate);
             return;
           }
           
           if (key) {
             if (key.tab) {
-              handleTabNavigation(interactiveComponents, key.shift, scheduleUpdate, root);
+              handleTabNavigation(currentComponents, key.shift, scheduleUpdate, root);
+              // Update focusedNodeId after tab navigation
+              const newFocused = currentComponents.find((comp) => 'focused' in comp && (comp as any).focused);
+              focusedNodeId = newFocused?.id || null;
               return;
             }
             
             if (key.escape) {
-              for (const comp of interactiveComponents) {
+              for (const comp of currentComponents) {
                 if (comp.type === 'dropdown' && 'isOpen' in comp && (comp as any).isOpen) {
                   (comp as any).isOpen = false;
                   scheduleUpdate();
@@ -1275,7 +1364,7 @@ export abstract class Node {
               }
             }
             
-            const focused = interactiveComponents.find((comp) => 'focused' in comp && (comp as any).focused);
+            const focused = currentComponents.find((comp) => 'focused' in comp && (comp as any).focused);
             
             if (focused) {
               if (!('disabled' in focused) || !(focused as any).disabled) {
@@ -1294,14 +1383,14 @@ export abstract class Node {
                 
                 if (!keyboardEvent._propagationStopped) {
                   if ('handleKeyboardEvent' in focused) {
-                    (focused as any).handleKeyboardEvent(key);
+                    (focused as any).handleKeyboardEvent(keyboardEvent);
                   }
                 }
               }
             }
             
-            if (!focused && interactiveComponents.length > 0) {
-              const focusableComponents = interactiveComponents.filter((comp) => {
+            if (!focused && currentComponents.length > 0) {
+              const focusableComponents = currentComponents.filter((comp) => {
                 const disabled = 'disabled' in comp ? (comp as any).disabled : false;
                 const tabIndex = 'tabIndex' in comp ? (comp as any).tabIndex : undefined;
                 return !disabled && (tabIndex === undefined || tabIndex >= 0);
@@ -1314,6 +1403,7 @@ export abstract class Node {
                 });
                 const first = sorted[0]!;
                 (first as any).focused = true;
+                focusedNodeId = first.id;
                 terminal.setFocusedComponent(first as any);
                 if ('onFocus' in first && (first as any).onFocus) {
                   (first as any).onFocus();

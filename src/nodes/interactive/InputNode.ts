@@ -9,6 +9,7 @@ import type { StyleMap, Dimensions } from '../base/types';
 import { StyleMixinRegistry } from '../../style/mixins/registry';
 import { measureText, padToVisibleColumn } from '../../utils/measure';
 import { applyStyles } from '../../renderer/ansi';
+import type { CellBuffer } from '../../buffer/CellBuffer';
 
 /**
  * Input node - text input field
@@ -127,6 +128,113 @@ export class InputNode extends Stylable(Renderable(Interactive(Node as any))) {
     };
   }
   
+  /**
+   * Render input to cell buffer (new buffer system)
+   */
+  renderToCellBuffer(context: {
+    buffer: CellBuffer;
+    x: number;
+    y: number;
+    maxWidth: number;
+    maxHeight: number;
+    layerId: string;
+    nodeId: string | null;
+    zIndex: number;
+  }): void {
+    const { buffer, x, y, maxWidth, layerId, nodeId, zIndex } = context;
+    
+    const displayValue = this.getDisplayValue();
+    const text = displayValue || this.placeholder;
+    const isPlaceholder = !displayValue;
+    const isFocused = this.focused;
+    const isDisabled = this.disabled;
+    
+    
+    // Determine colors based on state
+    let fgColor = isPlaceholder ? '#666666' : '#ffffff';
+    let bgColor = '#222222';
+    
+    if (isDisabled) {
+      fgColor = '#444444';
+      bgColor = '#111111';
+    } else if (isFocused) {
+      fgColor = isPlaceholder ? '#888888' : '#ffffff';
+      bgColor = '#333333';
+    }
+    
+    // Render focus indicator prefix
+    const prefix = isFocused ? '[ ' : '  ';
+    const suffix = isFocused ? ' ]' : '  ';
+    const prefixColor = isFocused ? '#00ff00' : undefined;
+    
+    let currentX = x;
+    
+    // Render prefix
+    for (let i = 0; i < prefix.length && currentX < x + maxWidth; i++) {
+      buffer.setCell(currentX, y, {
+        char: prefix[i],
+        foreground: prefixColor,
+        background: bgColor,
+        layerId,
+        nodeId,
+        zIndex,
+      });
+      currentX++;
+    }
+    
+    // Render input text
+    for (let i = 0; i < text.length && currentX < x + maxWidth - suffix.length; i++) {
+      buffer.setCell(currentX, y, {
+        char: text[i],
+        foreground: fgColor,
+        background: bgColor,
+        layerId,
+        nodeId,
+        zIndex,
+      });
+      currentX++;
+    }
+    
+    // Render cursor if focused
+    if (isFocused && currentX < x + maxWidth - suffix.length) {
+      buffer.setCell(currentX, y, {
+        char: '█',
+        foreground: '#00ff00',
+        background: bgColor,
+        layerId,
+        nodeId,
+        zIndex,
+      });
+      currentX++;
+    }
+    
+    // Fill remaining space with background
+    while (currentX < x + maxWidth - suffix.length) {
+      buffer.setCell(currentX, y, {
+        char: ' ',
+        foreground: fgColor,
+        background: bgColor,
+        layerId,
+        nodeId,
+        zIndex,
+      });
+      currentX++;
+    }
+    
+    // Render suffix
+    for (let i = 0; i < suffix.length && currentX < x + maxWidth; i++) {
+      buffer.setCell(currentX, y, {
+        char: suffix[i],
+        foreground: prefixColor,
+        background: bgColor,
+        layerId,
+        nodeId,
+        zIndex,
+      });
+      currentX++;
+    }
+  }
+  
   private getDisplayValue(): string {
     if (this.mask && this.value) {
       return this.mask.repeat(this.value.length);
@@ -147,16 +255,26 @@ export class InputNode extends Stylable(Renderable(Interactive(Node as any))) {
     }
     
     const currentLine = buffer.lines[y] || '';
+    
+    // Use different styling for focused vs unfocused
+    const isFocused = this.focused;
+    const bgColor = isFocused ? '#333333' : style.getBackgroundColor();
+    const fgColor = isFocused ? (textColor || '#ffffff') : (textColor || 'gray');
+    
     const styledText = applyStyles(text, {
-      color: textColor ?? undefined,
-      backgroundColor: style.getBackgroundColor(),
+      color: fgColor,
+      backgroundColor: bgColor,
     });
     
-    // Add cursor if focused
-    const cursor = this.focused ? '_' : '';
+    // Add blinking cursor block if focused, or just a space if not
+    const cursor = isFocused ? applyStyles('█', { color: '#00ff00' }) : ' ';
     const displayText = styledText + cursor;
     
-    buffer.lines[y] = padToVisibleColumn(currentLine, x) + displayText;
+    // Add focus indicator brackets
+    const prefix = isFocused ? applyStyles('[', { color: '#00ff00' }) : ' ';
+    const suffix = isFocused ? applyStyles(']', { color: '#00ff00' }) : ' ';
+    
+    buffer.lines[y] = padToVisibleColumn(currentLine, x) + prefix + displayText + suffix;
   }
   
   // Override Interactive mixin methods for input-specific behavior

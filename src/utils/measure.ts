@@ -301,3 +301,105 @@ export function truncateText(text: string, width: number, ellipsis = '...'): str
 
   return result + ellipsis;
 }
+
+/**
+ * HTML entity map for decoding common entities
+ * Includes named entities and supports numeric entities (&#NNN; and &#xHHH;)
+ */
+const HTML_ENTITIES: Record<string, string> = {
+  // Quotes and apostrophes
+  '&quot;': '"',
+  '&apos;': "'",
+  '&lsquo;': '\u2018', // '
+  '&rsquo;': '\u2019', // '
+  '&ldquo;': '\u201C', // "
+  '&rdquo;': '\u201D', // "
+  '&#34;': '"',
+  '&#39;': "'",
+  '&#x22;': '"',
+  '&#x27;': "'",
+  
+  // Common symbols
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&nbsp;': ' ',
+  '&copy;': '\u00A9', // ©
+  '&reg;': '\u00AE', // ®
+  '&trade;': '\u2122', // ™
+  '&deg;': '\u00B0', // °
+  '&plusmn;': '\u00B1', // ±
+  '&times;': '\u00D7', // ×
+  '&divide;': '\u00F7', // ÷
+  '&para;': '\u00B6', // ¶
+  '&sect;': '\u00A7', // §
+  '&bull;': '\u2022', // •
+  '&middot;': '\u00B7', // ·
+  '&hellip;': '\u2026', // …
+  '&ndash;': '\u2013', // –
+  '&mdash;': '\u2014', // —
+  
+  // Currency
+  '&cent;': '\u00A2', // ¢
+  '&pound;': '\u00A3', // £
+  '&euro;': '\u20AC', // €
+  '&yen;': '\u00A5', // ¥
+  
+  // Arrows
+  '&larr;': '\u2190', // ←
+  '&rarr;': '\u2192', // →
+  '&uarr;': '\u2191', // ↑
+  '&darr;': '\u2193', // ↓
+  
+  // Math
+  '&ne;': '\u2260', // ≠
+  '&le;': '\u2264', // ≤
+  '&ge;': '\u2265', // ≥
+  '&infin;': '\u221E', // ∞
+  '&sum;': '\u2211', // ∑
+  '&radic;': '\u221A', // √
+};
+
+/**
+ * Decode HTML entities in text
+ * 
+ * Converts HTML entities (named and numeric) to their corresponding characters.
+ * Supports common named entities and numeric entities (decimal and hex).
+ * 
+ * @param text - Text containing HTML entities
+ * @returns Text with entities decoded to characters
+ * 
+ * @example
+ * ```ts
+ * decodeHtmlEntities("Hello &amp; World"); // "Hello & World"
+ * decodeHtmlEntities("It&apos;s great!"); // "It's great!"
+ * decodeHtmlEntities("&quot;quoted&quot;"); // '"quoted"'
+ * decodeHtmlEntities("&#65;BC"); // "ABC"
+ * decodeHtmlEntities("&#x41;BC"); // "ABC"
+ * ```
+ */
+export function decodeHtmlEntities(text: string): string {
+  if (!text || !text.includes('&')) {
+    return text;
+  }
+  
+  // First replace named entities
+  let result = text;
+  for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
+    result = result.split(entity).join(char);
+  }
+  
+  // Handle numeric entities (decimal): &#NNN;
+  result = result.replace(/&#(\d+);/g, (_, num) => {
+    const code = parseInt(num, 10);
+    return code > 0 && code < 0x10FFFF ? String.fromCodePoint(code) : _;
+  });
+  
+  // Handle numeric entities (hex): &#xHHH;
+  result = result.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+    const code = parseInt(hex, 16);
+    return code > 0 && code < 0x10FFFF ? String.fromCodePoint(code) : _;
+  });
+  
+  return result;
+}

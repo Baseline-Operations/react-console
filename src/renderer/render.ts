@@ -7,7 +7,7 @@ import { reconciler } from './reconciler';
 import type { ReactElement } from 'react';
 import type { RenderMode } from '../types';
 import { getBufferRenderer, resetBufferRenderer } from '../buffer';
-import { hideCursor, showCursor } from './ansi';
+import { hideCursor, showCursor, moveCursor } from './ansi';
 import { startInputListener, stopInputListener } from './input';
 import { getTerminalDimensions, onTerminalResizeDebounced, setRenderMode } from '../utils/terminal';
 import { reportError, ErrorType } from '../utils/errors';
@@ -324,6 +324,12 @@ function renderToConsole(root: Node): void {
       (root as any).buildViewports();
     }
     
+    // Apply focus state to components after React updates
+    if (focusedNodeId) {
+      const components = getInteractiveComponents(root);
+      applyFocusState(components);
+    }
+    
     // Use the multi-buffer renderer
     const bufferRenderer = getBufferRenderer();
     bufferRenderer.render(root, {
@@ -334,6 +340,23 @@ function renderToConsole(root: Node): void {
     
     isFirstRender = false;
 
+    // Position cursor at focused input if any
+    if (focusedNodeId) {
+      const components = getInteractiveComponents(root);
+      const focusedComponent = components.find(c => c.id === focusedNodeId);
+      if (focusedComponent && focusedComponent.type === 'input') {
+        // Get the input's bounds from the component bounds registry (populated during render)
+        const registeredBounds = componentBoundsRegistry.get(focusedComponent as any);
+        if (registeredBounds) {
+          // Position cursor: x = bounds.x + prefix(2) + text length, y = bounds.y
+          const inputValue = (focusedComponent as any).value || '';
+          const cursorX = registeredBounds.x + 2 + inputValue.length; // +2 for "[ " prefix
+          const cursorY = registeredBounds.y;
+          process.stdout.write(moveCursor(cursorX, cursorY));
+        }
+      }
+    }
+    
     // Show cursor after render
     process.stdout.write(showCursor());
   } catch (error) {
@@ -349,41 +372,127 @@ function renderToConsole(root: Node): void {
   }
 }
 
+// Track which node ID is focused (survives across re-renders)
+let focusedNodeId: string | null = null;
+
+/**
+ * Get fresh interactive components from root
+ */
+function getInteractiveComponents(root: Node): Node[] {
+  const components: Node[] = [];
+  collectInteractiveComponents(root, components);
+  assignTabIndexes(components);
+  return components;
+}
+
+/**
+ * Apply stored focus state to components after re-render
+ */
+function applyFocusState(components: Node[]): void {
+  // Try to find focus by stored ID first
+  if (focusedNodeId) {
+    for (const comp of components) {
+      if (comp.id === focusedNodeId) {
+        (comp as any).focused = true;
+        terminal.setFocusedComponent(comp as any);
+        return;
+      }
+    }
+    // ID not found, clear it
+    focusedNodeId = null;
+  }
+  
+  // Fallback: check terminal's focused component by type and check if same position in tree
+  const terminalFocused = terminal.focusedComponent;
+  if (terminalFocused) {
+    const terminalType = (terminalFocused as any).type;
+    
+    // Find component with same type at same position
+    for (const comp of components) {
+      if (comp.type === terminalType) {
+        (comp as any).focused = true;
+        focusedNodeId = comp.id;
+        terminal.setFocusedComponent(comp as any);
+        return;
+      }
+    }
+  }
+}
+
 /**
  * Setup input handling for interactive components
  */
 function setupInputHandling(root: Node): void {
-  const interactiveComponents: Node[] = [];
-  collectInteractiveComponents(root, interactiveComponents);
+  const interactiveComponents = getInteractiveComponents(root);
 
-  assignTabIndexes(interactiveComponents);
-
+  // Find first autoFocus component that is not disabled
   const firstAutoFocusComponent = interactiveComponents.find(
-    (comp) => ('autoFocus' in comp && (comp as any).autoFocus) && ('disabled' in comp && !(comp as any).disabled)
+    (comp) => {
+      const hasAutoFocus = 'autoFocus' in comp && (comp as any).autoFocus;
+      const isDisabled = 'disabled' in comp && (comp as any).disabled;
+      return hasAutoFocus && !isDisabled;
+    }
   );
+  
+  let needsRerender = false;
+  
   if (firstAutoFocusComponent) {
     (firstAutoFocusComponent as any).focused = true;
+    focusedNodeId = firstAutoFocusComponent.id;
     terminal.setFocusedComponent(firstAutoFocusComponent as any);
     if ('onFocus' in firstAutoFocusComponent && (firstAutoFocusComponent as any).onFocus) {
       (firstAutoFocusComponent as any).onFocus();
     }
+    needsRerender = true;
+  } else if (interactiveComponents.length > 0) {
+    // If no autoFocus, focus the first focusable component
+    const focusableComponents = interactiveComponents.filter((comp) => {
+      const isDisabled = 'disabled' in comp && (comp as any).disabled;
+      const tabIndex = 'tabIndex' in comp ? (comp as any).tabIndex : undefined;
+      return !isDisabled && (tabIndex === undefined || tabIndex >= 0);
+    });
+    if (focusableComponents.length > 0) {
+      const sorted = [...focusableComponents].sort((a, b) => 
+        ((a as any).tabIndex || 0) - ((b as any).tabIndex || 0)
+      );
+      const first = sorted[0]!;
+      (first as any).focused = true;
+      focusedNodeId = first.id;
+      terminal.setFocusedComponent(first as any);
+      if ('onFocus' in first && (first as any).onFocus) {
+        (first as any).onFocus();
+      }
+      needsRerender = true;
+    }
+  }
+  
+  // Schedule a re-render to show focus state
+  if (needsRerender) {
+    scheduleUpdate();
   }
 
   startInputListener((_chunk, key, mouse) => {
     try {
+      // Re-collect components to get current instances after any React updates
+      const currentComponents = getInteractiveComponents(root);
+      applyFocusState(currentComponents);
+      
       if (mouse) {
-        handleMouseEvent(mouse, interactiveComponents, scheduleUpdate);
+        handleMouseEvent(mouse, currentComponents, scheduleUpdate);
         return;
       }
 
       if (key) {
         if (key.tab) {
-          handleTabNavigation(interactiveComponents, key.shift, scheduleUpdate, root);
+          handleTabNavigation(currentComponents, key.shift, scheduleUpdate, root);
+          // Update focusedNodeId after tab navigation
+          const newFocused = currentComponents.find((comp) => 'focused' in comp && (comp as any).focused);
+          focusedNodeId = newFocused?.id || null;
           return;
         }
 
         if (key.escape) {
-          for (const comp of interactiveComponents) {
+          for (const comp of currentComponents) {
             if (comp.type === 'dropdown' && 'isOpen' in comp && (comp as any).isOpen) {
               (comp as any).isOpen = false;
               scheduleUpdate();
@@ -392,7 +501,7 @@ function setupInputHandling(root: Node): void {
           }
         }
 
-        const focused = interactiveComponents.find((comp) => 'focused' in comp && (comp as any).focused);
+        const focused = currentComponents.find((comp) => 'focused' in comp && (comp as any).focused);
 
         if (focused) {
           if (!('disabled' in focused) || !(focused as any).disabled) {
@@ -417,8 +526,8 @@ function setupInputHandling(root: Node): void {
           }
         }
 
-        if (!focused && interactiveComponents.length > 0) {
-          const focusableComponents = interactiveComponents.filter((comp) => {
+        if (!focused && currentComponents.length > 0) {
+          const focusableComponents = currentComponents.filter((comp) => {
             const disabled = 'disabled' in comp ? (comp as any).disabled : false;
             const tabIndex = 'tabIndex' in comp ? (comp as any).tabIndex : undefined;
             return !disabled && (tabIndex === undefined || tabIndex >= 0);
@@ -429,6 +538,7 @@ function setupInputHandling(root: Node): void {
             );
             const first = sorted[0]!;
             (first as any).focused = true;
+            focusedNodeId = first.id;
             terminal.setFocusedComponent(first as any);
             if ('onFocus' in first && (first as any).onFocus) {
               (first as any).onFocus();
@@ -455,9 +565,22 @@ function handleComponentInput(component: Node, _chunk: string, key: import('../t
     return;
   }
   
+  // Route to type-specific handlers
+  if (component.type === 'input') {
+    // Use the Input component's handler
+    const { handleInputComponent } = require('../components/interactive/Input');
+    handleInputComponent(component as any, _chunk, key, scheduleUpdate);
+    return;
+  }
+  
   // Handle keyboard events on interactive nodes
   if ('handleKeyboardEvent' in component) {
-    (component as any).handleKeyboardEvent(key);
+    const keyboardEvent = {
+      key,
+      preventDefault: () => {},
+      stopPropagation: () => {},
+    };
+    (component as any).handleKeyboardEvent(keyboardEvent);
   }
 }
 

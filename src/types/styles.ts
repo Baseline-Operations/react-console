@@ -22,8 +22,24 @@ export interface StyleProps {
 }
 
 export interface LayoutProps {
+  // Padding - can use object or individual properties
   padding?: number | { top?: number; right?: number; bottom?: number; left?: number };
+  paddingTop?: number;
+  paddingRight?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+  paddingHorizontal?: number; // Shorthand for left + right
+  paddingVertical?: number; // Shorthand for top + bottom
+  
+  // Margin - can use object or individual properties
   margin?: number | { top?: number; right?: number; bottom?: number; left?: number };
+  marginTop?: number;
+  marginRight?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  marginHorizontal?: number; // Shorthand for left + right
+  marginVertical?: number; // Shorthand for top + bottom
+  
   width?: ResponsiveSize; // Fixed number or percentage/unit string (e.g., 80, "50%", "80vw", "80ch")
   height?: ResponsiveSize; // Fixed number or percentage/unit string (e.g., 24, "50%", "50vh")
 }
@@ -86,7 +102,8 @@ export interface ViewStyle extends StyleProps, LayoutProps {
   overflowY?: 'visible' | 'hidden' | 'scroll';
 
   // Borders
-  border?: boolean | {
+  // Can be: boolean (true = all sides), string (border style shorthand), or object (per-side)
+  border?: boolean | 'single' | 'double' | 'thick' | 'dashed' | 'dotted' | 'ascii' | {
     top?: boolean;
     right?: boolean;
     bottom?: boolean;

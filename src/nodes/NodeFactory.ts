@@ -9,6 +9,7 @@ import { BoxNode } from './primitives/BoxNode';
 import { FragmentNode } from './primitives/FragmentNode';
 import { InputNode } from './interactive/InputNode';
 import { ButtonNode } from './interactive/ButtonNode';
+import { ScrollViewNode } from './layout/ScrollViewNode';
 import { CommandRouterNode } from './cli/CommandRouterNode';
 import { CommandNode } from './cli/CommandNode';
 import { RouteNode } from './cli/RouteNode';
@@ -121,6 +122,32 @@ export class NodeFactory {
         if (props.type) {
           inputNode.setInputType(props.type === 'number' ? 'number' : 'text');
         }
+        // Set focus-related props
+        if (props.autoFocus !== undefined) {
+          (inputNode as any).autoFocus = Boolean(props.autoFocus);
+        }
+        if (props.tabIndex !== undefined) {
+          (inputNode as any).tabIndex = props.tabIndex;
+        }
+        if (props.disabled !== undefined) {
+          (inputNode as any).disabled = Boolean(props.disabled);
+        }
+        // Set event handlers
+        if (props.onChange) {
+          (inputNode as any).onChange = props.onChange;
+        }
+        if (props.onSubmit) {
+          (inputNode as any).onSubmit = props.onSubmit;
+        }
+        if (props.onKeyDown) {
+          (inputNode as any).onKeyDown = props.onKeyDown;
+        }
+        if (props.onFocus) {
+          (inputNode as any).onFocus = props.onFocus;
+        }
+        if (props.onBlur) {
+          (inputNode as any).onBlur = props.onBlur;
+        }
         node = inputNode as unknown as Node;
         break;
         
@@ -144,11 +171,68 @@ export class NodeFactory {
         if (props.disabled !== undefined) {
           buttonNode.disabled = Boolean(props.disabled);
         }
+        // Set focus-related props
+        if (props.autoFocus !== undefined) {
+          (buttonNode as any).autoFocus = Boolean(props.autoFocus);
+        }
+        if (props.tabIndex !== undefined) {
+          (buttonNode as any).tabIndex = props.tabIndex;
+        }
+        if (props.onFocus) {
+          (buttonNode as any).onFocus = props.onFocus;
+        }
+        if (props.onBlur) {
+          (buttonNode as any).onBlur = props.onBlur;
+        }
         // Set style if provided
         if (props.style) {
           buttonNode.setStyle(props.style as any);
         }
         node = buttonNode as unknown as Node;
+        break;
+        
+      case 'scrollview':
+      case 'ScrollView':
+      case 'scrollable':
+      case 'Scrollable':
+        const scrollViewNode = new ScrollViewNode();
+        if (props.scrollTop !== undefined) {
+          scrollViewNode.scrollTop = props.scrollTop as number;
+        }
+        if (props.scrollLeft !== undefined) {
+          scrollViewNode.scrollLeft = props.scrollLeft as number;
+        }
+        if (props.maxHeight !== undefined) {
+          scrollViewNode.maxHeight = props.maxHeight as number;
+        }
+        if (props.maxWidth !== undefined) {
+          scrollViewNode.maxWidth = props.maxWidth as number;
+        }
+        if (props.horizontal !== undefined) {
+          scrollViewNode.horizontal = Boolean(props.horizontal);
+        }
+        if (props.showsVerticalScrollIndicator !== undefined) {
+          scrollViewNode.showsVerticalScrollIndicator = Boolean(props.showsVerticalScrollIndicator);
+        }
+        if (props.showsHorizontalScrollIndicator !== undefined) {
+          scrollViewNode.showsHorizontalScrollIndicator = Boolean(props.showsHorizontalScrollIndicator);
+        }
+        if (props.scrollbarStyle) {
+          scrollViewNode.scrollbarStyle = props.scrollbarStyle as any;
+        }
+        if (props.scrollStep !== undefined) {
+          scrollViewNode.scrollStep = props.scrollStep as number;
+        }
+        if (props.keyboardScrollEnabled !== undefined) {
+          scrollViewNode.keyboardScrollEnabled = Boolean(props.keyboardScrollEnabled);
+        }
+        if (props.onScroll) {
+          scrollViewNode.onScroll = props.onScroll as (scrollTop: number, scrollLeft: number) => void;
+        }
+        if (props.style) {
+          scrollViewNode.setStyle(props.style as any);
+        }
+        node = scrollViewNode as unknown as Node;
         break;
         
       case 'commandrouter':
