@@ -64,6 +64,6 @@ export default [
     }
   },
   {
-    ignores: ['dist/**', 'node_modules/**', '**/*.config.js', '**/*.config.mjs', '.lintstagedrc.js']
+    ignores: ['dist/**', 'node_modules/**', '**/*.config.cjs', '**/*.config.mjs', '.lintstagedrc.cjs']
   }
 ];

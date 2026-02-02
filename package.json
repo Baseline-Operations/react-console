@@ -1,6 +1,7 @@
 {
   "name": "react-console",
   "version": "0.1.0",
+  "type": "module",
   "description": "React 19+ TypeScript library for building console/terminal applications using JSX",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
