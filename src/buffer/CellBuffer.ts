@@ -1,6 +1,6 @@
 /**
  * CellBuffer - Core 2D buffer of cells
- * 
+ *
  * This is the fundamental buffer class that stores a 2D grid of cells,
  * each containing character, color, and style information.
  */
@@ -24,17 +24,17 @@ export class CellBuffer {
   private _height: number;
   private dirtyRegions: Set<string>; // Set of "x,y" coordinates
   private fullyDirty: boolean;
-  
+
   constructor(width: number, height: number) {
     this._width = Math.max(1, width);
     this._height = Math.max(1, height);
     this.cells = [];
     this.dirtyRegions = new Set();
     this.fullyDirty = true;
-    
+
     this.initializeCells();
   }
-  
+
   /**
    * Initialize all cells to empty state
    */
@@ -48,21 +48,21 @@ export class CellBuffer {
       this.cells.push(row);
     }
   }
-  
+
   /**
    * Get buffer width
    */
   get width(): number {
     return this._width;
   }
-  
+
   /**
    * Get buffer height
    */
   get height(): number {
     return this._height;
   }
-  
+
   /**
    * Check if coordinates are within bounds
    */
@@ -72,7 +72,7 @@ export class CellBuffer {
     const iy = Math.floor(y);
     return ix >= 0 && ix < this._width && iy >= 0 && iy < this._height;
   }
-  
+
   /**
    * Get cell at position
    */
@@ -84,9 +84,11 @@ export class CellBuffer {
     }
     return this.cells[iy]![ix]!;
   }
-  
+
   /**
    * Set cell at position
+   * Respects z-index: higher z-index content won't be overwritten by lower z-index
+   * from DIFFERENT nodes (nodeId comparison)
    */
   setCell(x: number, y: number, cellData: PartialCell): void {
     const ix = Math.floor(x);
@@ -94,14 +96,30 @@ export class CellBuffer {
     if (!this.isInBounds(ix, iy)) {
       return;
     }
-    
+
     const currentCell = this.cells[iy]![ix]!;
+
+    // Check z-index - don't overwrite higher z-index content with lower
+    // BUT allow same node to overwrite its own content (for cursor updates, etc.)
+    const currentZ = currentCell.zIndex || 0;
+    const newZ = cellData.zIndex ?? 0;
+    const sameNode = cellData.nodeId && currentCell.nodeId === cellData.nodeId;
+
+    // If current cell has higher z-index AND is from a different node, don't overwrite
+    if (currentZ > newZ && !sameNode) {
+      const hasContent = currentCell.char && currentCell.char !== ' ' && currentCell.char !== '\0';
+      const hasBackground = currentCell.background && currentCell.background !== null;
+      if (hasContent || hasBackground) {
+        return; // Don't overwrite higher z-index content from different node
+      }
+    }
+
     const newCell: Cell = {
       ...currentCell,
       ...cellData,
       dirty: true,
     };
-    
+
     // Only mark dirty if actually changed
     if (!cellsEqual(currentCell, newCell)) {
       this.cells[iy]![ix] = newCell;
@@ -111,7 +129,7 @@ export class CellBuffer {
       this.cells[iy]![ix] = newCell;
     }
   }
-  
+
   /**
    * Set a character at position with optional style
    */
@@ -137,29 +155,23 @@ export class CellBuffer {
       ...styles,
     });
   }
-  
+
   /**
    * Fill a region with a cell value
    */
-  fillRegion(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    cellData: PartialCell
-  ): void {
+  fillRegion(x: number, y: number, width: number, height: number, cellData: PartialCell): void {
     const startX = Math.max(0, Math.floor(x));
     const startY = Math.max(0, Math.floor(y));
     const endX = Math.min(this._width, Math.floor(x + width));
     const endY = Math.min(this._height, Math.floor(y + height));
-    
+
     for (let cy = startY; cy < endY; cy++) {
       for (let cx = startX; cx < endX; cx++) {
         this.setCell(cx, cy, cellData);
       }
     }
   }
-  
+
   /**
    * Fill a region with a background color
    * Also fills with space characters to fully overwrite any existing content
@@ -182,7 +194,7 @@ export class CellBuffer {
       zIndex: zIndex ?? 0,
     });
   }
-  
+
   /**
    * Clear a region (reset to empty cells)
    */
@@ -191,7 +203,7 @@ export class CellBuffer {
     const startY = Math.max(0, Math.floor(y));
     const endX = Math.min(this._width, Math.floor(x + width));
     const endY = Math.min(this._height, Math.floor(y + height));
-    
+
     for (let cy = startY; cy < endY; cy++) {
       for (let cx = startX; cx < endX; cx++) {
         const emptyCell = createEmptyCell();
@@ -200,7 +212,7 @@ export class CellBuffer {
       }
     }
   }
-  
+
   /**
    * Clear entire buffer
    */
@@ -209,7 +221,7 @@ export class CellBuffer {
     this.fullyDirty = true;
     this.dirtyRegions.clear();
   }
-  
+
   /**
    * Resize buffer (preserving content where possible)
    */
@@ -217,18 +229,18 @@ export class CellBuffer {
     if (newWidth === this._width && newHeight === this._height) {
       return;
     }
-    
+
     newWidth = Math.max(1, newWidth);
     newHeight = Math.max(1, newHeight);
-    
+
     const oldCells = this.cells;
     const oldWidth = this._width;
     const oldHeight = this._height;
-    
+
     this._width = newWidth;
     this._height = newHeight;
     this.cells = [];
-    
+
     for (let y = 0; y < newHeight; y++) {
       const row: Cell[] = [];
       for (let x = 0; x < newWidth; x++) {
@@ -242,18 +254,18 @@ export class CellBuffer {
       }
       this.cells.push(row);
     }
-    
+
     this.fullyDirty = true;
     this.dirtyRegions.clear();
   }
-  
+
   /**
    * Mark a single cell as dirty
    */
   private markCellDirty(x: number, y: number): void {
     this.dirtyRegions.add(`${x},${y}`);
   }
-  
+
   /**
    * Mark a region as dirty
    */
@@ -262,7 +274,7 @@ export class CellBuffer {
     const startY = Math.max(0, y);
     const endX = Math.min(this._width, x + width);
     const endY = Math.min(this._height, y + height);
-    
+
     for (let cy = startY; cy < endY; cy++) {
       for (let cx = startX; cx < endX; cx++) {
         this.markCellDirty(cx, cy);
@@ -270,7 +282,7 @@ export class CellBuffer {
       }
     }
   }
-  
+
   /**
    * Mark entire buffer as dirty
    */
@@ -278,28 +290,28 @@ export class CellBuffer {
     this.fullyDirty = true;
     this.dirtyRegions.clear();
   }
-  
+
   /**
    * Mark all cells as clean
    */
   markClean(): void {
     this.fullyDirty = false;
     this.dirtyRegions.clear();
-    
+
     for (let y = 0; y < this._height; y++) {
       for (let x = 0; x < this._width; x++) {
         this.cells[y]![x]!.dirty = false;
       }
     }
   }
-  
+
   /**
    * Check if buffer has any dirty cells
    */
   isDirty(): boolean {
     return this.fullyDirty || this.dirtyRegions.size > 0;
   }
-  
+
   /**
    * Get all dirty regions (optimized as bounding boxes)
    */
@@ -307,11 +319,11 @@ export class CellBuffer {
     if (this.fullyDirty) {
       return [{ x: 0, y: 0, width: this._width, height: this._height }];
     }
-    
+
     if (this.dirtyRegions.size === 0) {
       return [];
     }
-    
+
     // Convert set of coordinates to bounding regions
     // For now, return individual cells as regions (can be optimized later)
     const regions: DirtyRegion[] = [];
@@ -319,10 +331,10 @@ export class CellBuffer {
       const [x, y] = coord.split(',').map(Number);
       regions.push({ x: x!, y: y!, width: 1, height: 1 });
     }
-    
+
     return this.mergeRegions(regions);
   }
-  
+
   /**
    * Merge adjacent dirty regions for efficiency
    */
@@ -330,10 +342,10 @@ export class CellBuffer {
     if (regions.length <= 1) {
       return regions;
     }
-    
+
     // Simple implementation: merge into row-based regions
     const rowRegions = new Map<number, { minX: number; maxX: number }>();
-    
+
     for (const region of regions) {
       for (let y = region.y; y < region.y + region.height; y++) {
         const existing = rowRegions.get(y);
@@ -345,21 +357,21 @@ export class CellBuffer {
         }
       }
     }
-    
+
     const merged: DirtyRegion[] = [];
     for (const [y, { minX, maxX }] of rowRegions) {
       merged.push({ x: minX, y, width: maxX - minX, height: 1 });
     }
-    
+
     return merged;
   }
-  
+
   /**
    * Get dirty cells as an array
    */
   getDirtyCells(): Array<{ x: number; y: number; cell: Cell }> {
     const dirtyCells: Array<{ x: number; y: number; cell: Cell }> = [];
-    
+
     for (let y = 0; y < this._height; y++) {
       for (let x = 0; x < this._width; x++) {
         const cell = this.cells[y]![x]!;
@@ -368,10 +380,10 @@ export class CellBuffer {
         }
       }
     }
-    
+
     return dirtyCells;
   }
-  
+
   /**
    * Iterate over all cells
    */
@@ -382,26 +394,23 @@ export class CellBuffer {
       }
     }
   }
-  
+
   /**
    * Iterate over a region
    */
-  forEachInRegion(
-    region: BoundingBox,
-    callback: (cell: Cell, x: number, y: number) => void
-  ): void {
+  forEachInRegion(region: BoundingBox, callback: (cell: Cell, x: number, y: number) => void): void {
     const startX = Math.max(0, region.x);
     const startY = Math.max(0, region.y);
     const endX = Math.min(this._width, region.x + region.width);
     const endY = Math.min(this._height, region.y + region.height);
-    
+
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
         callback(this.cells[y]![x]!, x, y);
       }
     }
   }
-  
+
   /**
    * Get a row of cells
    */
@@ -411,7 +420,7 @@ export class CellBuffer {
     }
     return this.cells[y]!.map(cloneCell);
   }
-  
+
   /**
    * Get a column of cells
    */
@@ -419,15 +428,15 @@ export class CellBuffer {
     if (x < 0 || x >= this._width) {
       return null;
     }
-    return this.cells.map(row => cloneCell(row[x]!));
+    return this.cells.map((row) => cloneCell(row[x]!));
   }
-  
+
   /**
    * Copy a region from this buffer
    */
   copyRegion(region: BoundingBox): CellBuffer {
     const copy = new CellBuffer(region.width, region.height);
-    
+
     for (let dy = 0; dy < region.height; dy++) {
       for (let dx = 0; dx < region.width; dx++) {
         const cell = this.getCell(region.x + dx, region.y + dy);
@@ -436,10 +445,10 @@ export class CellBuffer {
         }
       }
     }
-    
+
     return copy;
   }
-  
+
   /**
    * Paste a buffer into this buffer at position
    */
@@ -453,7 +462,7 @@ export class CellBuffer {
       }
     }
   }
-  
+
   /**
    * Write a string horizontally starting at position
    */
@@ -478,12 +487,12 @@ export class CellBuffer {
     }
   ): number {
     let cx = x;
-    
+
     for (const char of text) {
       if (!this.isInBounds(cx, y)) {
         break;
       }
-      
+
       this.setCell(cx, y, {
         char,
         foreground: foreground ?? null,
@@ -493,28 +502,28 @@ export class CellBuffer {
         nodeId: options?.nodeId ?? null,
         zIndex: options?.zIndex ?? 0,
       });
-      
+
       cx++;
     }
-    
+
     return cx - x; // Return number of characters written
   }
-  
+
   /**
    * Create a clone of this buffer
    */
   clone(): CellBuffer {
     const copy = new CellBuffer(this._width, this._height);
-    
+
     for (let y = 0; y < this._height; y++) {
       for (let x = 0; x < this._width; x++) {
         copy.cells[y]![x] = cloneCell(this.cells[y]![x]!);
       }
     }
-    
+
     copy.fullyDirty = this.fullyDirty;
     copy.dirtyRegions = new Set(this.dirtyRegions);
-    
+
     return copy;
   }
 }

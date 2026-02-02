@@ -3,15 +3,6 @@
  * React 19+ TypeScript library for building console/terminal applications using JSX
  */
 
-// IMPORTANT: Patch React hooks FIRST before any other imports
-// This ensures useState/useReducer work correctly in console apps
-import './patchReact';
-
-// Re-export patched React hooks for users who import React before this library
-// Users should preferably use: import { useState } from 'react-console-log'
-// instead of: import { useState } from 'react'
-export { useState, useReducer } from './patchReact';
-
 // Renderer - integrated into Node class
 import { Node } from './nodes/base/Node';
 export const render = Node.render.bind(Node);
@@ -79,7 +70,12 @@ export type { SuspenseProps } from './components/Suspense';
 
 // Components - Form
 export { Form } from './components/Form';
-export type { FormProps, FormFieldError, FormValidationResult, FormValidator } from './components/Form';
+export type {
+  FormProps,
+  FormFieldError,
+  FormValidationResult,
+  FormValidator,
+} from './components/Form';
 
 // Animation components and utilities are available via 'react-console/animations'
 // See src/animations.ts for exports
@@ -87,9 +83,11 @@ export type { FormProps, FormFieldError, FormValidationResult, FormValidator } f
 // CLI components and utilities are available via 'react-console/cli' or 'react-console/router'
 // See src/cli.ts and src/router.ts for exports
 
-
 // Utilities - Debug
 export {
+  debug,
+  debugLabeled,
+  isDebugEnabled,
   setDebugMode,
   isDebugMode,
   debugLog,
@@ -99,10 +97,7 @@ export {
 } from './utils/debug';
 
 // Utilities - Errors (enhanced)
-export {
-  ErrorMessages,
-  deprecationWarning,
-} from './utils/errors';
+export { ErrorMessages, deprecationWarning } from './utils/errors';
 
 // Utilities - Extensibility
 export {
@@ -112,11 +107,7 @@ export {
   registerPlugin,
   unregisterPlugin,
 } from './utils/extensibility';
-export type {
-  CustomRenderer,
-  ComponentRegistryEntry,
-  PluginConfig,
-} from './utils/extensibility';
+export type { CustomRenderer, ComponentRegistryEntry, PluginConfig } from './utils/extensibility';
 
 // Types - Guards (enhanced)
 export {
@@ -180,14 +171,8 @@ export {
 } from './utils/console';
 
 // Utilities - Input Validator
-export {
-  InputValidator,
-  ValidationRules,
-} from './utils/inputValidator';
-export type {
-  ValidationRule,
-  ValidationRuleConfig,
-} from './utils/inputValidator';
+export { InputValidator, ValidationRules } from './utils/inputValidator';
+export type { ValidationRule, ValidationRuleConfig } from './utils/inputValidator';
 
 // Utilities - Date Formatting
 export {
@@ -242,11 +227,7 @@ export {
 } from './utils/memoization';
 
 // Utilities - Debouncing
-export {
-  debounce,
-  debounceImmediate,
-  throttle,
-} from './utils/debounce';
+export { debounce, debounceImmediate, throttle } from './utils/debounce';
 
 // Renderer - Batching (for advanced usage)
 export {
@@ -257,7 +238,6 @@ export {
   hasBatchedUpdates,
   getBatchedUpdatesCount,
 } from './renderer/batching';
-
 
 // Types
 export type {

@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { valueToString, getValueLength, validateNumberInput, formatByType, validatePattern } from '../../utils/input';
+import {
+  valueToString,
+  getValueLength,
+  validateNumberInput,
+  formatByType,
+  validatePattern,
+} from '../../utils/input';
 import type { ConsoleNode } from '../../types';
 
 describe('input utilities', () => {
@@ -31,7 +37,7 @@ describe('input utilities', () => {
 
     it('should return empty string for undefined/null', () => {
       expect(valueToString(undefined)).toBe('');
-      expect(valueToString(null as any)).toBe('');
+      expect(valueToString(null as unknown as undefined)).toBe('');
     });
   });
 
@@ -59,7 +65,7 @@ describe('input utilities', () => {
 
     it('should return 0 for undefined/null', () => {
       expect(getValueLength(undefined)).toBe(0);
-      expect(getValueLength(null as any)).toBe(0);
+      expect(getValueLength(null as unknown as undefined)).toBe(0);
     });
   });
 

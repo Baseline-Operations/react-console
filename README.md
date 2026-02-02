@@ -2,6 +2,8 @@
 
 React 19+ TypeScript library for building console/terminal applications using JSX and React components.
 
+> **Alpha Notice**: This library is currently in alpha (v0.x). The API may change between versions without notice. We do not guarantee backwards compatibility until v1.0.0. Please pin your dependency to a specific version if stability is important for your project.
+
 ## Overview
 
 React Console allows you to build terminal/console applications using React 19+ with JSX, components, hooks, and all the modern React features - but for console output instead of HTML.
@@ -39,7 +41,9 @@ import { render, Text, View } from 'react-console';
 function App() {
   return (
     <View padding={1}>
-      <Text color="cyan" bold>Hello, Console!</Text>
+      <Text color="cyan" bold>
+        Hello, Console!
+      </Text>
       <Text>This is React in the terminal.</Text>
     </View>
   );
@@ -51,6 +55,7 @@ render(<App />);
 ## Components
 
 ### `<View>` / `<Box>`
+
 Container component for layout with padding, margin, and responsive sizing.
 
 ```tsx
@@ -64,6 +69,7 @@ Container component for layout with padding, margin, and responsive sizing.
 ```
 
 ### `<Text>`
+
 Styled text output with colors and formatting. Supports nested Text components for inline styling.
 
 ```tsx
@@ -78,6 +84,7 @@ Styled text output with colors and formatting. Supports nested Text components f
 ```
 
 ### `<LineBreak>`
+
 Explicit line break component.
 
 ```tsx
@@ -87,6 +94,7 @@ Explicit line break component.
 ```
 
 ### `<Input>`
+
 Text input component with JSX-style event handlers. Supports single-line and multiline input.
 
 ```tsx
@@ -101,17 +109,18 @@ const [value, setValue] = useState('');
   multiline
   maxLines={5}
   autoFocus
-/>
+/>;
 ```
 
 **Props:**
+
 - `value` / `defaultValue` - Controlled or uncontrolled input
 - `placeholder` - Placeholder text
 - `maxLength` - Maximum character length
 - `maxWidth` - Maximum input width (defaults to terminal width)
 - `multiline` - Allow multiline input
 - `maxLines` - Maximum number of lines for multiline input
-- `mask` - Character to mask input (e.g., '*' for password)
+- `mask` - Character to mask input (e.g., '\*' for password)
 - `disabled` - Disable input
 - `autoFocus` - Auto-focus on mount
 - `tabIndex` - Tab order
@@ -121,17 +130,15 @@ const [value, setValue] = useState('');
 - `onFocus` / `onBlur` - Focus event handlers
 
 ### `<Button>`
+
 Clickable button component with keyboard and mouse support.
 
 ```tsx
-<Button
-  onClick={() => console.log('Clicked!')}
-  label="Click Me"
-  tabIndex={0}
-/>
+<Button onClick={() => console.log('Clicked!')} label="Click Me" tabIndex={0} />
 ```
 
 **Props:**
+
 - `onClick` - Click handler
 - `onPress` - Press handler (alias for onClick)
 - `onMouseDown` / `onMouseUp` / `onMouseMove` - Mouse event handlers
@@ -141,18 +148,17 @@ Clickable button component with keyboard and mouse support.
 - `disabled` - Disable button
 
 ### `<Pressable>`
+
 React Native-like pressable component that can wrap any content.
 
 ```tsx
-<Pressable
-  onPress={() => console.log('Pressed!')}
-  tabIndex={0}
->
+<Pressable onPress={() => console.log('Pressed!')} tabIndex={0}>
   <Text>Pressable content</Text>
 </Pressable>
 ```
 
 ### `<Focusable>`
+
 Component to make any content focusable with tab navigation.
 
 ```tsx
@@ -162,31 +168,28 @@ Component to make any content focusable with tab navigation.
 ```
 
 ### `<Scrollable>` / `<ScrollView>`
+
 Scrollable container for overflow content.
 
 ```tsx
 <Scrollable maxHeight={20} maxWidth={80}>
-  <View>
-    {/* Long content that will scroll */}
-  </View>
+  <View>{/* Long content that will scroll */}</View>
 </Scrollable>
 ```
 
 **Props:**
+
 - `scrollTop` / `scrollLeft` - Scroll position
 - `maxHeight` / `maxWidth` - Maximum dimensions
 - `horizontal` - Scroll horizontally instead of vertically
 - `showsScrollIndicator` - Show scroll indicators (planned)
 
 ### `<Overlay>`
+
 Overlay/modal component for layered rendering.
 
 ```tsx
-<Overlay
-  backdrop
-  backdropColor="black"
-  zIndex={10}
->
+<Overlay backdrop backdropColor="black" zIndex={10}>
   <View padding={2}>
     <Text>Modal content</Text>
   </View>
@@ -194,6 +197,7 @@ Overlay/modal component for layered rendering.
 ```
 
 **Props:**
+
 - `backdrop` - Show backdrop
 - `backdropColor` - Backdrop color
 - `zIndex` - Z-index for layering
@@ -202,11 +206,13 @@ Overlay/modal component for layered rendering.
 ## Styling
 
 ### Colors
+
 - **Named colors**: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, `gray`
 - **Hex colors**: `#FF0000`
 - **RGB colors**: `rgb(255, 0, 0)`
 
 ### Text Styles
+
 - `bold` - Bold text
 - `dim` - Dim text
 - `italic` - Italic text
@@ -215,6 +221,7 @@ Overlay/modal component for layered rendering.
 - `inverse` - Inverse colors
 
 ### Background Colors
+
 ```tsx
 <Text backgroundColor="blue" color="white">
   White text on blue background
@@ -222,6 +229,7 @@ Overlay/modal component for layered rendering.
 ```
 
 ### Responsive Sizing
+
 React Console supports responsive sizing similar to CSS:
 
 ```tsx
@@ -236,6 +244,7 @@ The UI automatically adjusts when the terminal is resized, just like React in th
 ## Layout
 
 ### Padding
+
 ```tsx
 <View padding={2}>Uniform padding</View>
 <View padding={{ top: 1, right: 2, bottom: 1, left: 2 }}>
@@ -244,6 +253,7 @@ The UI automatically adjusts when the terminal is resized, just like React in th
 ```
 
 ### Margin
+
 ```tsx
 <View margin={1}>Content with margin</View>
 <View margin={{ top: 2, bottom: 2 }}>Vertical margin</View>
@@ -252,6 +262,7 @@ The UI automatically adjusts when the terminal is resized, just like React in th
 ## Rendering Modes
 
 ### Static Mode (Default)
+
 One-time output, perfect for CLI commands:
 
 ```tsx
@@ -259,6 +270,7 @@ render(<App />); // or render(<App />, { mode: 'static' });
 ```
 
 ### Interactive Mode
+
 Full terminal application with input handling:
 
 ```tsx
@@ -266,6 +278,7 @@ render(<App />, { mode: 'interactive' });
 ```
 
 ### Fullscreen Mode
+
 Application takes over the entire terminal:
 
 ```tsx
@@ -345,6 +358,7 @@ Mouse tracking is automatically enabled in interactive and fullscreen modes.
 ## Utilities
 
 ### Terminal Utilities
+
 ```tsx
 import { getTerminalDimensions, supportsColor } from 'react-console';
 
@@ -357,6 +371,7 @@ if (supportsColor()) {
 ```
 
 ### Responsive Utilities
+
 ```tsx
 import { resolveWidth, resolveHeight } from 'react-console';
 
@@ -365,6 +380,7 @@ const height = resolveHeight('80vh', 24); // 19 (80% of 24)
 ```
 
 ### Text Measurement
+
 ```tsx
 import { measureText, wrapText, truncateText } from 'react-console';
 
@@ -378,45 +394,28 @@ const truncated = truncateText('Very long text...', 20);
 See the `examples/` directory for complete examples:
 
 - `basic.tsx` - Simple text output
-- `interactive.tsx` - Interactive application with input
-- `fullscreen.tsx` - Full-screen terminal application
-- `mouse-example.tsx` - Mouse event handling
+- `flexbox.tsx` - Flexbox layout examples
+- `forms.tsx` - Form handling with inputs
 - `responsive.tsx` - Responsive sizing examples
+- `state-hooks.tsx` - State management with hooks
+- `stylesheet.tsx` - StyleSheet API usage
+- `cli/` - CLI application examples
 
-## Development
+Run examples with:
 
 ```bash
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-
-# Format code
-npm run format
-
-# Run examples
 npx tsx examples/basic.tsx
-npx tsx examples/interactive.tsx
 ```
 
-## Architecture
+## Documentation
 
-This library uses a custom React renderer built with `react-reconciler` that:
-
-- Maps React components to console output
-- Handles ANSI escape codes for colors and styling
-- Manages layout and positioning in the terminal
-- Supports React 19 features including the React Compiler
-- Provides reactive updates when terminal dimensions change
-- Handles input events and mouse events
-- Manages focus and tab navigation
+- [CLI Framework Guide](./docs/CLI_FRAMEWORK_GUIDE.md) - Building CLI applications
+- [Styling Guide](./docs/STYLING_GUIDE.md) - Styling components
+- [Layout Guide](./docs/LAYOUT_GUIDE.md) - Flexbox and grid layouts
+- [Event Handling Guide](./docs/EVENT_HANDLING_GUIDE.md) - Handling keyboard and mouse events
+- [Input Handling Guide](./docs/INPUT_HANDLING_GUIDE.md) - Working with input components
+- [Migration Guide](./docs/MIGRATION_GUIDE.md) - Migrating from other libraries
+- [API Reference](./docs/api/README.md) - Full API documentation
 
 ## License
 

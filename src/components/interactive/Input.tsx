@@ -22,10 +22,10 @@ export type InputType = 'text' | 'string' | 'number' | 'radio' | 'checkbox' | 'd
 
 /**
  * Props for the Input component
- * 
+ *
  * Supports multiple input types (text, number) with validation, formatting, and multiline support.
  * All event handlers use JSX-style event objects similar to React Native.
- * 
+ *
  * @example
  * ```tsx
  * // Text input
@@ -35,7 +35,7 @@ export type InputType = 'text' | 'string' | 'number' | 'radio' | 'checkbox' | 'd
  *   placeholder="Enter your name"
  *   maxLength={50}
  * />
- * 
+ *
  * // Number input with validation
  * <Input
  *   type="number"
@@ -46,7 +46,7 @@ export type InputType = 'text' | 'string' | 'number' | 'radio' | 'checkbox' | 'd
  *   step={1}
  *   allowDecimals={false}
  * />
- * 
+ *
  * // Currency input with formatting
  * <Input
  *   type="number"
@@ -55,7 +55,7 @@ export type InputType = 'text' | 'string' | 'number' | 'radio' | 'checkbox' | 'd
  *   formatDisplay={(v) => `$${v.toFixed(2)}`}
  *   decimalPlaces={2}
  * />
- * 
+ *
  * // Multiline input
  * <Input
  *   multiline
@@ -98,18 +98,18 @@ export interface InputProps extends ComponentEventHandlers, StyleProps {
 
 /**
  * Input component - Text input field with validation and formatting support
- * 
+ *
  * Provides controlled/uncontrolled input similar to React Native's TextInput.
  * Supports text and number types with validation, formatting, multiline input,
  * and all standard event handlers (onChange, onKeyDown, onSubmit, etc.).
- * 
+ *
  * @param props - Input component props
  * @returns React element representing an input field
- * 
+ *
  * @example
  * ```tsx
  * const [value, setValue] = useState('');
- * 
+ *
  * <Input
  *   value={value}
  *   onChange={(event) => setValue(event.value)}
@@ -159,7 +159,7 @@ export function Input({
 }: InputProps) {
   // Merge className with style prop and legacy style props
   const mergedStyle = mergeClassNameAndStyle(className, style, styleProps);
-  
+
   // Input is handled by the reconciler - we just pass props through
   // The renderer will manage the actual input state and call event handlers
   return createConsoleNode('input', {
@@ -238,7 +238,7 @@ export function handleInputComponent(
   // Handle value changes
   const currentValue = component.value ?? component.defaultValue ?? '';
   const currentValueStr = typeof currentValue === 'string' ? currentValue : String(currentValue);
-  let newValue: string | number | boolean | string[] | number[] = currentValue;
+  let newValue: string | number | boolean | (string | number)[] = currentValue;
   let newValueStr = currentValueStr;
   let valueChanged = false;
 
@@ -248,7 +248,7 @@ export function handleInputComponent(
   // Handle character input
   if (key.char && !key.ctrl && !key.meta && key.char.length === 1) {
     const maxLength = component.maxLength;
-    
+
     const inputResult = handleCharacterInput(
       currentValueStr,
       key.char,
@@ -256,26 +256,25 @@ export function handleInputComponent(
       component,
       maxLength
     );
-    
+
     if (!inputResult.accepted) {
       // Invalid input - set validation error and visual indicator
       component.invalid = true;
-      component.validationError = inputType === 'number' 
-        ? 'Invalid number format' 
-        : 'Invalid input';
+      component.validationError =
+        inputType === 'number' ? 'Invalid number format' : 'Invalid input';
       scheduleUpdate();
       return;
     }
-    
+
     // Clear validation error on valid input
     if (component.invalid) {
       component.invalid = false;
       component.validationError = undefined;
     }
-    
+
     newValueStr = inputResult.newValueStr;
     valueChanged = true;
-    
+
     // Convert back to appropriate type
     const convertedValue = convertToTypedValue(newValueStr, inputType, component);
     if (typeof convertedValue === 'string' || typeof convertedValue === 'number') {
@@ -293,18 +292,23 @@ export function handleInputComponent(
   // Handle backspace
   if (key.backspace) {
     const deletionResult = handleCharacterDeletion(
-      typeof currentValue === 'string' || typeof currentValue === 'number' ? currentValue : undefined,
+      typeof currentValue === 'string' || typeof currentValue === 'number'
+        ? currentValue
+        : undefined,
       currentValueStr,
       inputType,
       component
     );
     if (deletionResult.valueChanged) {
-      if (typeof deletionResult.newValue === 'string' || typeof deletionResult.newValue === 'number') {
+      if (
+        typeof deletionResult.newValue === 'string' ||
+        typeof deletionResult.newValue === 'number'
+      ) {
         newValue = deletionResult.newValue;
       }
       newValueStr = deletionResult.newValueStr;
       valueChanged = true;
-      
+
       // Clear validation error if value is now valid
       if (component.invalid && newValueStr) {
         // Re-validate after deletion
@@ -326,18 +330,23 @@ export function handleInputComponent(
   // Handle delete (same as backspace for terminal input)
   if (key.delete) {
     const deletionResult = handleCharacterDeletion(
-      typeof currentValue === 'string' || typeof currentValue === 'number' ? currentValue : undefined,
+      typeof currentValue === 'string' || typeof currentValue === 'number'
+        ? currentValue
+        : undefined,
       currentValueStr,
       inputType,
       component
     );
     if (deletionResult.valueChanged) {
-      if (typeof deletionResult.newValue === 'string' || typeof deletionResult.newValue === 'number') {
+      if (
+        typeof deletionResult.newValue === 'string' ||
+        typeof deletionResult.newValue === 'number'
+      ) {
         newValue = deletionResult.newValue;
       }
       newValueStr = deletionResult.newValueStr;
       valueChanged = true;
-      
+
       // Clear validation error if value is now valid
       if (component.invalid && newValueStr) {
         // Re-validate after deletion
@@ -361,7 +370,7 @@ export function handleInputComponent(
     const dims = getTerminalDimensions();
     const lines = currentValueStr.split('\n');
     const maxLines = component.maxLines || dims.rows;
-    
+
     // Check if we can add another line
     if (lines.length < maxLines) {
       newValueStr = currentValueStr + '\n';

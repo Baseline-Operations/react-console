@@ -3,14 +3,19 @@
  * Demonstrates: focus/blur events, validation, disabled button, submitButtonId
  */
 
-import React, { useState } from 'react';
-import { render, Text, View, Input, Button, LineBreak } from '../src/index';
+import React, { useState, useMemo } from 'react';
+import { render, Text, View, Input, Button, LineBreak, debug } from '../src/index';
 
 function App() {
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+
+  // Determine if button should be disabled
+  const isButtonDisabled = useMemo(() => !name.trim(), [name]);
+
+  debug('[App] render', { name, isButtonDisabled });
 
   // Validate name
   const validateName = (value: string): string | null => {
@@ -45,14 +50,13 @@ function App() {
     setSubmitted(true);
   };
 
-  // Determine if button should be disabled
-  const isButtonDisabled = !name.trim();
-
   return (
     <View padding={2}>
-      <Text color="cyan" bold>Interactive Console App</Text>
+      <Text color="cyan" bold>
+        Interactive Console App
+      </Text>
       <LineBreak />
-      
+
       {!submitted ? (
         <>
           <Text>Enter your name:</Text>
@@ -73,14 +77,14 @@ function App() {
             autoFocus
             submitButtonId="submit-btn"
           />
-          
+
           {/* Show error message if validation failed */}
           {error && touched && (
             <>
               <Text color="red">{error}</Text>
             </>
           )}
-          
+
           <LineBreak />
           <Button
             id="submit-btn"
@@ -89,7 +93,7 @@ function App() {
             disabled={isButtonDisabled}
             disabledStyle={{ color: '#666666', backgroundColor: '#333333' }}
           />
-          
+
           {/* Help text */}
           <LineBreak />
           <Text color="gray" dim>
@@ -98,7 +102,9 @@ function App() {
         </>
       ) : (
         <>
-          <Text color="green" bold>Hello, {name}!</Text>
+          <Text color="green" bold>
+            Hello, {name}!
+          </Text>
           <Text>Thanks for using React Console.</Text>
         </>
       )}
@@ -106,7 +112,7 @@ function App() {
   );
 }
 
-render(<App />, { 
+render(<App />, {
   mode: 'interactive',
   navigation: {
     // Enable arrow key navigation between focusable elements
@@ -114,5 +120,5 @@ render(<App />, {
     // Or configure separately:
     // verticalArrowNavigation: true,  // up/down arrows
     // horizontalArrowNavigation: false, // left/right arrows (disabled)
-  }
+  },
 });

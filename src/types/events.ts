@@ -25,7 +25,7 @@ export interface KeyPress {
 }
 
 export interface InputEvent {
-  value: string | number | boolean | string[] | number[]; // Value can be different types depending on input type
+  value: string | number | boolean | (string | number)[]; // Value can be different types depending on input type
   key: KeyPress;
 }
 
@@ -50,8 +50,10 @@ export interface MouseEvent {
   startY?: number; // Y position where drag started
   deltaX?: number; // Change in X since drag started (x - startX)
   deltaY?: number; // Change in Y since drag started (y - startY)
-  // Event type indicator (for distinguishing press/move/release)
-  eventType?: 'press' | 'drag' | 'release';
+  // Event type indicator (for distinguishing press/move/release/wheel)
+  eventType?: 'press' | 'drag' | 'release' | 'wheel';
+  // Scroll wheel properties
+  scrollDirection?: 'up' | 'down';
 }
 
 /**

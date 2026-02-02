@@ -10,9 +10,9 @@ let batchTimeoutId: ReturnType<typeof setTimeout> | null = null;
 /**
  * Schedule a batched update
  * Queues an update function to be executed in the next batch
- * 
+ *
  * @param updateFn - Function to execute as part of the batch
- * 
+ *
  * @example
  * ```ts
  * scheduleBatchedUpdate(() => {
@@ -22,18 +22,16 @@ let batchTimeoutId: ReturnType<typeof setTimeout> | null = null;
  */
 export function scheduleBatchedUpdate(updateFn: () => void): void {
   updateQueue.push(updateFn);
-  
+
   if (!isScheduled) {
     isScheduled = true;
-    
+
     // Use setImmediate for batching (runs after current event loop)
     // This ensures all synchronous updates in the same tick are batched together
     if (typeof setImmediate !== 'undefined') {
       const immediateId = setImmediate(flushBatchedUpdates);
-      // Convert Immediate to Timeout-compatible ID (both can be cleared with clearTimeout)
       batchTimeoutId = immediateId as unknown as ReturnType<typeof setTimeout>;
     } else {
-      // Fallback for environments without setImmediate
       batchTimeoutId = setTimeout(flushBatchedUpdates, 0);
     }
   }
@@ -53,7 +51,7 @@ export function flushBatchedUpdates(): void {
   const queue = updateQueue.slice();
   updateQueue = [];
   isScheduled = false;
-  
+
   if (batchTimeoutId !== null) {
     // Both setImmediate and setTimeout IDs can be cleared with clearTimeout
     if (typeof clearImmediate !== 'undefined') {
@@ -82,7 +80,7 @@ export function flushBatchedUpdates(): void {
 /**
  * Immediately flush batched updates (synchronously)
  * Useful when you need to ensure updates are applied before proceeding
- * 
+ *
  * @example
  * ```ts
  * scheduleBatchedUpdate(update1);
@@ -133,7 +131,7 @@ export function flushBatchedUpdatesSync(): void {
 export function clearBatchedUpdates(): void {
   updateQueue = [];
   isScheduled = false;
-  
+
   if (batchTimeoutId !== null) {
     // Both setImmediate and setTimeout IDs can be cleared with clearTimeout
     if (typeof clearImmediate !== 'undefined') {
@@ -151,7 +149,7 @@ export function clearBatchedUpdates(): void {
 
 /**
  * Check if there are pending batched updates
- * 
+ *
  * @returns True if there are updates waiting to be flushed
  */
 export function hasBatchedUpdates(): boolean {
@@ -160,7 +158,7 @@ export function hasBatchedUpdates(): boolean {
 
 /**
  * Get the number of pending batched updates
- * 
+ *
  * @returns Number of queued updates
  */
 export function getBatchedUpdatesCount(): number {

@@ -64,7 +64,7 @@ function SettingsComponent() {
       <Text bold color="yellow">
         Settings
       </Text>
-      <Text>Route: {route?.location || path}</Text>
+      <Text>Route: {route || path}</Text>
       <Text>Configure your application settings here.</Text>
     </View>
   );

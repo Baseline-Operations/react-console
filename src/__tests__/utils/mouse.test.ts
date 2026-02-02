@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { supportsMouse, enableMouseTracking, disableMouseTracking, parseMouseEvent, isMouseEvent } from '../../utils/mouse';
+import {
+  supportsMouse,
+  enableMouseTracking,
+  disableMouseTracking,
+  parseMouseEvent,
+  isMouseEvent,
+} from '../../utils/mouse';
 
 describe('mouse utilities', () => {
   const originalEnv = process.env.TERM;
@@ -12,7 +18,7 @@ describe('mouse utilities', () => {
 
   beforeEach(() => {
     // Mock stdout.write to capture output
-    process.stdout.write = vi.fn() as any;
+    process.stdout.write = vi.fn() as typeof process.stdout.write;
   });
 
   afterEach(() => {
@@ -161,7 +167,12 @@ describe('mouse utilities', () => {
       // - y char: 0x21 (!) = '!'
       // So the full sequence needs 3 chars after [M: \x1b[M !!
       // Construct it properly: \x1b + [M + space + ! + !
-      const legacyEvent = String.fromCharCode(0x1b) + '[M' + String.fromCharCode(0x20) + String.fromCharCode(0x21) + String.fromCharCode(0x21);
+      const legacyEvent =
+        String.fromCharCode(0x1b) +
+        '[M' +
+        String.fromCharCode(0x20) +
+        String.fromCharCode(0x21) +
+        String.fromCharCode(0x21);
       const event = parseMouseEvent(legacyEvent);
       expect(event).not.toBeNull();
       if (event) {
@@ -191,7 +202,12 @@ describe('mouse utilities', () => {
       expect(isMouseEvent('\x1b[<0;10;5m')).toBe(true);
       // Legacy format requires 3 characters after \x1b[M
       // button: 0x20-0x23, x: 0x21-0x7e, y: 0x21-0x7e
-      const legacyEvent = String.fromCharCode(0x1b) + '[M' + String.fromCharCode(0x20) + String.fromCharCode(0x21) + String.fromCharCode(0x21);
+      const legacyEvent =
+        String.fromCharCode(0x1b) +
+        '[M' +
+        String.fromCharCode(0x20) +
+        String.fromCharCode(0x21) +
+        String.fromCharCode(0x21);
       expect(isMouseEvent(legacyEvent)).toBe(true);
     });
 

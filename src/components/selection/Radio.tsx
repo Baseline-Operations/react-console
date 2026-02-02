@@ -3,7 +3,13 @@
  */
 
 import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
-import type { ComponentEventHandlers, SelectOption, ConsoleNode, KeyPress, ViewStyle } from '../../types';
+import type {
+  ComponentEventHandlers,
+  SelectOption,
+  ConsoleNode,
+  KeyPress,
+  ViewStyle,
+} from '../../types';
 import type { StyleProps } from '../../types';
 
 /**
@@ -13,14 +19,14 @@ export type RadioOption = SelectOption;
 
 /**
  * Props for the Radio component
- * 
+ *
  * Provides single-selection radio button group functionality.
  * Supports keyboard navigation (arrow keys) and selection (Enter/Space).
- * 
+ *
  * @example
  * ```tsx
  * const [value, setValue] = useState('option1');
- * 
+ *
  * <Radio
  *   name="choice"
  *   value={value}
@@ -44,17 +50,20 @@ export interface RadioProps extends ComponentEventHandlers, StyleProps {
   formatDisplay?: (option: SelectOption, selected: boolean) => string; // Format function for display
   // Display formatting
   displayFormat?: string; // Format string (e.g., "bullet", "number", "letter")
+  // Indicator characters (customizable)
+  selectedIndicator?: string; // Character for selected state (default: ●)
+  unselectedIndicator?: string; // Character for unselected state (default: ○)
 }
 
 /**
  * Radio component - Single selection from options
- * 
+ *
  * Provides radio button group functionality for selecting one option from a list.
  * Supports keyboard navigation (arrow keys) and selection (Enter/Space).
- * 
+ *
  * @param props - Radio component props
  * @returns React element representing a radio button group
- * 
+ *
  * @example
  * ```tsx
  * <Radio
@@ -120,7 +129,7 @@ export function handleRadioComponent(
   if (options.length === 0) return;
 
   const currentValue = component.value ?? component.defaultValue;
-  const currentIndex = options.findIndex(opt => opt.value === currentValue);
+  const currentIndex = options.findIndex((opt) => opt.value === currentValue);
   let newIndex = currentIndex;
 
   if (key.upArrow || key.downArrow) {
@@ -130,10 +139,10 @@ export function handleRadioComponent(
     } else {
       newIndex = currentIndex >= options.length - 1 ? 0 : currentIndex + 1;
     }
-    
+
     const newValue = options[newIndex]!.value;
     component.value = newValue;
-    
+
     if (component.onChange) {
       component.onChange({
         value: newValue,
@@ -145,7 +154,7 @@ export function handleRadioComponent(
     // Select current option
     const selectedValue = options[currentIndex >= 0 ? currentIndex : 0]!.value;
     component.value = selectedValue;
-    
+
     if (component.onChange) {
       component.onChange({
         value: selectedValue,

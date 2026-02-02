@@ -1,6 +1,6 @@
 /**
  * Application Storage - Encrypted, namespaced storage for terminal applications
- * 
+ *
  * Provides persistent key-value storage similar to browser localStorage:
  * - Single shared encrypted file for all applications
  * - Application-level namespacing (each app has its own isolated namespace)
@@ -9,7 +9,7 @@
  * - Efficient value types (string, number, boolean, null, object/array)
  * - Optional TTL (default: persist until explicitly removed)
  * - Optional clear on exit (default: false - persists across sessions)
- * 
+ *
  * Storage is automatically created when first accessed (via render() or direct access).
  * Each application's data is isolated within the shared encrypted file.
  */
@@ -80,10 +80,10 @@ export interface StorageOptions {
 
 /**
  * Storage Manager - Singleton that manages the shared encrypted storage file
- * 
+ *
  * Manages a single encrypted file containing all applications' storage data.
  * Each application gets its own namespace within the shared file.
- * 
+ *
  * Storage location priority:
  * 1. REACT_CONSOLE_STORAGE_PATH environment variable (if set) - allows custom location
  * 2. Script/command directory (default) - same directory as executing script + .react-console/
@@ -92,7 +92,7 @@ export interface StorageOptions {
  *    - Windows: C:\ProgramData\react-console\
  *    - Linux/Unix: /var/lib/react-console/
  * 4. Fallback to user directory (~/.react-console/) if system location not accessible
- * 
+ *
  * Each script/command gets its own encrypted storage file in its own directory.
  */
 class StorageManager {
@@ -485,10 +485,10 @@ class StorageManager {
 
 /**
  * Application Storage class
- * 
+ *
  * Provides storage API for a single application namespace within the shared file.
  * Each application instance has its own isolated storage namespace.
- * 
+ *
  * Features:
  * - Access to shared encrypted file (via StorageManager)
  * - Application-level namespacing
@@ -603,7 +603,11 @@ export class ApplicationStorage {
    * @param value - Value to store
    * @param options - Optional storage options (TTL in milliseconds)
    */
-  setItem<T extends StorageValue = StorageValue>(key: string, value: T, options?: { ttl?: number }): void {
+  setItem<T extends StorageValue = StorageValue>(
+    key: string,
+    value: T,
+    options?: { ttl?: number }
+  ): void {
     const expiresAt = options?.ttl ? Date.now() + options.ttl : null;
 
     this.cache.set(key, {
@@ -638,15 +642,15 @@ export class ApplicationStorage {
     const keys = Array.from(this.cache.keys());
     this.cache.clear();
     this.manager.clearAppData(this.appId);
-    
+
     // Trigger persistence check (will delete file if storage is empty)
     this.manager.markDirty();
     this.manager.persistToDisk();
-    
+
     // Notify storage deletion hooks for each deleted key
     try {
       const { notifyStorageDelete } = require('../hooks/lifecycle');
-      keys.forEach(key => notifyStorageDelete(key));
+      keys.forEach((key) => notifyStorageDelete(key));
     } catch {
       // Hooks module may not be loaded yet, ignore
     }
@@ -691,7 +695,10 @@ export class ApplicationStorage {
    */
   getStoragePath(): string {
     // Access private filePath via manager (shared file path)
-    return (this.manager as any).filePath;
+    interface ManagerWithFilePath {
+      filePath: string;
+    }
+    return (this.manager as unknown as ManagerWithFilePath).filePath;
   }
 
   /**
@@ -713,15 +720,19 @@ export interface StorageAPI {
    * @returns Stored value, default value, or null if not found
    */
   getItem<T extends StorageValue = StorageValue>(key: string, defaultValue?: T | null): T | null;
-  
+
   /**
    * Set an item in storage
    * @param key - Storage key
    * @param value - Value to store
    * @param options - Optional storage options (TTL in milliseconds)
    */
-  setItem<T extends StorageValue = StorageValue>(key: string, value: T, options?: { ttl?: number }): void;
-  
+  setItem<T extends StorageValue = StorageValue>(
+    key: string,
+    value: T,
+    options?: { ttl?: number }
+  ): void;
+
   removeItem(key: string): void;
   clear(): void;
   keys(): string[];
@@ -747,7 +758,7 @@ function generateAppId(): string {
 
 /**
  * Current application storage instance (auto-created)
- * 
+ *
  * Automatically initialized when first accessed.
  * Uses app ID derived from process.cwd() or can be set via initializeStorage().
  */
@@ -756,20 +767,20 @@ let currentAppId: string | null = null;
 
 /**
  * Initialize storage for the current application
- * 
+ *
  * Called automatically by render() or can be called manually.
  * If appId is not provided, auto-generates from process.cwd().
- * 
+ *
  * @param appId - Optional application ID (auto-generated if not provided)
  * @param options - Optional storage options
  * @returns ApplicationStorage instance
- * 
+ *
  * @internal
  * This is called automatically by render() - users typically don't need to call this.
  */
 export function initializeStorage(appId?: string, options?: StorageOptions): ApplicationStorage {
   const id = appId || generateAppId();
-  
+
   // If already initialized with same app ID, return existing instance
   if (currentAppStorage && currentAppId === id) {
     return currentAppStorage;
@@ -778,22 +789,22 @@ export function initializeStorage(appId?: string, options?: StorageOptions): App
   const manager = StorageManager.getInstance();
   currentAppStorage = manager.getAppStorage(id, options);
   currentAppId = id;
-  
+
   return currentAppStorage;
 }
 
 /**
  * Get current application storage instance
- * 
+ *
  * Automatically initializes storage if not already initialized.
  * Uses app ID derived from process.cwd().
- * 
+ *
  * @returns ApplicationStorage instance for current application
- * 
+ *
  * @example
  * ```ts
  * import { storage } from 'react-console';
- * 
+ *
  * // Use storage (automatically initialized)
  * storage.setItem('username', 'john');
  * const username = storage.getItem('username');
@@ -808,18 +819,18 @@ export function getStorage(): ApplicationStorage {
 
 /**
  * Storage singleton - automatically initialized
- * 
+ *
  * Automatically created when first accessed. Uses app ID derived from process.cwd().
  * Each application gets its own isolated namespace within the shared encrypted file.
- * 
+ *
  * @example
  * ```ts
  * import { storage } from 'react-console';
- * 
+ *
  * // Use storage (automatically initialized)
  * storage.setItem('username', 'john');
  * const username = storage.getItem('username');
- * 
+ *
  * // Store with optional TTL
  * storage.setItem('token', 'abc123', { ttl: 3600000 });
  * ```
@@ -827,7 +838,9 @@ export function getStorage(): ApplicationStorage {
 export const storage: StorageAPI = new Proxy({} as StorageAPI, {
   get(_target, prop) {
     const instance = getStorage();
-    const value = (instance as any)[prop];
-    return typeof value === 'function' ? value.bind(instance) : value;
+    const value = (instance as Record<string | symbol, unknown>)[prop];
+    return typeof value === 'function'
+      ? (value as (...args: unknown[]) => unknown).bind(instance)
+      : value;
   },
 });

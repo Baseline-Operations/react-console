@@ -96,7 +96,7 @@ function SettingsComponent() {
       <Text bold color="green">
         Settings
       </Text>
-      <Text>Route: {route?.location || path}</Text>
+      <Text>Route: {route || path}</Text>
       <Text>This is a route-only component.</Text>
     </View>
   );

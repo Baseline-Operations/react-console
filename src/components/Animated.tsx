@@ -36,16 +36,16 @@ export interface AnimatedProps extends StyleProps {
 
 /**
  * Animated component - Wrapper for animating any component
- * 
+ *
  * Provides animation capabilities for terminal components with support for
  * fade, slide, pulse, and other animation types.
- * 
+ *
  * @example
  * ```tsx
  * <Animated type="fade" duration={1000} autoPlay>
  *   <Text>Fading in</Text>
  * </Animated>
- * 
+ *
  * <Animated type="slide" direction="in" duration={500}>
  *   <Box>Sliding in</Box>
  * </Animated>
@@ -76,7 +76,7 @@ export function Animated({
     iterations,
     direction,
   });
-  
+
   // Use React.useState directly to ensure we get the patched version
   // Store the computed style directly to avoid batching issues
   const [animatedState, setAnimatedState] = React.useState<{
@@ -90,9 +90,9 @@ export function Animated({
     started: boolean;
     completed: boolean;
   } | null>(null);
-  
+
   const baseStyle = mergeClassNameAndStyle(className, style, styleProps) || {};
-  
+
   // Compute style for a given progress value
   const computeStyleForProgress = (animatedProgress: number): ViewStyle | TextStyle => {
     switch (type) {
@@ -100,14 +100,14 @@ export function Animated({
         // Fade in/out using color interpolation
         // Note: calculateAnimationProgress already handles direction, so progress
         // goes 0->1 for 'in' and 1->0 for 'out'. We always interpolate dark->bright.
-        const targetColor = (baseStyle as any).color || '#ffffff';
+        const targetColor = (baseStyle as TextStyle).color || '#ffffff';
         const darkColor = '#000000';
-        
+
         // Always interpolate from dark to target based on progress
         // For 'in': progress goes 0->1, so dark->bright
         // For 'out': progress goes 1->0 (inverted by calculateAnimationProgress), so bright->dark
         const finalColor = interpolateColor(darkColor, targetColor, animatedProgress);
-        
+
         return {
           ...baseStyle,
           color: finalColor,
@@ -115,19 +115,19 @@ export function Animated({
           dim: animatedProgress < 0.3,
         } as ViewStyle | TextStyle;
       }
-        
+
       case 'slide': {
         // Slide animation using margin/position offsets
         // Note: calculateAnimationProgress already handles direction
         // For 'in': progress 0->1, so off-screen -> on-screen
         // For 'out': progress 1->0 (inverted), so on-screen -> off-screen
-        
+
         // Calculate remaining distance: at progress=0 max distance, at progress=1 no distance
         const remainingDistance = Math.round(distance * (1 - animatedProgress));
-        
+
         let marginLeft = 0;
         let marginTop = 0;
-        
+
         switch (from) {
           case 'left':
             marginLeft = -remainingDistance;
@@ -142,7 +142,7 @@ export function Animated({
             marginTop = remainingDistance;
             break;
         }
-        
+
         // Use position: relative with offsets for smooth sliding
         return {
           ...baseStyle,
@@ -153,7 +153,7 @@ export function Animated({
           dim: animatedProgress < 0.3,
         } as ViewStyle | TextStyle;
       }
-        
+
       case 'pulse':
         // Pulse effect using dim/bright toggle
         const pulseProgress = animatedProgress % 1;
@@ -161,7 +161,7 @@ export function Animated({
           ...baseStyle,
           dim: pulseProgress > 0.5,
         } as ViewStyle | TextStyle;
-        
+
       case 'blink':
         // Blink effect
         const blinkProgress = animatedProgress % 1;
@@ -169,12 +169,12 @@ export function Animated({
           ...baseStyle,
           dim: blinkProgress > 0.5,
         } as ViewStyle | TextStyle;
-        
+
       default:
         return baseStyle;
     }
   };
-  
+
   // Get the current animated style (uses stored state or computes initial/final state)
   const getAnimatedStyle = (): ViewStyle | TextStyle => {
     if (!animationRef.current?.isRunning) {
@@ -186,45 +186,45 @@ export function Animated({
         // For 'in', animation ends at progress=1
         return computeStyleForProgress(direction === 'out' ? 0 : 1);
       }
-      
+
       // Initial state before animation starts
       // For 'out': start visible (progress=1 before inversion makes it look like 1)
       // For 'in': start hidden (progress=0)
       return computeStyleForProgress(direction === 'out' ? 1 : 0);
     }
-    
+
     // Animation is running - use stored style from state
     return animatedState.style || baseStyle;
   };
-  
+
   const startAnimation = () => {
     if (animationRef.current?.isRunning) return;
-    
+
     animationRef.current = {
       startTime: Date.now(),
       isRunning: true,
       started: false,
       completed: false,
     };
-    
+
     if (onAnimationStart) {
       onAnimationStart();
     }
-    
+
     animationRef.current.started = true;
-    
+
     const animate = (timestamp: number) => {
       if (!animationRef.current) return;
-      
+
       const elapsed = timestamp - (animationRef.current.startTime || 0);
       const currentProgress = calculateAnimationProgress(elapsed, animationConfig);
-      
+
       // Compute the animated style immediately with current progress
       const computedStyle = computeStyleForProgress(currentProgress);
-      
+
       // Update state with both progress and computed style
       setAnimatedState({ progress: currentProgress, style: computedStyle });
-      
+
       // Check if animation completed
       const iterations = animationConfig.iterations || 1;
       if (iterations !== Infinity && currentProgress >= 1 && !animationRef.current.completed) {
@@ -238,56 +238,60 @@ export function Animated({
         animationRef.current.isRunning = false;
         return;
       }
-      
+
       // Continue animation
       if (animationRef.current.isRunning) {
         frameController.requestAnimationFrame(animate);
       }
     };
-    
+
     frameController.requestAnimationFrame(animate);
   };
-  
+
   useEffect(() => {
     if (autoPlay) {
       startAnimation();
     }
-    
+
     return () => {
       if (animationRef.current) {
         animationRef.current.isRunning = false;
       }
       frameController.cancelAnimationFrame();
     };
-  }, [autoPlay]); // Only depend on autoPlay
-  
+    // Intentionally only depend on autoPlay - startAnimation and frameController are stable
+    // (frameController from useRef, startAnimation should not re-trigger on every prop change)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay]);
+
   // Get animated style
   const animatedStyle = getAnimatedStyle();
-  
+
   // For fade animations, we need to apply color to all children
   // Clone children and inject the animated style
   const enhancedChildren = React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) {
       return child;
     }
-    
+
     // Clone ALL children with the animated color/dim properties
     // This ensures the animation affects Text elements and any custom components
     const childProps = child.props as Record<string, unknown>;
+    const textStyle = animatedStyle as TextStyle;
     const mergedStyle = {
-      ...(childProps.style as object || {}),
-      color: (animatedStyle as any).color,
-      dim: (animatedStyle as any).dim,
+      ...((childProps.style as object) || {}),
+      color: textStyle.color,
+      dim: textStyle.dim,
     };
-    
+
     return React.cloneElement(child, {
       ...childProps,
       style: mergedStyle,
-      color: (animatedStyle as any).color,
-      dim: (animatedStyle as any).dim,
-    } as any);
+      color: textStyle.color,
+      dim: textStyle.dim,
+    } as React.Attributes);
   });
-  
+
   // Render children with animated style wrapper
   return createConsoleNode('box', {
     style: animatedStyle as ViewStyle,

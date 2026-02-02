@@ -25,26 +25,26 @@ export interface ScrollbarStyle {
 
 /**
  * Props for the ScrollView component
- * 
+ *
  * React Native-like scrollable container for overflow content.
  * Extends View with scrolling capability and optional scrollbar.
- * 
+ *
  * @example
  * ```tsx
  * // Basic usage
  * <ScrollView maxHeight={20}>
  *   <Text>Long content that overflows</Text>
  * </ScrollView>
- * 
+ *
  * // With scrollbar styling
- * <ScrollView 
- *   maxHeight={20} 
+ * <ScrollView
+ *   maxHeight={20}
  *   showsVerticalScrollIndicator
  *   scrollbarStyle={{ thumbColor: 'cyan', trackColor: 'gray' }}
  * >
  *   <Text>Scrollable content</Text>
  * </ScrollView>
- * 
+ *
  * // Controlled scroll position
  * <ScrollView scrollTop={scrollY} onScroll={setScrollY}>
  *   <Text>Content</Text>
@@ -57,7 +57,7 @@ export interface ScrollViewProps extends LayoutProps, StyleProps {
   style?: ViewStyle | ViewStyle[];
   /** Content container style */
   contentContainerStyle?: ViewStyle;
-  
+
   // Scroll position
   /** Vertical scroll offset (default: 0) */
   scrollTop?: number;
@@ -65,17 +65,17 @@ export interface ScrollViewProps extends LayoutProps, StyleProps {
   scrollLeft?: number;
   /** Callback when scroll position changes */
   onScroll?: (scrollTop: number, scrollLeft: number) => void;
-  
+
   // Constraints
   /** Maximum visible height (enables vertical scrolling) */
   maxHeight?: number;
   /** Maximum visible width (enables horizontal scrolling) */
   maxWidth?: number;
-  
+
   // Scroll direction
   /** Enable horizontal scrolling (default: false) */
   horizontal?: boolean;
-  
+
   // Scroll indicators (React Native compatible naming)
   /** Show vertical scroll indicator (default: true when content overflows) */
   showsVerticalScrollIndicator?: boolean;
@@ -83,11 +83,11 @@ export interface ScrollViewProps extends LayoutProps, StyleProps {
   showsHorizontalScrollIndicator?: boolean;
   /** Legacy: Show scroll indicator (maps to vertical/horizontal based on direction) */
   showsScrollIndicator?: boolean;
-  
+
   // Scrollbar styling
   /** Custom scrollbar appearance */
   scrollbarStyle?: ScrollbarStyle;
-  
+
   // Behavior
   /** Scroll to end when content changes (default: false) */
   scrollToEnd?: boolean;
@@ -95,26 +95,28 @@ export interface ScrollViewProps extends LayoutProps, StyleProps {
   keyboardScrollEnabled?: boolean;
   /** Lines to scroll per key press (default: 1) */
   scrollStep?: number;
+  /** Stay at bottom when new content is added (if already at bottom) (default: false) */
+  stickyToBottom?: boolean;
 }
 
 /**
  * ScrollView component - React Native-like pattern for terminal
- * 
+ *
  * Extends View with scrolling capability. Content that exceeds maxHeight/maxWidth
  * becomes scrollable. Supports both controlled (scrollTop prop) and uncontrolled modes.
- * 
+ *
  * @param props - ScrollView component props
  * @returns React element representing a scrollable container
- * 
+ *
  * @example
  * ```tsx
  * // Simple scrollable list
  * <ScrollView maxHeight={10}>
  *   {items.map(item => <Text key={item.id}>{item.name}</Text>)}
  * </ScrollView>
- * 
+ *
  * // With custom scrollbar
- * <ScrollView 
+ * <ScrollView
  *   maxHeight={15}
  *   showsVerticalScrollIndicator
  *   scrollbarStyle={{
@@ -145,16 +147,17 @@ export function ScrollView({
   scrollToEnd = false,
   keyboardScrollEnabled = true,
   scrollStep = 1,
+  stickyToBottom = false,
   className,
   ...props
 }: ScrollViewProps) {
   // Merge className with style prop and legacy props
   const mergedStyle = mergeClassNameAndStyle(className, style, props);
-  
+
   // Determine which indicators to show
   const showVertical = showsVerticalScrollIndicator ?? (!horizontal && showsScrollIndicator);
   const showHorizontal = showsHorizontalScrollIndicator ?? (horizontal && showsScrollIndicator);
-  
+
   return createConsoleNode('scrollview', {
     scrollTop: horizontal ? scrollLeft : scrollTop,
     scrollLeft: horizontal ? scrollTop : scrollLeft,
@@ -168,6 +171,7 @@ export function ScrollView({
     scrollToEnd,
     keyboardScrollEnabled,
     scrollStep,
+    autoScrollToBottom: stickyToBottom,
     contentContainerStyle,
     style: mergedStyle as ViewStyle,
     layout: mergedStyle as LayoutProps,

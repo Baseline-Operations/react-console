@@ -16,7 +16,21 @@ export interface SelectOption {
 }
 
 export interface ConsoleNode {
-  type: 'text' | 'box' | 'fragment' | 'newline' | 'linebreak' | 'input' | 'button' | 'scrollable' | 'scrollview' | 'overlay' | 'radio' | 'checkbox' | 'dropdown' | 'list';
+  type:
+    | 'text'
+    | 'box'
+    | 'fragment'
+    | 'newline'
+    | 'linebreak'
+    | 'input'
+    | 'button'
+    | 'scrollable'
+    | 'scrollview'
+    | 'overlay'
+    | 'radio'
+    | 'checkbox'
+    | 'dropdown'
+    | 'list';
   customType?: string; // For custom registered components
   content?: string;
   styles?: StyleProps; // Legacy - use style prop instead
@@ -28,8 +42,8 @@ export interface ConsoleNode {
   width?: ResponsiveSize;
   height?: ResponsiveSize;
   // Interactive props
-  value?: string | number | boolean | string[] | number[]; // Value can be string, number, boolean, or array (for multi-select)
-  defaultValue?: string | number | boolean | string[] | number[];
+  value?: string | number | boolean | (string | number)[]; // Value can be string, number, boolean, or array (for multi-select)
+  defaultValue?: string | number | boolean | (string | number)[];
   placeholder?: string;
   focused?: boolean;
   disabled?: boolean;

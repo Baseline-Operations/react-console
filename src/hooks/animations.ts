@@ -17,9 +17,13 @@ import type { ViewStyle, TextStyle } from '../types';
 
 // Import reconciler for discrete updates
 // This ensures state updates trigger proper re-renders
-let reconciler: any = null;
+interface ReconcilerMethods {
+  flushSyncFromReconciler?: (fn: () => void) => void;
+  discreteUpdates?: (fn: () => void) => void;
+}
+let reconciler: ReconcilerMethods | null = null;
 try {
-  reconciler = require('../renderer/reconciler').reconciler;
+  reconciler = require('../renderer/reconciler').reconciler as ReconcilerMethods;
 } catch {
   // Reconciler may not be available in all contexts
 }
@@ -28,7 +32,10 @@ try {
  * Helper to update state with proper reconciler integration
  * Uses flushSyncFromReconciler to ensure state changes trigger immediate re-renders
  */
-function updateState<T>(setter: (value: T | ((prev: T) => T)) => void, value: T | ((prev: T) => T)): void {
+function updateState<T>(
+  setter: (value: T | ((prev: T) => T)) => void,
+  value: T | ((prev: T) => T)
+): void {
   if (reconciler?.flushSyncFromReconciler) {
     reconciler.flushSyncFromReconciler(() => {
       setter(value);
@@ -44,12 +51,12 @@ function updateState<T>(setter: (value: T | ((prev: T) => T)) => void, value: T 
 
 /**
  * Hook for animating numeric values
- * 
+ *
  * @param from - Starting value
  * @param to - Ending value
  * @param config - Animation configuration
  * @returns Animated value and control functions
- * 
+ *
  * @example
  * ```tsx
  * function AnimatedCounter() {
@@ -57,11 +64,11 @@ function updateState<T>(setter: (value: T | ((prev: T) => T)) => void, value: T 
  *     duration: 2000,
  *     easing: easing.easeOut,
  *   });
- *   
+ *
  *   useEffect(() => {
  *     start();
  *   }, []);
- *   
+ *
  *   return <Text>{Math.round(value)}</Text>;
  * }
  * ```
@@ -93,7 +100,7 @@ export function useAnimatedValue(
 
   const start = useCallback(() => {
     stop();
-    
+
     animationRef.current = {
       startTime: Date.now(),
       isRunning: true,
@@ -107,10 +114,10 @@ export function useAnimatedValue(
       const { startTime, from: startVal, to: endVal } = animationRef.current;
       const elapsed = timestamp - startTime;
       const progress = calculateAnimationProgress(elapsed, animationConfig);
-      
+
       const eased = (animationConfig.easing || easing.linear)(progress);
       const newValue = interpolate(startVal, endVal, eased);
-      
+
       updateState(setValue, newValue);
 
       // Continue animation if not complete
@@ -136,12 +143,12 @@ export function useAnimatedValue(
 
 /**
  * Hook for animating colors
- * 
+ *
  * @param from - Starting color
  * @param to - Ending color
  * @param config - Animation configuration
  * @returns Animated color and control functions
- * 
+ *
  * @example
  * ```tsx
  * function ColorTransition() {
@@ -149,7 +156,7 @@ export function useAnimatedValue(
  *     duration: 1000,
  *     easing: easing.easeInOut,
  *   });
- *   
+ *
  *   return (
  *     <Text style={{ color }} onClick={start}>
  *       Click to animate color
@@ -185,7 +192,7 @@ export function useAnimatedColor(
 
   const start = useCallback(() => {
     stop();
-    
+
     animationRef.current = {
       startTime: Date.now(),
       isRunning: true,
@@ -199,7 +206,7 @@ export function useAnimatedColor(
       const { startTime, from: startColor, to: endColor } = animationRef.current;
       const elapsed = timestamp - startTime;
       const progress = calculateAnimationProgress(elapsed, animationConfig);
-      
+
       const newColor = interpolateColor(startColor, endColor, progress, animationConfig.easing);
       updateState(setColor, newColor);
 
@@ -226,12 +233,12 @@ export function useAnimatedColor(
 
 /**
  * Hook for animating style objects
- * 
+ *
  * @param from - Starting style
  * @param to - Ending style
  * @param config - Animation configuration
  * @returns Animated style and control functions
- * 
+ *
  * @example
  * ```tsx
  * function AnimatedBox() {
@@ -240,7 +247,7 @@ export function useAnimatedColor(
  *     { width: 50, height: 20 },
  *     { duration: 1000 }
  *   );
- *   
+ *
  *   return (
  *     <Box style={style} onClick={start}>
  *       <Text>Click to animate</Text>
@@ -276,7 +283,7 @@ export function useAnimatedStyle(
 
   const start = useCallback(() => {
     stop();
-    
+
     animationRef.current = {
       startTime: Date.now(),
       isRunning: true,
@@ -290,16 +297,16 @@ export function useAnimatedStyle(
       const { startTime, from: startStyle, to: endStyle } = animationRef.current;
       const elapsed = timestamp - startTime;
       const progress = calculateAnimationProgress(elapsed, animationConfig);
-      
+
       const eased = (animationConfig.easing || easing.linear)(progress);
       const newStyle: ViewStyle | TextStyle = {};
-      
+
       // Interpolate numeric properties
       const allKeys = new Set([...Object.keys(startStyle), ...Object.keys(endStyle)]);
       for (const key of allKeys) {
         const startVal = (startStyle as Record<string, unknown>)[key];
         const endVal = (endStyle as Record<string, unknown>)[key];
-        
+
         if (typeof startVal === 'number' && typeof endVal === 'number') {
           (newStyle as Record<string, unknown>)[key] = interpolate(startVal, endVal, eased);
         } else if (eased < 0.5) {
@@ -308,7 +315,7 @@ export function useAnimatedStyle(
           (newStyle as Record<string, unknown>)[key] = endVal ?? startVal;
         }
       }
-      
+
       updateState(setStyle, newStyle);
 
       // Continue animation if not complete

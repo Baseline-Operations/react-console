@@ -26,18 +26,18 @@ const DEFAULT_EMPTY_COLOR = 'gray';
 
 /**
  * ProgressBar component - Visual progress indicator
- * 
+ *
  * Displays a horizontal or vertical progress bar with customizable appearance.
- * 
+ *
  * @param props - ProgressBar component props
  * @returns React element representing a progress bar
- * 
+ *
  * @example
  * ```tsx
  * <ProgressBar value={75} label="Uploading..." />
- * 
- * <ProgressBar 
- *   value={50} 
+ *
+ * <ProgressBar
+ *   value={50}
  *   width={40}
  *   filledColor="cyan"
  *   showPercentage
@@ -83,19 +83,19 @@ export function ProgressBar({
       ...(mergedStyle as ViewStyle),
       display: orientation === 'vertical' ? 'flex' : 'row',
       flexDirection: orientation === 'vertical' ? 'column-reverse' : 'row',
-    } as any,
+    } as ViewStyle,
     // Store progress bar configuration in node properties for renderer
     // Note: Custom renderer support needed for full progress bar rendering
-    progressValue: clampedValue as any,
-    progressMax: max as any,
-    progressPercentage: percentage as any,
-    progressWidth: barWidth as any,
-    progressLabel: label as any,
-    progressShowPercentage: showPercentage as any,
-    progressFilledColor: filledColor as any,
-    progressEmptyColor: emptyColor as any,
-    progressFilledChar: filledChar as any,
-    progressEmptyChar: emptyChar as any,
-    progressOrientation: orientation as any,
+    progressValue: clampedValue,
+    progressMax: max,
+    progressPercentage: percentage,
+    progressWidth: barWidth,
+    progressLabel: label,
+    progressShowPercentage: showPercentage,
+    progressFilledColor: filledColor,
+    progressEmptyColor: emptyColor,
+    progressFilledChar: filledChar,
+    progressEmptyChar: emptyChar,
+    progressOrientation: orientation,
   });
 }

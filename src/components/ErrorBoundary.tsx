@@ -1,9 +1,9 @@
 /**
  * ErrorBoundary component - Catches errors in child components and displays fallback UI
- * 
+ *
  * React error boundaries must be class components. This component catches errors
  * during rendering and displays a fallback UI instead of crashing the entire app.
- * 
+ *
  * @example
  * ```tsx
  * <ErrorBoundary fallback={<Text color="red">Something went wrong</Text>}>
@@ -16,6 +16,7 @@ import React, { Component, type ReactNode } from 'react';
 import { Text } from './primitives/Text';
 import { View } from './primitives/View';
 import { reportError, ErrorType } from '../utils/errors';
+import type { ViewStyle } from '../types/styles';
 
 /**
  * Props for ErrorBoundary component
@@ -52,17 +53,17 @@ interface ErrorBoundaryState {
 
 /**
  * ErrorBoundary component - Catches errors in child components
- * 
+ *
  * This is a class component because React error boundaries must be class components.
  * It catches errors during rendering, lifecycle methods, and constructors of child components.
- * 
+ *
  * @example
  * ```tsx
  * // Basic usage
  * <ErrorBoundary>
  *   <App />
  * </ErrorBoundary>
- * 
+ *
  * // With custom fallback
  * <ErrorBoundary
  *   fallback={<Text color="red">An error occurred</Text>}
@@ -70,7 +71,7 @@ interface ErrorBoundaryState {
  * >
  *   <App />
  * </ErrorBoundary>
- * 
+ *
  * // With function fallback
  * <ErrorBoundary
  *   fallback={(error, errorInfo) => (
@@ -133,7 +134,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
    */
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {
     const { resetOnChange = true } = this.props;
-    
+
     if (resetOnChange && this.state.hasError && prevProps.children !== this.props.children) {
       this.setState({
         hasError: false,
@@ -158,11 +159,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       // Default fallback UI
       return (
-        <View style={{ padding: 1, border: 'single' } as any}>
-          <Text color="red" bold>⚠ Error</Text>
+        <View style={{ padding: 1, border: 'single' } as ViewStyle}>
+          <Text color="red" bold>
+            ⚠ Error
+          </Text>
           <Text>An error occurred while rendering this component.</Text>
           {this.state.error.message && (
-            <Text color="yellow" dim>Error: {this.state.error.message}</Text>
+            <Text color="yellow" dim>
+              Error: {this.state.error.message}
+            </Text>
           )}
           {process.env.NODE_ENV === 'development' && this.state.errorInfo?.componentStack && (
             <Text color="gray" dim>
@@ -180,18 +185,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
 /**
  * Hook to reset error boundary (useful for programmatic error recovery)
- * 
+ *
  * Note: This is a workaround since we can't directly access ErrorBoundary state.
  * Consider using a key prop on ErrorBoundary to force remount instead.
- * 
+ *
  * @example
  * ```tsx
  * const [errorKey, setErrorKey] = useState(0);
- * 
+ *
  * <ErrorBoundary key={errorKey}>
  *   <App />
  * </ErrorBoundary>
- * 
+ *
  * // Reset by changing key
  * setErrorKey(prev => prev + 1);
  * ```

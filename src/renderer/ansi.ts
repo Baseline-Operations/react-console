@@ -41,8 +41,8 @@ const ANSI_BG_COLORS: Record<string, number> = {
   brightCyan: 106,
   brightWhite: 107,
   // Common aliases
-  gray: 100,    // brightBlack (dark gray)
-  grey: 100,    // alias for gray
+  gray: 100, // brightBlack (dark gray)
+  grey: 100, // alias for gray
   lightGray: 47, // white
   lightGrey: 47, // alias
   darkGray: 100, // brightBlack
@@ -79,13 +79,13 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 
 /**
  * Get ANSI foreground color code
- * 
+ *
  * Converts a color (named, hex, or RGB) to ANSI foreground color escape code.
  * Supports named colors (red, blue, etc.), hex colors (#FF0000), and RGB (rgb(255,0,0)).
- * 
+ *
  * @param color - Color to convert (named, hex, or RGB format)
  * @returns ANSI escape code for foreground color or empty string if invalid
- * 
+ *
  * @example
  * ```ts
  * getForegroundColorCode('red'); // '\x1b[31m'
@@ -121,13 +121,13 @@ export function getForegroundColorCode(color?: Color): string {
 
 /**
  * Get ANSI background color code
- * 
+ *
  * Converts a color (named, hex, or RGB) to ANSI background color escape code.
  * Supports named colors (red, blue, etc.), hex colors (#FF0000), and RGB (rgb(255,0,0)).
- * 
+ *
  * @param color - Color to convert (named, hex, or RGB format)
  * @returns ANSI escape code for background color or empty string if invalid
- * 
+ *
  * @example
  * ```ts
  * getBackgroundColorCode('blue'); // '\x1b[44m'
@@ -162,20 +162,20 @@ export function getBackgroundColorCode(color?: Color): string {
 
 /**
  * Apply styles to text using ANSI escape codes
- * 
+ *
  * Applies multiple text styles and colors to text using ANSI escape codes.
  * Supports text styles (bold, italic, underline, etc.) and colors (foreground, background).
  * Automatically resets styles at the end of text.
- * 
+ *
  * @param text - Text to style
  * @param styles - Style properties to apply (color, backgroundColor, bold, italic, etc.)
  * @returns Styled text with ANSI escape codes
- * 
+ *
  * @example
  * ```ts
  * applyStyles('Hello', { color: 'red', bold: true });
  * // '\x1b[1;31mHello\x1b[0m' (combined codes)
- * 
+ *
  * applyStyles('World', { backgroundColor: 'blue', underline: true });
  * // '\x1b[4;44mWorld\x1b[0m' (combined codes)
  * ```
@@ -301,13 +301,13 @@ function getBackgroundColorParams(color?: Color): number[] {
 
 /**
  * Remove ANSI codes from text
- * 
+ *
  * Strips all ANSI escape codes from text, returning only visible characters.
  * Useful for measuring text width or comparing text without styling.
- * 
+ *
  * @param text - Text with ANSI escape codes
  * @returns Text without ANSI escape codes
- * 
+ *
  * @example
  * ```ts
  * stripAnsiCodes('\x1b[31mRed\x1b[0m'); // 'Red'
@@ -315,19 +315,18 @@ function getBackgroundColorParams(color?: Color): number[] {
  * ```
  */
 export function stripAnsiCodes(text: string): string {
-  // eslint-disable-next-line no-control-regex
   return text.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
 /**
  * Get visible length of text (without ANSI codes)
- * 
+ *
  * Returns the visible character count of text, excluding ANSI escape codes.
  * Useful for layout calculations where ANSI codes shouldn't affect width.
- * 
+ *
  * @param text - Text with ANSI escape codes
  * @returns Visible character count (ANSI codes excluded)
- * 
+ *
  * @example
  * ```ts
  * getVisibleLength('Hello'); // 5
@@ -340,11 +339,11 @@ export function getVisibleLength(text: string): number {
 
 /**
  * Clear screen
- * 
+ *
  * Returns ANSI escape code to clear the entire terminal screen.
- * 
+ *
  * @returns ANSI escape code for clearing screen
- * 
+ *
  * @example
  * ```ts
  * process.stdout.write(clearScreen()); // Clears screen
@@ -356,14 +355,14 @@ export function clearScreen(): string {
 
 /**
  * Move cursor to position
- * 
+ *
  * Returns ANSI escape code to move cursor to specified position.
  * Coordinates are converted from 0-based to 1-based (ANSI format).
- * 
+ *
  * @param x - X position (0-based, left to right)
  * @param y - Y position (0-based, top to bottom)
  * @returns ANSI escape code for cursor movement
- * 
+ *
  * @example
  * ```ts
  * process.stdout.write(moveCursor(10, 5)); // Moves cursor to column 11, row 6
@@ -375,11 +374,11 @@ export function moveCursor(x: number, y: number): string {
 
 /**
  * Hide cursor
- * 
+ *
  * Returns ANSI escape code to hide the terminal cursor.
- * 
+ *
  * @returns ANSI escape code for hiding cursor
- * 
+ *
  * @example
  * ```ts
  * process.stdout.write(hideCursor()); // Hides cursor
@@ -391,11 +390,11 @@ export function hideCursor(): string {
 
 /**
  * Show cursor
- * 
+ *
  * Returns ANSI escape code to show the terminal cursor.
- * 
+ *
  * @returns ANSI escape code for showing cursor
- * 
+ *
  * @example
  * ```ts
  * process.stdout.write(showCursor()); // Shows cursor
@@ -407,11 +406,11 @@ export function showCursor(): string {
 
 /**
  * Clear line
- * 
+ *
  * Returns ANSI escape code to clear from cursor to end of line.
- * 
+ *
  * @returns ANSI escape code for clearing line
- * 
+ *
  * @example
  * ```ts
  * process.stdout.write(clearLine()); // Clears from cursor to end of line

@@ -1,6 +1,6 @@
 /**
  * Multi-Buffer System Type Definitions
- * 
+ *
  * This module defines all types for the cell-based multi-buffer rendering system.
  */
 
@@ -10,12 +10,12 @@
  */
 export interface Cell {
   // Content
-  char: string;              // Single character (or empty string '' for transparent)
-  
+  char: string; // Single character (or empty string '' for transparent)
+
   // Colors
   foreground: string | null; // ANSI color name, hex (#RRGGBB), or rgb(r,g,b)
   background: string | null; // ANSI color name, hex (#RRGGBB), or rgb(r,g,b)
-  
+
   // Text Styles (ANSI attributes)
   bold: boolean;
   dim: boolean;
@@ -23,16 +23,16 @@ export interface Cell {
   underline: boolean;
   strikethrough: boolean;
   inverse: boolean;
-  
+
   // Layer/Z-Index Information
-  zIndex: number;            // Z-index for layer ordering (higher = on top)
-  layerId: string;           // ID of the layer that owns this cell
-  
+  zIndex: number; // Z-index for layer ordering (higher = on top)
+  layerId: string; // ID of the layer that owns this cell
+
   // Component Tracking
-  nodeId: string | null;     // ID of the node/component that rendered this cell
-  
+  nodeId: string | null; // ID of the node/component that rendered this cell
+
   // Dirty Tracking
-  dirty: boolean;            // Whether this cell needs to be re-rendered to terminal
+  dirty: boolean; // Whether this cell needs to be re-rendered to terminal
 }
 
 /**
@@ -77,9 +77,9 @@ export interface LayerInfo {
   id: string;
   zIndex: number;
   visible: boolean;
-  opacity: number;           // 0-1, for future transparency support
-  bounds: BoundingBox;       // Layer's position and size
-  nodeId: string | null;     // Associated node ID
+  opacity: number; // 0-1, for future transparency support
+  bounds: BoundingBox; // Layer's position and size
+  nodeId: string | null; // Associated node ID
 }
 
 /**
@@ -89,6 +89,8 @@ export interface BufferRenderOptions {
   mode: 'static' | 'interactive' | 'fullscreen';
   fullRedraw: boolean;
   clearScreen: boolean;
+  /** Final cursor position to set after rendering (combined with flush to avoid artifacts) */
+  cursorPosition?: { x: number; y: number };
 }
 
 /**
@@ -130,20 +132,21 @@ export function createCell(partial: PartialCell): Cell {
 export function isCellTransparent(cell: Cell): boolean {
   // Empty char is always transparent
   if (cell.char === '') return true;
-  
+
   // Space with no styling is transparent
   if (cell.char === ' ') {
     // Check for any text styles that make the space "visible"
-    const hasTextStyle = cell.bold || cell.dim || cell.italic || 
-                         cell.underline || cell.strikethrough || cell.inverse;
+    const hasTextStyle =
+      cell.bold || cell.dim || cell.italic || cell.underline || cell.strikethrough || cell.inverse;
     // Check for explicit foreground color (not null/inherit)
-    const hasExplicitForeground = cell.foreground !== null && 
-                                   cell.foreground !== 'inherit';
-    
-    // Space is only transparent if it has no styling
-    return !hasTextStyle && !hasExplicitForeground;
+    const hasExplicitForeground = cell.foreground !== null && cell.foreground !== 'inherit';
+    // Check for explicit background color (makes the space visible)
+    const hasExplicitBackground = cell.background !== null && cell.background !== 'inherit';
+
+    // Space is only transparent if it has no styling (including background)
+    return !hasTextStyle && !hasExplicitForeground && !hasExplicitBackground;
   }
-  
+
   // Non-space characters are never transparent
   return false;
 }
@@ -186,7 +189,7 @@ export function mergeCells(bottom: Cell, top: Cell): Cell {
       dirty: true,
     };
   }
-  
+
   // Top is transparent, use bottom but potentially override background
   return {
     ...bottom,

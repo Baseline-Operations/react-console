@@ -10,7 +10,12 @@ import { RenderingTreeRegistry } from '../../../render/RenderingTree';
 import { StackingContextManager } from '../../../render/StackingContext';
 import { ViewportManager } from '../../../render/Viewport';
 import { getBackgroundColorCode, applyStyles } from '../../../renderer/ansi';
-import { padToVisibleColumn, replaceAtVisibleColumn, substringToVisibleColumn, substringFromVisibleColumn } from '../../../utils/measure';
+import {
+  padToVisibleColumn,
+  replaceAtVisibleColumn,
+  substringToVisibleColumn,
+  substringFromVisibleColumn,
+} from '../../../utils/measure';
 
 /**
  * Legacy output buffer type - kept for method signatures during transition
@@ -20,6 +25,24 @@ export interface OutputBuffer {
   lines: string[];
   cursorX: number;
   cursorY: number;
+}
+
+/**
+ * Theme type for styling
+ */
+export interface Theme {
+  colors?: Record<string, string>;
+  styles?: Record<string, unknown>;
+}
+
+/**
+ * Viewport type for clipping
+ */
+export interface Viewport {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 /**
@@ -36,8 +59,8 @@ export interface RenderContext {
     availableHeight?: number;
   };
   parent?: Node | null;
-  theme?: any;
-  viewport?: any;
+  theme?: Theme | null;
+  viewport?: Viewport | null;
 }
 
 /**
@@ -52,6 +75,14 @@ export interface RenderResult {
 }
 
 /**
+ * Stacking context type
+ */
+export interface StackingContext {
+  zIndex: number;
+  parent?: StackingContext | null;
+}
+
+/**
  * Rendering info type (placeholder - will be fully defined in Phase 3)
  */
 export interface RenderingInfo {
@@ -59,8 +90,8 @@ export interface RenderingInfo {
   bufferRegion: BufferRegion;
   children: RenderingInfo[];
   zIndex: number;
-  stackingContext: any | null;
-  viewport: any | null;
+  stackingContext: StackingContext | null;
+  viewport: Viewport | null;
   clipped: boolean;
   visible: boolean;
 }
@@ -94,12 +125,26 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
      * Default behavior: render background, children, border
      */
     render(buffer: OutputBuffer, context: RenderContext): RenderResult {
+      // Interface for stylable nodes
+      interface StylableNodeMixin {
+        computeStyle(): ComputedStyle;
+      }
+      // Interface for layoutable nodes
+      interface LayoutableNodeMixin {
+        computeLayout(constraints: RenderContext['constraints']): void;
+      }
+      // Interface for renderable children
+      interface RenderableChildNode {
+        render(buffer: OutputBuffer, context: RenderContext): RenderResult;
+      }
+
       // Get style if Stylable mixin is present
-      const style = 'computeStyle' in this ? (this as any).computeStyle() : null;
+      const style =
+        'computeStyle' in this ? (this as unknown as StylableNodeMixin).computeStyle() : null;
 
       // Get layout if Layoutable mixin is present
       if ('computeLayout' in this) {
-        (this as any).computeLayout(context.constraints);
+        (this as unknown as LayoutableNodeMixin).computeLayout(context.constraints);
       }
 
       // Get bounds
@@ -125,7 +170,7 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
             },
             parent: this,
           };
-          const result = (child as any).render(buffer, childContext);
+          const result = (child as unknown as RenderableChildNode).render(buffer, childContext);
           maxEndY = Math.max(maxEndY, result.endY);
         }
       }
@@ -160,11 +205,7 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
      * Render background (called before children)
      * Ink-style: render background ONLY in content area (excluding border areas)
      */
-    renderBackground(
-      buffer: OutputBuffer,
-      style: ComputedStyle,
-      _context: RenderContext
-    ): void {
+    renderBackground(buffer: OutputBuffer, style: ComputedStyle, _context: RenderContext): void {
       const bgColor = style.getBackgroundColor();
       if (!bgColor || bgColor === 'inherit' || bgColor === 'transparent') {
         return;
@@ -220,11 +261,7 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
      * Render border (called after children)
      * Note: This is the legacy OutputBuffer method. New code uses renderBorderToCellBuffer.
      */
-    renderBorder(
-      buffer: OutputBuffer,
-      style: ComputedStyle,
-      _context: RenderContext
-    ): void {
+    renderBorder(buffer: OutputBuffer, style: ComputedStyle, _context: RenderContext): void {
       if (
         !this.border.show.top &&
         !this.border.show.right &&
@@ -243,51 +280,59 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
 
       // Get border characters
       const chars = this.getBorderCharsForCellBuffer(this.border.style);
-      
+
       // Apply border styles
-      const styledChar = (char: string) => applyStyles(char, {
-        color: borderColor ?? undefined,
-        backgroundColor: borderBgColor ?? undefined,
-      });
-      
+      const styledChar = (char: string) =>
+        applyStyles(char, {
+          color: borderColor ?? undefined,
+          backgroundColor: borderBgColor ?? undefined,
+        });
+
       // Ensure buffer has enough lines
       while (buffer.lines.length <= bounds.y + bounds.height) {
         buffer.lines.push('');
       }
-      
+
       // Top border
       if (this.border.show.top) {
-        const topLine = (this.border.show.left ? styledChar(chars.topLeft) : '') +
+        const topLine =
+          (this.border.show.left ? styledChar(chars.topLeft) : '') +
           styledChar(chars.horizontal.repeat(Math.max(0, bounds.width - 2))) +
           (this.border.show.right ? styledChar(chars.topRight) : '');
-        buffer.lines[bounds.y] = padToVisibleColumn(buffer.lines[bounds.y] || '', bounds.x) + topLine;
+        buffer.lines[bounds.y] =
+          padToVisibleColumn(buffer.lines[bounds.y] || '', bounds.x) + topLine;
       }
-      
+
       // Bottom border
       if (this.border.show.bottom) {
         const by = bounds.y + bounds.height - 1;
-        const bottomLine = (this.border.show.left ? styledChar(chars.bottomLeft) : '') +
+        const bottomLine =
+          (this.border.show.left ? styledChar(chars.bottomLeft) : '') +
           styledChar(chars.horizontal.repeat(Math.max(0, bounds.width - 2))) +
           (this.border.show.right ? styledChar(chars.bottomRight) : '');
         buffer.lines[by] = padToVisibleColumn(buffer.lines[by] || '', bounds.x) + bottomLine;
       }
-      
+
       // Left and right borders (vertical parts)
       const startY = this.border.show.top ? 1 : 0;
       const endY = bounds.height - (this.border.show.bottom ? 1 : 0);
-      
+
       for (let row = startY; row < endY; row++) {
         const y = bounds.y + row;
         let line = buffer.lines[y] || '';
         line = padToVisibleColumn(line, bounds.x + bounds.width);
-        
+
         if (this.border.show.left) {
           line = replaceAtVisibleColumn(line, bounds.x, styledChar(chars.vertical));
         }
         if (this.border.show.right) {
-          line = replaceAtVisibleColumn(line, bounds.x + bounds.width - 1, styledChar(chars.vertical));
+          line = replaceAtVisibleColumn(
+            line,
+            bounds.x + bounds.width - 1,
+            styledChar(chars.vertical)
+          );
         }
-        
+
         buffer.lines[y] = line;
       }
     }
@@ -301,17 +346,21 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
     getEffectiveParentBackground(_context: RenderContext): string | null {
       // Start from this node's actual parent in the tree, not context.parent
       // This is because BoxNode.render sets context.parent = this for child rendering
-      let current = this.parent;
+      interface StylableParentNode {
+        computeStyle(): ComputedStyle;
+        parent?: Node | null;
+      }
+      let current: Node | null = this.parent;
       while (current) {
         if ('computeStyle' in current) {
-          const style = (current as any).computeStyle();
+          const style = (current as unknown as StylableParentNode).computeStyle();
           const bgColor = style.getBackgroundColor();
           if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
             return bgColor;
           }
         }
         // Move to parent's parent
-        current = (current as any).parent || null;
+        current = current.parent || null;
       }
       return null;
     }
@@ -319,19 +368,19 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
     /**
      * Register rendering info after rendering
      */
-    registerRendering(
-      bufferRegion: BufferRegion,
-      zIndex: number,
-      viewport: any | null
-    ): void {
+    registerRendering(bufferRegion: BufferRegion, zIndex: number, viewport: Viewport | null): void {
+      interface ViewportWithIntersects extends Viewport {
+        intersects?(bounds: BoundingBox): boolean;
+      }
+      const viewportWithMethod = viewport as ViewportWithIntersects | null;
       const renderingInfo: RenderingInfo = {
         component: this,
         bufferRegion,
         children: [],
         zIndex,
-        stackingContext: (this as any).stackingContext,
+        stackingContext: this.stackingContext as StackingContext | null,
         viewport,
-        clipped: viewport ? !viewport.intersects(this.getBounds()) : false,
+        clipped: viewportWithMethod ? !viewportWithMethod.intersects?.(this.getBounds()) : false,
         visible: this.state.visible,
       };
 
@@ -342,8 +391,13 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
 
       // Update component instance
       if (this.componentInstance) {
-        (this.componentInstance as any).renderingInfo = renderingInfo;
-        (this.componentInstance as any).rendered = true;
+        interface ComponentInstanceExt {
+          renderingInfo?: RenderingInfo;
+          rendered?: boolean;
+        }
+        const instance = this.componentInstance as ComponentInstanceExt;
+        instance.renderingInfo = renderingInfo;
+        instance.rendered = true;
       }
     }
 

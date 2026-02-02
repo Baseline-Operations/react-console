@@ -29,12 +29,12 @@ export function normalizeChildren(children?: ReactNode): ConsoleNode[] | undefin
 /**
  * Create a ConsoleNode with type safety
  * Generic helper to create properly typed ConsoleNode objects
- * 
+ *
  * @template T - The ConsoleNode type (e.g., 'input', 'button', 'text')
  * @param type - The node type
  * @param props - Node properties (content, style, children, etc.)
  * @returns ReactElement for React reconciler compatibility
- * 
+ *
  * Note: The `as unknown as ReactElement` assertion is necessary because:
  * - React reconciler expects ReactElement type
  * - We're creating ConsoleNode objects (our host representation)
@@ -56,13 +56,13 @@ export function createConsoleNode<T extends ConsoleNode['type']>(
   // This ensures React 19 compatibility with correct $$typeof symbol
   // The type is a string (like 'box', 'text') which React will process
   // The reconciler's hostConfig.createInstance will be called with this type
-  return React.createElement(type as any, props as any);
+  return React.createElement(type as string, props as React.Attributes);
 }
 
 /**
  * Merge style arrays or objects into a single style object
  * Helper for components that accept style arrays (React Native pattern)
- * 
+ *
  * Note: This function is optimized for performance. For expensive style calculations,
  * consider using memoizeStyle from utils/memoization.
  */
@@ -99,13 +99,13 @@ export function mergeClassNameAndStyle(
 ): ViewStyle | TextStyle {
   const { mergeClassNameWithStyle } = require('../utils/className');
   const classNameStyle = mergeClassNameWithStyle(className, style);
-  
+
   if (additionalStyles.length > 0) {
     const filteredStyles = additionalStyles.filter((s): s is ViewStyle | TextStyle => s != null);
     if (filteredStyles.length > 0) {
       return mergeStyles(classNameStyle, ...filteredStyles);
     }
   }
-  
+
   return classNameStyle || {};
 }

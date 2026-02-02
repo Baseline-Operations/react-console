@@ -15,6 +15,32 @@ import { CommandNode } from './cli/CommandNode';
 import { RouteNode } from './cli/RouteNode';
 import { DefaultNode } from './cli/DefaultNode';
 import type { Node } from './base/Node';
+import type { ViewStyle, TextStyle } from '../types';
+
+// Extended node interface for interactive properties
+interface ExtendedNodeProps {
+  autoFocus?: boolean;
+  tabIndex?: number;
+  disabled?: boolean;
+  onChange?: (event: unknown) => void;
+  onSubmit?: (event: unknown) => void;
+  onKeyDown?: (event: unknown) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  onClick?: (event: unknown) => void;
+  onKeyPress?: (event: unknown) => void;
+  submitButtonId?: string;
+  disabledStyle?: ViewStyle | TextStyle;
+  focusedStyle?: ViewStyle | TextStyle;
+  pressedStyle?: ViewStyle | TextStyle;
+  hoveredStyle?: ViewStyle | TextStyle;
+  setStyle?: (style: ViewStyle | TextStyle) => void;
+  setClassName?: (className: string | string[]) => void;
+  setOptions?: (options: unknown[]) => void;
+  setValue?: (value: unknown) => void;
+}
+
+type ExtendedNode = Node & Partial<ExtendedNodeProps>;
 
 /**
  * Node factory - creates node instances from React elements
@@ -25,21 +51,24 @@ export class NodeFactory {
    */
   static createNode(element: ReactElement, _parent?: Node): Node {
     const type = element.type;
-    const props = element.props as Record<string, any>;
-    
+    const props = element.props as Record<string, unknown>;
+
     // Normalize type to string
     let typeString: string;
     if (typeof type === 'string') {
       typeString = type;
     } else if (typeof type === 'function') {
-      typeString = type.name || (type as any).displayName || 'Box';
+      typeString = type.name || (type as { displayName?: string }).displayName || 'Box';
     } else if (type && typeof type === 'object' && 'type' in type) {
       // Nested element - extract inner type
-      const innerType = (type as any).type;
+      const innerType = (type as { type: unknown }).type;
       if (typeof innerType === 'string') {
         typeString = innerType;
       } else if (typeof innerType === 'function') {
-        typeString = innerType.name || innerType.displayName || 'Box';
+        typeString =
+          (innerType as { name?: string; displayName?: string }).name ||
+          (innerType as { displayName?: string }).displayName ||
+          'Box';
       } else {
         typeString = 'Box';
       }
@@ -47,9 +76,9 @@ export class NodeFactory {
       // Fallback to Box for unknown types
       typeString = 'Box';
     }
-    
+
     let node: Node;
-    
+
     // Use TSX-friendly component names
     switch (typeString) {
       case 'text':
@@ -66,9 +95,15 @@ export class NodeFactory {
             for (const child of props.children) {
               if (typeof child === 'string' || typeof child === 'number') {
                 textParts.push(String(child));
-              } else if (child && typeof child === 'object' && 'props' in child && child.props && 'children' in child.props) {
+              } else if (
+                child &&
+                typeof child === 'object' &&
+                'props' in child &&
+                (child as { props?: { children?: unknown } }).props &&
+                'children' in (child as { props: { children?: unknown } }).props
+              ) {
                 // Nested Text element - extract its children
-                const nestedChildren = child.props.children;
+                const nestedChildren = (child as { props: { children: unknown } }).props.children;
                 if (typeof nestedChildren === 'string' || typeof nestedChildren === 'number') {
                   textParts.push(String(nestedChildren));
                 }
@@ -77,37 +112,44 @@ export class NodeFactory {
             if (textParts.length > 0) {
               node.setContent(textParts.join(''));
             }
-          } else if (props.children && typeof props.children === 'object' && 'props' in props.children) {
+          } else if (
+            props.children &&
+            typeof props.children === 'object' &&
+            'props' in (props.children as object)
+          ) {
             // Single React element child - try to extract text
-            const childProps = (props.children as any).props;
+            const childProps = (props.children as { props?: { children?: unknown } }).props;
             if (childProps && childProps.children) {
-              if (typeof childProps.children === 'string' || typeof childProps.children === 'number') {
+              if (
+                typeof childProps.children === 'string' ||
+                typeof childProps.children === 'number'
+              ) {
                 node.setContent(String(childProps.children));
               }
             }
           }
         }
         break;
-        
+
       case 'view':
       case 'box':
       case 'View':
       case 'Box':
         node = new BoxNode() as unknown as Node;
         break;
-        
+
       case 'fragment':
       case 'Fragment':
         node = new FragmentNode() as unknown as Node;
         break;
-        
+
       case 'linebreak':
       case 'LineBreak':
         // LineBreak is just a text node with a newline
         node = new TextNode() as unknown as Node;
         node.setContent('\n');
         break;
-        
+
       case 'input':
       case 'Input':
         const inputNode = new InputNode(props.id);
@@ -123,6 +165,9 @@ export class NodeFactory {
         if (props.multiline) {
           inputNode.setMultiline(props.multiline);
         }
+        if (props.maxLines) {
+          inputNode.setMaxLines(props.maxLines);
+        }
         if (props.mask) {
           inputNode.setMask(props.mask);
         }
@@ -130,38 +175,39 @@ export class NodeFactory {
           inputNode.setInputType(props.type === 'number' ? 'number' : 'text');
         }
         // Set focus-related props
+        const extInputNode = inputNode as ExtendedNode;
         if (props.autoFocus !== undefined) {
-          (inputNode as any).autoFocus = Boolean(props.autoFocus);
+          extInputNode.autoFocus = Boolean(props.autoFocus);
         }
         if (props.tabIndex !== undefined) {
-          (inputNode as any).tabIndex = props.tabIndex;
+          extInputNode.tabIndex = props.tabIndex as number;
         }
         if (props.disabled !== undefined) {
-          (inputNode as any).disabled = Boolean(props.disabled);
+          extInputNode.disabled = Boolean(props.disabled);
         }
         // Set event handlers
         if (props.onChange) {
-          (inputNode as any).onChange = props.onChange;
+          extInputNode.onChange = props.onChange as (event: unknown) => void;
         }
         if (props.onSubmit) {
-          (inputNode as any).onSubmit = props.onSubmit;
+          extInputNode.onSubmit = props.onSubmit as (event: unknown) => void;
         }
         if (props.onKeyDown) {
-          (inputNode as any).onKeyDown = props.onKeyDown;
+          extInputNode.onKeyDown = props.onKeyDown as (event: unknown) => void;
         }
         if (props.onFocus) {
-          (inputNode as any).onFocus = props.onFocus;
+          extInputNode.onFocus = props.onFocus as () => void;
         }
         if (props.onBlur) {
-          (inputNode as any).onBlur = props.onBlur;
+          extInputNode.onBlur = props.onBlur as () => void;
         }
         // Set submitButtonId for Enter key behavior
         if (props.submitButtonId) {
-          (inputNode as any).submitButtonId = props.submitButtonId;
+          extInputNode.submitButtonId = props.submitButtonId as string;
         }
         node = inputNode as unknown as Node;
         break;
-        
+
       case 'button':
       case 'Button':
         const buttonNode = new ButtonNode(props.id);
@@ -174,47 +220,48 @@ export class NodeFactory {
         }
         // Set event handlers
         if (props.onClick) {
-          buttonNode.onClick = props.onClick as (event: any) => void;
+          buttonNode.onClick = props.onClick as (event: unknown) => void;
         }
         if (props.onPress) {
-          buttonNode.onPress = props.onPress as (event: any) => void;
+          buttonNode.onPress = props.onPress as (event: unknown) => void;
         }
         if (props.disabled !== undefined) {
           buttonNode.disabled = Boolean(props.disabled);
         }
         // Set focus-related props
+        const extButtonNode = buttonNode as ExtendedNode;
         if (props.autoFocus !== undefined) {
-          (buttonNode as any).autoFocus = Boolean(props.autoFocus);
+          extButtonNode.autoFocus = Boolean(props.autoFocus);
         }
         if (props.tabIndex !== undefined) {
-          (buttonNode as any).tabIndex = props.tabIndex;
+          extButtonNode.tabIndex = props.tabIndex as number;
         }
         if (props.onFocus) {
-          (buttonNode as any).onFocus = props.onFocus;
+          extButtonNode.onFocus = props.onFocus as () => void;
         }
         if (props.onBlur) {
-          (buttonNode as any).onBlur = props.onBlur;
+          extButtonNode.onBlur = props.onBlur as () => void;
         }
         // Set state-specific style overrides
         if (props.disabledStyle) {
-          (buttonNode as any).disabledStyle = props.disabledStyle;
+          extButtonNode.disabledStyle = props.disabledStyle as ViewStyle | TextStyle;
         }
         if (props.focusedStyle) {
-          (buttonNode as any).focusedStyle = props.focusedStyle;
+          extButtonNode.focusedStyle = props.focusedStyle as ViewStyle | TextStyle;
         }
         if (props.pressedStyle) {
-          (buttonNode as any).pressedStyle = props.pressedStyle;
+          extButtonNode.pressedStyle = props.pressedStyle as ViewStyle | TextStyle;
         }
         if (props.hoveredStyle) {
-          (buttonNode as any).hoveredStyle = props.hoveredStyle;
+          extButtonNode.hoveredStyle = props.hoveredStyle as ViewStyle | TextStyle;
         }
         // Set style if provided
         if (props.style) {
-          buttonNode.setStyle(props.style as any);
+          buttonNode.setStyle(props.style as ViewStyle | TextStyle);
         }
         node = buttonNode as unknown as Node;
         break;
-        
+
       case 'scrollview':
       case 'ScrollView':
       case 'scrollable':
@@ -239,10 +286,12 @@ export class NodeFactory {
           scrollViewNode.showsVerticalScrollIndicator = Boolean(props.showsVerticalScrollIndicator);
         }
         if (props.showsHorizontalScrollIndicator !== undefined) {
-          scrollViewNode.showsHorizontalScrollIndicator = Boolean(props.showsHorizontalScrollIndicator);
+          scrollViewNode.showsHorizontalScrollIndicator = Boolean(
+            props.showsHorizontalScrollIndicator
+          );
         }
         if (props.scrollbarStyle) {
-          scrollViewNode.scrollbarStyle = props.scrollbarStyle as any;
+          scrollViewNode.scrollbarStyle = props.scrollbarStyle as ViewStyle | TextStyle;
         }
         if (props.scrollStep !== undefined) {
           scrollViewNode.scrollStep = props.scrollStep as number;
@@ -250,123 +299,252 @@ export class NodeFactory {
         if (props.keyboardScrollEnabled !== undefined) {
           scrollViewNode.keyboardScrollEnabled = Boolean(props.keyboardScrollEnabled);
         }
+        if (props.autoScrollToBottom !== undefined) {
+          scrollViewNode.autoScrollToBottom = Boolean(props.autoScrollToBottom);
+        }
         if (props.onScroll) {
-          scrollViewNode.onScroll = props.onScroll as (scrollTop: number, scrollLeft: number) => void;
+          scrollViewNode.onScroll = props.onScroll as (
+            scrollTop: number,
+            scrollLeft: number
+          ) => void;
         }
         if (props.style) {
-          scrollViewNode.setStyle(props.style as any);
+          scrollViewNode.setStyle(props.style as ViewStyle | TextStyle);
         }
         node = scrollViewNode as unknown as Node;
         break;
-        
+
       case 'commandrouter':
       case 'CommandRouter':
-        node = new CommandRouterNode(props as any) as unknown as Node;
+        node = new CommandRouterNode(props as Record<string, unknown>) as unknown as Node;
         break;
-        
+
       case 'command':
       case 'Command':
-        node = new CommandNode(props as any) as unknown as Node;
+        node = new CommandNode(props as Record<string, unknown>) as unknown as Node;
         break;
-        
+
       case 'route':
       case 'Route':
-        node = new RouteNode(props as any) as unknown as Node;
+        node = new RouteNode(props as Record<string, unknown>) as unknown as Node;
         break;
-        
+
       case 'default':
       case 'Default':
-        node = new DefaultNode(props as any) as unknown as Node;
+        node = new DefaultNode(props as Record<string, unknown>) as unknown as Node;
         break;
-        
+
       case 'radio':
       case 'Radio':
         const { RadioNode } = require('./selection/RadioNode');
-        node = new RadioNode() as unknown as Node;
+        const radioNode = new RadioNode(props.id);
         if (props.options) {
-          (node as any).setOptions(props.options);
+          radioNode.setOptions(props.options);
         }
         if (props.value !== undefined) {
-          (node as any).setValue(props.value);
+          radioNode.setValue(props.value);
         }
+        // Set focus-related props
+        if (props.autoFocus !== undefined) {
+          radioNode.autoFocus = Boolean(props.autoFocus);
+        }
+        if (props.tabIndex !== undefined) {
+          radioNode.tabIndex = props.tabIndex;
+        }
+        if (props.disabled !== undefined) {
+          radioNode.disabled = Boolean(props.disabled);
+        }
+        // Set event handlers
+        if (props.onChange) {
+          radioNode.onChange = props.onChange;
+        }
+        if (props.onFocus) {
+          radioNode.onFocus = props.onFocus;
+        }
+        if (props.onBlur) {
+          radioNode.onBlur = props.onBlur;
+        }
+        // Set display props
+        if (props.formatDisplay) {
+          radioNode.formatDisplay = props.formatDisplay;
+        }
+        if (props.displayFormat) {
+          radioNode.displayFormat = props.displayFormat;
+        }
+        // Set indicator characters (customizable)
+        if (props.selectedIndicator) {
+          radioNode.selectedIndicator = props.selectedIndicator;
+        }
+        if (props.unselectedIndicator) {
+          radioNode.unselectedIndicator = props.unselectedIndicator;
+        }
+        // Set style if provided
+        if (props.style) {
+          radioNode.setStyle(props.style as ViewStyle | TextStyle);
+        }
+        node = radioNode as unknown as Node;
         break;
-        
+
       case 'checkbox':
       case 'Checkbox':
         const { CheckboxNode } = require('./selection/CheckboxNode');
-        node = new CheckboxNode() as unknown as Node;
+        const checkboxNode = new CheckboxNode(props.id as string | undefined);
         if (props.options) {
-          (node as any).setOptions(props.options);
+          checkboxNode.setOptions(props.options);
         }
         if (props.value !== undefined) {
-          (node as any).setValue(props.value);
+          checkboxNode.setValue(props.value);
         }
+        // Set focus-related props
+        if (props.autoFocus !== undefined) {
+          checkboxNode.autoFocus = Boolean(props.autoFocus);
+        }
+        if (props.tabIndex !== undefined) {
+          checkboxNode.tabIndex = props.tabIndex;
+        }
+        if (props.disabled !== undefined) {
+          checkboxNode.disabled = Boolean(props.disabled);
+        }
+        // Set event handlers
+        if (props.onChange) {
+          checkboxNode.onChange = props.onChange;
+        }
+        if (props.onFocus) {
+          checkboxNode.onFocus = props.onFocus;
+        }
+        if (props.onBlur) {
+          checkboxNode.onBlur = props.onBlur;
+        }
+        // Set display props
+        if (props.formatDisplay) {
+          checkboxNode.formatDisplay = props.formatDisplay;
+        }
+        if (props.displayFormat) {
+          checkboxNode.displayFormat = props.displayFormat;
+        }
+        // Set indicator characters (customizable)
+        if (props.checkedIndicator) {
+          checkboxNode.checkedIndicator = props.checkedIndicator;
+        }
+        if (props.uncheckedIndicator) {
+          checkboxNode.uncheckedIndicator = props.uncheckedIndicator;
+        }
+        // Set style if provided
+        if (props.style) {
+          checkboxNode.setStyle(props.style as ViewStyle | TextStyle);
+        }
+        node = checkboxNode as unknown as Node;
         break;
-        
+
       case 'dropdown':
       case 'Dropdown':
         const { DropdownNode } = require('./selection/DropdownNode');
-        node = new DropdownNode() as unknown as Node;
+        const dropdownNode = new DropdownNode(props.id as string | undefined);
         if (props.options) {
-          (node as any).setOptions(props.options);
+          dropdownNode.setOptions(props.options);
         }
         if (props.value !== undefined) {
-          (node as any).setValue(props.value);
+          dropdownNode.setValue(props.value);
         }
+        // Set dropdown-specific props
+        if (props.placeholder) {
+          dropdownNode.placeholder = props.placeholder;
+        }
+        // Set focus-related props
+        if (props.autoFocus !== undefined) {
+          dropdownNode.autoFocus = Boolean(props.autoFocus);
+        }
+        if (props.tabIndex !== undefined) {
+          dropdownNode.tabIndex = props.tabIndex;
+        }
+        if (props.disabled !== undefined) {
+          dropdownNode.disabled = Boolean(props.disabled);
+        }
+        // Set event handlers
+        if (props.onChange) {
+          dropdownNode.onChange = props.onChange;
+        }
+        if (props.onFocus) {
+          dropdownNode.onFocus = props.onFocus;
+        }
+        if (props.onBlur) {
+          dropdownNode.onBlur = props.onBlur;
+        }
+        // Set display props
+        if (props.formatDisplay) {
+          dropdownNode.formatDisplay = props.formatDisplay;
+        }
+        if (props.displayFormat) {
+          dropdownNode.displayFormat = props.displayFormat;
+        }
+        // Set dropdown-specific styling props
+        if (props.dropdownHeight !== undefined) {
+          dropdownNode.dropdownHeight = props.dropdownHeight;
+        }
+        if (props.dropdownPosition) {
+          dropdownNode.dropdownPosition = props.dropdownPosition;
+        }
+        // Set style if provided
+        if (props.style) {
+          dropdownNode.setStyle(props.style as ViewStyle | TextStyle);
+        }
+        node = dropdownNode as unknown as Node;
         break;
-        
+
       case 'list':
       case 'List':
         const { ListNode } = require('./selection/ListNode');
         node = new ListNode() as unknown as Node;
+        const extListNode = node as ExtendedNode;
         if (props.options) {
-          (node as any).setOptions(props.options);
+          extListNode.setOptions?.(props.options as unknown[]);
         }
         if (props.value !== undefined) {
-          (node as any).setValue(props.value);
+          extListNode.setValue?.(props.value);
         }
         break;
-        
+
       default:
         // Default to BoxNode for unknown types
         // This handles custom components and unknown types gracefully
         node = new BoxNode() as unknown as Node;
     }
-    
+
     // Apply props using TSX-friendly APIs
+    const extNode = node as ExtendedNode;
     if (props.style && 'setStyle' in node) {
-      (node as any).setStyle(props.style);
+      extNode.setStyle?.(props.style as ViewStyle | TextStyle);
     }
-    
+
     if (props.className && 'setClassName' in node) {
-      (node as any).setClassName(props.className);
+      extNode.setClassName?.(props.className as string | string[]);
     }
-    
+
     // Add event handlers
     if (props.onClick && 'onClick' in node) {
-      (node as any).onClick = props.onClick;
+      extNode.onClick = props.onClick as (event: unknown) => void;
     }
     if (props.onKeyDown && 'onKeyDown' in node) {
-      (node as any).onKeyDown = props.onKeyDown;
+      extNode.onKeyDown = props.onKeyDown as (event: unknown) => void;
     }
     if (props.onKeyPress && 'onKeyPress' in node) {
-      (node as any).onKeyPress = props.onKeyPress;
+      extNode.onKeyPress = props.onKeyPress as (event: unknown) => void;
     }
     if (props.onChange && 'onChange' in node) {
-      (node as any).onChange = props.onChange;
+      extNode.onChange = props.onChange as (event: unknown) => void;
     }
     if (props.onFocus && 'onFocus' in node) {
-      (node as any).onFocus = props.onFocus;
+      extNode.onFocus = props.onFocus as () => void;
     }
     if (props.onBlur && 'onBlur' in node) {
-      (node as any).onBlur = props.onBlur;
+      extNode.onBlur = props.onBlur as () => void;
     }
-    
+
     // NOTE: Children are NOT added here - React's reconciler handles child addition
     // via appendChild/appendInitialChild. Adding them here would cause duplication.
     // TextNode content is set above from props.children, but children nodes are
     // added by the reconciler.
-    
+
     return node;
   }
 }

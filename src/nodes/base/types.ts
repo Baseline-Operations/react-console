@@ -7,14 +7,14 @@
  * Position enum - CSS-like positioning
  */
 export const Position = {
-  STATIC: 'static',    // Default - normal document flow
+  STATIC: 'static', // Default - normal document flow
   RELATIVE: 'relative', // Normal flow + offset
   ABSOLUTE: 'absolute', // Out of flow, relative to positioned ancestor
-  FIXED: 'fixed',       // Out of flow, relative to viewport
-  STICKY: 'sticky',     // Relative until scroll threshold
+  FIXED: 'fixed', // Out of flow, relative to viewport
+  STICKY: 'sticky', // Relative until scroll threshold
 } as const;
 
-export type Position = typeof Position[keyof typeof Position];
+export type Position = (typeof Position)[keyof typeof Position];
 
 /**
  * Display mode enum - Layout display modes
@@ -26,7 +26,7 @@ export const DisplayMode = {
   NONE: 'none',
 } as const;
 
-export type DisplayMode = typeof DisplayMode[keyof typeof DisplayMode];
+export type DisplayMode = (typeof DisplayMode)[keyof typeof DisplayMode];
 
 /**
  * Border style enum - Border rendering styles
@@ -39,7 +39,7 @@ export const BorderStyle = {
   DOTTED: 'dotted',
 } as const;
 
-export type BorderStyle = typeof BorderStyle[keyof typeof BorderStyle];
+export type BorderStyle = (typeof BorderStyle)[keyof typeof BorderStyle];
 
 /**
  * Text align enum - Text alignment options
@@ -51,7 +51,7 @@ export const TextAlign = {
   JUSTIFY: 'justify',
 } as const;
 
-export type TextAlign = typeof TextAlign[keyof typeof TextAlign];
+export type TextAlign = (typeof TextAlign)[keyof typeof TextAlign];
 
 /**
  * Overflow enum - Overflow handling
@@ -62,7 +62,7 @@ export const Overflow = {
   SCROLL: 'scroll',
 } as const;
 
-export type Overflow = typeof Overflow[keyof typeof Overflow];
+export type Overflow = (typeof Overflow)[keyof typeof Overflow];
 
 /**
  * Flex direction enum - Flexbox direction
@@ -74,7 +74,7 @@ export const FlexDirection = {
   COLUMN_REVERSE: 'column-reverse',
 } as const;
 
-export type FlexDirection = typeof FlexDirection[keyof typeof FlexDirection];
+export type FlexDirection = (typeof FlexDirection)[keyof typeof FlexDirection];
 
 /**
  * Justify content enum - Flexbox/Grid justify content
@@ -88,7 +88,7 @@ export const JustifyContent = {
   SPACE_EVENLY: 'space-evenly',
 } as const;
 
-export type JustifyContent = typeof JustifyContent[keyof typeof JustifyContent];
+export type JustifyContent = (typeof JustifyContent)[keyof typeof JustifyContent];
 
 /**
  * Align items enum - Flexbox/Grid align items
@@ -101,7 +101,7 @@ export const AlignItems = {
   STRETCH: 'stretch',
 } as const;
 
-export type AlignItems = typeof AlignItems[keyof typeof AlignItems];
+export type AlignItems = (typeof AlignItems)[keyof typeof AlignItems];
 
 /**
  * Mouse button enum - Mouse button types
@@ -113,7 +113,7 @@ export const MouseButton = {
   WHEEL: 'wheel',
 } as const;
 
-export type MouseButton = typeof MouseButton[keyof typeof MouseButton];
+export type MouseButton = (typeof MouseButton)[keyof typeof MouseButton];
 
 /**
  * Mouse action enum - Mouse action types
@@ -125,7 +125,7 @@ export const MouseAction = {
   WHEEL: 'wheel',
 } as const;
 
-export type MouseAction = typeof MouseAction[keyof typeof MouseAction];
+export type MouseAction = (typeof MouseAction)[keyof typeof MouseAction];
 
 /**
  * Margin definition - Spacing outside the border
@@ -161,8 +161,8 @@ export interface BorderWidth {
  * Border show definition - Which borders to display
  * Can be true for all sides, or an object specifying individual sides
  */
-export type BorderShow = 
-  | true  // Show all borders
+export type BorderShow =
+  | true // Show all borders
   | {
       top?: boolean;
       right?: boolean;
@@ -233,7 +233,7 @@ export interface ContentArea {
 /**
  * Style map - Generic style object
  */
-export type StyleMap = Record<string, any>;
+export type StyleMap = Record<string, unknown>;
 
 /**
  * Color type - String color name or hex code
@@ -268,4 +268,4 @@ export interface NodeState {
  * Base constructor type for mixins
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type Constructor<T = {}> = new (...args: any[]) => T;
+export type Constructor<T = {}> = new (...args: unknown[]) => T;

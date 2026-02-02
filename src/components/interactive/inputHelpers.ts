@@ -18,7 +18,7 @@ export interface DeletionResult {
 /**
  * Handle character deletion (backspace or delete)
  * Shared logic for removing characters from input value
- * 
+ *
  * @param currentValue - Current input value
  * @param currentValueStr - Current input value as string
  * @param inputType - Input type ('text', 'number', etc.)
@@ -67,7 +67,7 @@ export function handleCharacterDeletion(
 /**
  * Handle character input with validation
  * Shared logic for adding characters to input value
- * 
+ *
  * @param currentValueStr - Current input value as string
  * @param inputChar - Character to add
  * @param inputType - Input type ('text', 'number', etc.)
@@ -120,7 +120,7 @@ export function handleCharacterInput(
 /**
  * Convert input string to typed value based on input type
  * Shared logic for type conversion after input changes
- * 
+ *
  * @param valueStr - Input value as string
  * @param inputType - Input type ('text', 'number', etc.)
  * @param component - ConsoleNode component (for validation)
@@ -144,13 +144,13 @@ export function convertToTypedValue(
 /**
  * Create input event object
  * Helper for creating consistent InputEvent objects
- * 
+ *
  * @param value - New input value
  * @param key - KeyPress event
  * @returns InputEvent object
  */
 export function createInputEvent(
-  value: string | number | boolean | string[] | number[],
+  value: string | number | boolean | (string | number)[],
   key: KeyPress
 ): InputEvent {
   return { value, key };

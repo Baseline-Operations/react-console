@@ -7,5 +7,21 @@ import Reconciler from 'react-reconciler';
 import { Node } from '../nodes/base/Node';
 
 // Type assertion needed because HostConfig type signature varies by react-reconciler version
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const reconciler = Reconciler(Node.createHostConfig() as any);
+// react-reconciler's HostConfig generic parameters are complex and change between versions
+export const reconciler = Reconciler(
+  Node.createHostConfig() as Reconciler.HostConfig<
+    string, // Type
+    Record<string, unknown>, // Props
+    Node, // Container
+    Node, // Instance
+    Node, // TextInstance
+    Node, // SuspenseInstance
+    Node, // HydratableInstance
+    Node, // PublicInstance
+    object, // HostContext
+    unknown[], // UpdatePayload
+    unknown, // ChildSet
+    number, // TimeoutHandle
+    number // NoTimeout
+  >
+);

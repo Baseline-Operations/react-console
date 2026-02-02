@@ -8,7 +8,9 @@ import { isVersionRequested, getAppVersion } from '../../../utils/cli/version';
 describe('isVersionRequested', () => {
   it('should detect --version flag', () => {
     expect(isVersionRequested({ command: [], options: { version: true }, params: [] })).toBe(true);
-    expect(isVersionRequested({ command: [], options: { version: false }, params: [] })).toBe(false);
+    expect(isVersionRequested({ command: [], options: { version: false }, params: [] })).toBe(
+      false
+    );
   });
 
   it('should detect -v flag', () => {
@@ -23,12 +25,20 @@ describe('isVersionRequested', () => {
   });
 
   it('should handle both flags', () => {
-    expect(isVersionRequested({ command: [], options: { version: true, v: true }, params: [] })).toBe(true);
+    expect(
+      isVersionRequested({ command: [], options: { version: true, v: true }, params: [] })
+    ).toBe(true);
   });
 });
 
 describe('getAppVersion', () => {
-  const originalGlobal = global as any;
+  interface GlobalWithAppMetadata {
+    __react_console_cli_app__?: {
+      version?: string;
+      name?: string;
+    };
+  }
+  const originalGlobal = global as unknown as GlobalWithAppMetadata;
 
   beforeEach(() => {
     // Clear global app metadata

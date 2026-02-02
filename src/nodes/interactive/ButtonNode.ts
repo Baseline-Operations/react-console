@@ -4,13 +4,22 @@
  */
 
 import { Node } from '../base/Node';
-import { Stylable, Renderable, Interactive, type OutputBuffer, type RenderContext, type RenderResult, type KeyboardEvent } from '../base/mixins';
+import {
+  Stylable,
+  Renderable,
+  Interactive,
+  type OutputBuffer,
+  type RenderContext,
+  type RenderResult,
+  type KeyboardEvent,
+} from '../base/mixins';
 import type { StyleMap, Dimensions } from '../base/types';
 import type { MouseEvent } from '../base/mixins';
 import { StyleMixinRegistry } from '../../style/mixins/registry';
 import { measureText, padToVisibleColumn } from '../../utils/measure';
 import { applyStyles } from '../../renderer/ansi';
 import type { CellBuffer } from '../../buffer/CellBuffer';
+import { debug } from '../../utils/debug';
 
 /**
  * State-specific style overrides
@@ -24,44 +33,46 @@ interface ButtonStateStyle {
 /**
  * Button node - clickable button
  */
-export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
+export class ButtonNode extends Stylable(
+  Renderable(Interactive(Node as import('../base/types').Constructor<Node>))
+) {
   private label: string = '';
   private _isHovered: boolean = false;
   private _isPressed: boolean = false;
-  
+
   // State-specific style overrides (customizable via props)
   public disabledStyle?: ButtonStateStyle;
   public focusedStyle?: ButtonStateStyle;
   public pressedStyle?: ButtonStateStyle;
   public hoveredStyle?: ButtonStateStyle;
-  
+
   constructor(id?: string) {
     super(id);
     this.applyStyleMixin('BaseStyle');
     // Default button styling
     this.padding = { top: 0, right: 1, bottom: 0, left: 1 };
   }
-  
+
   getNodeType(): string {
     return 'button';
   }
-  
+
   get isHovered(): boolean {
     return this._isHovered;
   }
-  
+
   set isHovered(value: boolean) {
     this._isHovered = value;
   }
-  
+
   get isPressed(): boolean {
     return this._isPressed;
   }
-  
+
   set isPressed(value: boolean) {
     this._isPressed = value;
   }
-  
+
   getDefaultStyle(): StyleMap {
     const baseStyle = StyleMixinRegistry.get('BaseStyle')?.getDefaultStyle() || {};
     return {
@@ -70,7 +81,7 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       color: 'black',
     };
   }
-  
+
   /**
    * Get the current style based on button state (normal, hovered, pressed)
    */
@@ -90,13 +101,15 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     const bgColor = style.getBackgroundColor?.();
     const fgColor = style.getColor?.();
     return {
-      backgroundColor: (bgColor && bgColor !== 'inherit') ? bgColor : 'white',
-      color: (fgColor && fgColor !== 'inherit') ? fgColor : 'black',
+      backgroundColor: bgColor && bgColor !== 'inherit' ? bgColor : 'white',
+      color: fgColor && fgColor !== 'inherit' ? fgColor : 'black',
       bold: style.getBold?.() || false,
     };
   }
-  
-  computeLayout(_constraints: any): any {
+
+  computeLayout(
+    _constraints: import('../base/mixins/Layoutable').LayoutConstraints
+  ): import('../base/mixins/Layoutable').LayoutResult {
     if (this.bounds) {
       return {
         dimensions: {
@@ -109,52 +122,54 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
         bounds: this.bounds,
       };
     }
-    
+
     const text = this.label || this.content || '';
     const textWidth = measureText(text);
     const borderWidth = this.border.width;
     // +4 for focus indicators (prefix "> " or "  " = 2, suffix " <" or "  " = 2)
-    const totalWidth = textWidth + borderWidth.left + borderWidth.right + this.padding.left + this.padding.right + 4;
-    const totalHeight = 1 + borderWidth.top + borderWidth.bottom + this.padding.top + this.padding.bottom;
-    
+    const totalWidth =
+      textWidth + borderWidth.left + borderWidth.right + this.padding.left + this.padding.right + 4;
+    const totalHeight =
+      1 + borderWidth.top + borderWidth.bottom + this.padding.top + this.padding.bottom;
+
     const dimensions: Dimensions = {
       width: totalWidth,
       height: totalHeight,
       contentWidth: textWidth,
       contentHeight: 1,
     };
-    
+
     this.bounds = {
       x: 0,
       y: 0,
       width: dimensions.width,
       height: dimensions.height,
     };
-    
+
     this.contentArea = this.calculateContentArea();
-    
+
     return {
       dimensions,
       layout: {},
       bounds: this.bounds,
     };
   }
-  
+
   render(buffer: OutputBuffer, context: RenderContext): RenderResult {
     const style = this.computeStyle();
     const layout = this.computeLayout(context.constraints);
-    
+
     // 1. Render background
     this.renderBackground(buffer, style, context);
-    
+
     // 2. Render button text
     const contentArea = this.getContentArea();
     const text = this.label || this.content || '';
     this.renderButtonText(buffer, text, style, contentArea.x, contentArea.y);
-    
+
     // 3. Render border
     this.renderBorder(buffer, style, context);
-    
+
     // 4. Register rendering info
     const bufferRegion = {
       startX: context.x,
@@ -163,13 +178,9 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       endY: context.y + layout.dimensions.height,
       lines: [context.y],
     };
-    
-    this.registerRendering(
-      bufferRegion,
-      style.getZIndex() || 0,
-      context.viewport
-    );
-    
+
+    this.registerRendering(bufferRegion, style.getZIndex() || 0, context.viewport);
+
     return {
       endX: context.x + layout.dimensions.width,
       endY: context.y + layout.dimensions.height,
@@ -178,7 +189,7 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       bounds: layout.bounds,
     };
   }
-  
+
   /**
    * Render button to cell buffer (new buffer system)
    */
@@ -196,18 +207,18 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     const text = this.label || this.content || '';
     const isFocused = this.focused;
     const isDisabled = this.disabled;
-    
+
     // Default colors for each state
     const defaultDisabledStyle = { color: '#666666', backgroundColor: '#222222', bold: false };
     const defaultPressedStyle = { color: '#ffffff', backgroundColor: '#005500', bold: true };
     const defaultFocusedStyle = { color: '#00ff00', backgroundColor: '#333333', bold: true };
     const defaultHoveredStyle = { color: '#00ffff', backgroundColor: '#222222', bold: false };
-    
+
     // Determine colors based on state (with custom style overrides)
     let fgColor: string;
     let bgColor: string;
     let bold = false;
-    
+
     if (isDisabled) {
       const style = { ...defaultDisabledStyle, ...this.disabledStyle };
       fgColor = style.color!;
@@ -235,14 +246,16 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       bgColor = stateStyle.backgroundColor;
       bold = stateStyle.bold;
     }
-    
+
     // Focus indicator prefix/suffix
     const prefix = isFocused ? '> ' : '  ';
     const suffix = isFocused ? ' <' : '  ';
     const indicatorColor = isFocused ? '#00ff00' : undefined;
-    
+
+    debug('[ButtonNode] renderToCellBuffer', { x, y, isFocused, prefix, suffix });
+
     let currentX = x;
-    
+
     // Render prefix
     for (let i = 0; i < prefix.length && currentX < x + maxWidth; i++) {
       buffer.setCell(currentX, y, {
@@ -256,7 +269,7 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       });
       currentX++;
     }
-    
+
     // Render button text
     for (let i = 0; i < text.length && currentX < x + maxWidth - suffix.length; i++) {
       buffer.setCell(currentX, y, {
@@ -270,7 +283,7 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       });
       currentX++;
     }
-    
+
     // Render suffix
     for (let i = 0; i < suffix.length && currentX < x + maxWidth; i++) {
       buffer.setCell(currentX, y, {
@@ -285,30 +298,30 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       currentX++;
     }
   }
-  
+
   private renderButtonText(
     buffer: OutputBuffer,
     text: string,
-    style: any,
+    style: import('../base/mixins/Stylable').ComputedStyle,
     x: number,
     y: number
   ): void {
     while (buffer.lines.length <= y) {
       buffer.lines.push('');
     }
-    
+
     const currentLine = buffer.lines[y] || '';
-    
+
     // Determine styling based on state: focused, hovered, pressed, disabled
     const isFocused = this.focused;
     const isHovered = this._isHovered;
     const isPressed = this._isPressed;
     const isDisabled = this.disabled;
-    
+
     let bgColor = style.getBackgroundColor();
     let fgColor = style.getColor() || '#ffffff';
     let bold = style.getBold();
-    
+
     if (isDisabled) {
       fgColor = 'gray';
       bgColor = undefined;
@@ -324,33 +337,40 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
       bgColor = '#222222';
       fgColor = '#00ffff';
     }
-    
+
     // Add focus indicator
     const prefix = isFocused ? applyStyles('> ', { color: '#00ff00', bold: true }) : '  ';
     const suffix = isFocused ? applyStyles(' <', { color: '#00ff00', bold: true }) : '  ';
-    
+
+    debug('[ButtonNode] renderButtonText (legacy)', {
+      x,
+      y,
+      isFocused,
+      prefix: isFocused ? '> ' : '  ',
+    });
+
     const styledText = applyStyles(text, {
       color: fgColor,
       backgroundColor: bgColor,
       bold,
     });
-    
+
     buffer.lines[y] = padToVisibleColumn(currentLine, x) + prefix + styledText + suffix;
   }
-  
+
   // Override Interactive mixin methods for button-specific behavior
   handleKeyboardEvent(event: KeyboardEvent): void {
     if (this.disabled) return;
-    
+
     // Enter or Space activates button
-    if (event.key.return || (event.key.char === ' ')) {
+    if (event.key.return || event.key.char === ' ') {
       this.handleClick({} as MouseEvent); // Create mock mouse event
       event.preventDefault();
     }
-    
+
     super.handleKeyboardEvent(event);
   }
-  
+
   /**
    * Handle mouse enter (hover start)
    */
@@ -359,7 +379,7 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     this._isHovered = true;
     this.onUpdate();
   }
-  
+
   /**
    * Handle mouse leave (hover end)
    */
@@ -368,7 +388,7 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     this._isPressed = false;
     this.onUpdate();
   }
-  
+
   /**
    * Handle mouse down (press start)
    */
@@ -377,24 +397,24 @@ export class ButtonNode extends Stylable(Renderable(Interactive(Node as any))) {
     this._isPressed = true;
     this.onUpdate();
   }
-  
+
   /**
    * Handle mouse up (press end / click)
    */
   onMouseUp(event: MouseEvent): void {
     if (this.disabled) return;
-    
+
     const wasPressed = this._isPressed;
     this._isPressed = false;
-    
+
     // Only trigger click if mouse was pressed on this button
     if (wasPressed && this.onClick) {
       this.onClick(event);
     }
-    
+
     this.onUpdate();
   }
-  
+
   setLabel(label: string): void {
     this.label = label;
     this.onUpdate();

@@ -66,7 +66,7 @@ function BuildComponent() {
       </Text>
       <Text>Command: {command}</Text>
       <Text>Path: {path}</Text>
-      {route && <Text>Route: {route.location}</Text>}
+      {route && <Text>Route: {route}</Text>}
       <Text>This command is accessible both as &apos;build&apos; and &apos;/build&apos;.</Text>
     </View>
   );

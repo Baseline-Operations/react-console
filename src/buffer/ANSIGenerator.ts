@@ -1,6 +1,6 @@
 /**
  * ANSIGenerator - Converts cells to ANSI escape codes
- * 
+ *
  * Handles efficient generation of ANSI codes with minimal escape sequences
  * by tracking state and only emitting changes.
  */
@@ -61,20 +61,20 @@ export class ANSIGenerator {
    */
   cellToANSI(cell: Cell): string {
     const codes = this.getCellCodes(cell);
-    
+
     if (codes.length === 0) {
       return cell.char || ' ';
     }
-    
+
     return `\x1b[${codes.join(';')}m${cell.char || ' '}`;
   }
-  
+
   /**
    * Get ANSI codes for a cell (without escape sequence wrapper)
    */
   private getCellCodes(cell: Cell): number[] {
     const codes: number[] = [];
-    
+
     // Text styles
     if (cell.bold) codes.push(1);
     if (cell.dim) codes.push(2);
@@ -82,31 +82,31 @@ export class ANSIGenerator {
     if (cell.underline) codes.push(4);
     if (cell.inverse) codes.push(7);
     if (cell.strikethrough) codes.push(9);
-    
+
     // Foreground color
     const fgCodes = this.getColorCodes(cell.foreground, false);
     codes.push(...fgCodes);
-    
+
     // Background color
     const bgCodes = this.getColorCodes(cell.background, true);
     codes.push(...bgCodes);
-    
+
     return codes;
   }
-  
+
   /**
    * Get color codes for a color value
    */
   private getColorCodes(color: string | null, isBackground: boolean): number[] {
     if (!color) return [];
-    
+
     const colorMap = isBackground ? ANSI_BG_COLORS : ANSI_FG_COLORS;
-    
+
     // Named color
     if (color in colorMap) {
       return [colorMap[color]!];
     }
-    
+
     // Hex color (#RRGGBB or #RGB)
     if (color.startsWith('#')) {
       const rgb = this.hexToRgb(color);
@@ -116,7 +116,7 @@ export class ANSIGenerator {
         return isBackground ? [48, 5, code256] : [38, 5, code256];
       }
     }
-    
+
     // RGB format (rgb(r,g,b))
     const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
     if (rgbMatch) {
@@ -126,10 +126,10 @@ export class ANSIGenerator {
       // Use true color (24-bit)
       return isBackground ? [48, 2, r, g, b] : [38, 2, r, g, b];
     }
-    
+
     return [];
   }
-  
+
   /**
    * Convert hex color to RGB
    */
@@ -143,7 +143,7 @@ export class ANSIGenerator {
         b: parseInt(shortMatch[3]! + shortMatch[3]!, 16),
       };
     }
-    
+
     const fullMatch = hex.match(/^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
     if (fullMatch) {
       return {
@@ -152,10 +152,10 @@ export class ANSIGenerator {
         b: parseInt(fullMatch[3]!, 16),
       };
     }
-    
+
     return null;
   }
-  
+
   /**
    * Convert RGB to 256-color palette index
    */
@@ -166,7 +166,7 @@ export class ANSIGenerator {
     const b6 = Math.round((b / 255) * 5);
     return 16 + 36 * r6 + 6 * g6 + b6;
   }
-  
+
   /**
    * Generate minimal codes when transitioning between cells
    * Returns codes to transition from `from` cell styling to `to` cell styling
@@ -180,10 +180,10 @@ export class ANSIGenerator {
       }
       return `\x1b[${codes.join(';')}m`;
     }
-    
+
     // Check if we need to reset first
     const needsReset = this.needsReset(from, to);
-    
+
     if (needsReset) {
       // Reset and apply new codes
       const codes = this.getCellCodes(to);
@@ -192,17 +192,17 @@ export class ANSIGenerator {
       }
       return `\x1b[0;${codes.join(';')}m`;
     }
-    
+
     // Generate only the delta codes
     const deltaCodes = this.getDeltaCodes(from, to);
-    
+
     if (deltaCodes.length === 0) {
       return '';
     }
-    
+
     return `\x1b[${deltaCodes.join(';')}m`;
   }
-  
+
   /**
    * Check if we need a reset before applying new styles
    */
@@ -215,20 +215,20 @@ export class ANSIGenerator {
     if (from.underline && !to.underline) return true;
     if (from.inverse && !to.inverse) return true;
     if (from.strikethrough && !to.strikethrough) return true;
-    
+
     // Need reset if going from a color to null (no specific "turn off" code)
     if (from.foreground && !to.foreground) return true;
     if (from.background && !to.background) return true;
-    
+
     return false;
   }
-  
+
   /**
    * Get delta codes (only what changed between cells)
    */
   private getDeltaCodes(from: Cell, to: Cell): number[] {
     const codes: number[] = [];
-    
+
     // Style changes (only additions since we handle resets separately)
     if (!from.bold && to.bold) codes.push(1);
     if (!from.dim && to.dim) codes.push(2);
@@ -236,45 +236,45 @@ export class ANSIGenerator {
     if (!from.underline && to.underline) codes.push(4);
     if (!from.inverse && to.inverse) codes.push(7);
     if (!from.strikethrough && to.strikethrough) codes.push(9);
-    
+
     // Foreground color change
     if (from.foreground !== to.foreground) {
       codes.push(...this.getColorCodes(to.foreground, false));
     }
-    
+
     // Background color change
     if (from.background !== to.background) {
       codes.push(...this.getColorCodes(to.background, true));
     }
-    
+
     return codes;
   }
-  
+
   /**
    * Generate full line output
    */
   lineToANSI(cells: Cell[]): string {
     let output = '';
     let lastCell: Cell | null = null;
-    
+
     for (const cell of cells) {
       output += this.transitionCodes(lastCell, cell);
       output += cell.char || ' ';
       lastCell = cell;
     }
-    
+
     // Reset at end of line
     output += '\x1b[0m';
-    
+
     return output;
   }
-  
+
   /**
    * Generate full buffer output
    */
   bufferToANSI(cells: Cell[][], _width: number, height: number): string {
     const lines: string[] = [];
-    
+
     for (let y = 0; y < height; y++) {
       const row = cells[y];
       if (row) {
@@ -283,18 +283,17 @@ export class ANSIGenerator {
         lines.push('');
       }
     }
-    
+
     return lines.join('\n');
   }
-  
+
   /**
    * Strip all ANSI codes from text
    */
   static stripANSI(text: string): string {
-    // eslint-disable-next-line no-control-regex
     return text.replace(/\x1b\[[0-9;]*m/g, '');
   }
-  
+
   /**
    * Get visible length of text (without ANSI codes)
    */

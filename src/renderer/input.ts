@@ -4,9 +4,17 @@
 
 import { enterRawMode, exitRawMode } from '../utils/terminal';
 import type { KeyPress, MouseEvent } from '../types';
-import { parseMouseEvent, isMouseEvent, enableMouseTracking, disableMouseTracking, supportsMouse } from '../utils/mouse';
+import {
+  parseMouseEvent,
+  isMouseEvent,
+  enableMouseTracking,
+  disableMouseTracking,
+  supportsMouse,
+} from '../utils/mouse';
 
-let inputListener: ((chunk: string, key: KeyPress | null, mouse: MouseEvent | null) => void) | null = null;
+let inputListener:
+  | ((chunk: string, key: KeyPress | null, mouse: MouseEvent | null) => void)
+  | null = null;
 let isRawModeActive = false;
 let mouseTrackingEnabled = false;
 let inputBuffer = ''; // Buffer for multi-byte sequences (like arrow keys)
@@ -258,10 +266,10 @@ export function parseKeyPress(chunk: string): KeyPress {
   const charCode = chunk.length === 1 ? chunk.charCodeAt(0) : 0;
   const isCtrl = charCode < 32 && charCode !== 0;
   const isMeta = false; // Meta key detection would need platform-specific code
-  
+
   // Map common Ctrl+key combinations to readable names for shortcut detection
   let char = chunk;
-  if (isCtrl && charCode >= 0x01 && charCode <= 0x1A) {
+  if (isCtrl && charCode >= 0x01 && charCode <= 0x1a) {
     // Map control characters to their key names for shortcuts (Ctrl+A through Ctrl+Z)
     const ctrlMap: Record<number, string> = {
       0x01: 'a', // Ctrl+A
@@ -273,12 +281,12 @@ export function parseKeyPress(chunk: string): KeyPress {
       0x07: 'g', // Ctrl+G
       0x08: 'h', // Ctrl+H (backspace)
       0x09: 'i', // Ctrl+I (tab)
-      0x0A: 'j', // Ctrl+J (line feed)
-      0x0B: 'k', // Ctrl+K
-      0x0C: 'l', // Ctrl+L
-      0x0D: 'm', // Ctrl+M (return)
-      0x0E: 'n', // Ctrl+N
-      0x0F: 'o', // Ctrl+O
+      0x0a: 'j', // Ctrl+J (line feed)
+      0x0b: 'k', // Ctrl+K
+      0x0c: 'l', // Ctrl+L
+      0x0d: 'm', // Ctrl+M (return)
+      0x0e: 'n', // Ctrl+N
+      0x0f: 'o', // Ctrl+O
       0x10: 'p', // Ctrl+P
       0x11: 'q', // Ctrl+Q
       0x12: 'r', // Ctrl+R
@@ -289,7 +297,7 @@ export function parseKeyPress(chunk: string): KeyPress {
       0x17: 'w', // Ctrl+W
       0x18: 'x', // Ctrl+X
       0x19: 'y', // Ctrl+Y
-      0x1A: 'z', // Ctrl+Z
+      0x1a: 'z', // Ctrl+Z
     };
     // Store the mapped key name for shortcut detection (e.g., 'c' for Ctrl+C)
     char = ctrlMap[charCode] || chunk;
@@ -338,34 +346,47 @@ export function startInputListener(
   // Set up input handling
   process.stdin.on('data', (chunk: Buffer) => {
     const str = chunk.toString();
-    
+
     // Accumulate input buffer for multi-byte sequences
     inputBuffer += str;
 
     // Check if we have a complete sequence (mouse events or arrow keys can be multi-byte)
     // Mouse events: \x1b[<button;x;yM (SGR extended mode)
     // Arrow keys: \x1b[A, \x1b[B, \x1b[C, \x1b[D
-    
+
     // Check for mouse events (can be multi-byte)
-    if (inputBuffer.startsWith('\x1b[<')) {
+    // Multiple mouse events can arrive in a single chunk - process them all in a loop
+    while (inputBuffer.startsWith('\x1b[<')) {
       // Mouse event - wait for complete sequence (ends with M or m)
-      // eslint-disable-next-line no-control-regex
-      if (inputBuffer.match(/^\x1b\[<\d+;\d+;\d+[Mm]/)) {
-        const mouseEvent = parseMouseEvent(inputBuffer);
+
+      const mouseMatch = inputBuffer.match(/^(\x1b\[<\d+;\d+;\d+[Mm])([\s\S]*)/);
+      if (mouseMatch) {
+        const singleEvent = mouseMatch[1]!;
+        const remaining = mouseMatch[2] || '';
+
+        const mouseEvent = parseMouseEvent(singleEvent);
         if (inputListener && mouseEvent) {
-          inputListener(inputBuffer, null, mouseEvent);
+          inputListener(singleEvent, null, mouseEvent);
         }
-        inputBuffer = '';
+
+        // Continue with remaining data (may contain more events)
+        inputBuffer = remaining;
+        // If no more data, we're done
+        if (inputBuffer.length === 0) {
+          return;
+        }
+        // Loop continues to process next event
+      } else {
+        // Incomplete mouse sequence, wait for more data
         return;
       }
-      // Incomplete mouse sequence, wait for more data
-      return;
     }
+    // If we exit the loop with data still in buffer, continue processing below
 
     // Check for arrow keys or other escape sequences
     if (inputBuffer.startsWith('\x1b[')) {
       // Escape sequence - check if complete
-      // eslint-disable-next-line no-control-regex
+
       if (inputBuffer.match(/^\x1b\[[ABCDZ]/)) {
         // Complete arrow key sequence or Shift+Tab (Z)
         const key = parseKeyPress(inputBuffer);
@@ -375,7 +396,7 @@ export function startInputListener(
         inputBuffer = '';
         return;
       }
-      // eslint-disable-next-line no-control-regex
+
       if (inputBuffer.match(/^\x1b\[[56]~/)) {
         // Page Up (\x1b[5~) or Page Down (\x1b[6~)
         const key = parseKeyPress(inputBuffer);
@@ -385,7 +406,7 @@ export function startInputListener(
         inputBuffer = '';
         return;
       }
-      // eslint-disable-next-line no-control-regex
+
       if (inputBuffer.match(/^\x1b\[[14]~/)) {
         // Home (\x1b[1~) or End (\x1b[4~)
         const key = parseKeyPress(inputBuffer);
@@ -429,16 +450,16 @@ export function startInputListener(
     // Handle Ctrl+C - exit cleanly
     // Note: Components can handle Ctrl+C via onKeyDown if they want custom behavior
     if (key.ctrl && inputBuffer === '\x03') {
-      // Clean exit - don't call listener to avoid errors during shutdown
-      stopInputListener();
-      process.exit(0);
+      // Clean exit - use Node.exit() to properly unmount and position cursor
+      const { Node } = require('../nodes/base/Node');
+      Node.exit(0);
       return;
     }
 
     if (inputListener) {
       inputListener(inputBuffer, key, null);
     }
-    
+
     // Clear buffer after processing
     inputBuffer = '';
   });

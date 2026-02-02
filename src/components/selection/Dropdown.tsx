@@ -3,7 +3,13 @@
  */
 
 import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
-import type { ComponentEventHandlers, SelectOption, ConsoleNode, KeyPress, ViewStyle } from '../../types';
+import type {
+  ComponentEventHandlers,
+  SelectOption,
+  ConsoleNode,
+  KeyPress,
+  ViewStyle,
+} from '../../types';
 import type { StyleProps } from '../../types';
 import { isArrayValue } from '../../types/guards';
 
@@ -14,14 +20,14 @@ export type DropdownOption = SelectOption;
 
 /**
  * Props for the Dropdown component
- * 
+ *
  * Provides dropdown/select functionality for single or multiple selection.
  * Opens/closes with Space/Enter, navigates with arrow keys, selects with Enter/Space.
- * 
+ *
  * @example
  * ```tsx
  * const [value, setValue] = useState('option1');
- * 
+ *
  * <Dropdown
  *   value={value}
  *   onChange={(e) => setValue(e.value)}
@@ -32,6 +38,9 @@ export type DropdownOption = SelectOption;
  * />
  * ```
  */
+/** Position preference for dropdown options */
+export type DropdownPosition = 'below' | 'above' | 'auto';
+
 export interface DropdownProps extends ComponentEventHandlers, StyleProps {
   style?: ViewStyle | ViewStyle[]; // CSS-like style (similar to React Native)
   value?: string | number | string[] | number[]; // Selected value(s)
@@ -45,18 +54,21 @@ export interface DropdownProps extends ComponentEventHandlers, StyleProps {
   formatDisplay?: (option: SelectOption, selected: boolean) => string; // Format function for display
   // Display formatting
   displayFormat?: string; // Format string (e.g., "arrow", "select", "menu")
+  // Dropdown-specific styling
+  dropdownHeight?: number; // Max visible options in dropdown (default: 6)
+  dropdownPosition?: DropdownPosition; // Position preference: 'below', 'above', or 'auto' (default: 'auto')
 }
 
 /**
  * Dropdown component - Single or multiple selection dropdown
- * 
+ *
  * Provides dropdown menu functionality with keyboard and mouse support.
  * Opens/closes with Space or Enter, navigates options with arrow keys,
  * selects with Enter/Space, closes with Escape or clicking outside.
- * 
+ *
  * @param props - Dropdown component props
  * @returns React element representing a dropdown menu
- * 
+ *
  * @example
  * ```tsx
  * <Dropdown
@@ -80,6 +92,8 @@ export function Dropdown({
   tabIndex,
   formatDisplay,
   displayFormat,
+  dropdownHeight,
+  dropdownPosition = 'auto',
   onChange,
   onFocus,
   onBlur,
@@ -101,6 +115,8 @@ export function Dropdown({
     tabIndex,
     formatDisplay,
     displayFormat,
+    dropdownHeight,
+    dropdownPosition,
     onChange,
     onFocus,
     onBlur,
@@ -134,20 +150,22 @@ export function handleDropdownComponent(
         const newValue = component.multiple
           ? (() => {
               // Use type guard to safely extract array values
-              const current: (string | number)[] = isArrayValue(component.value) ? component.value : [];
-              const isSelected = current.some(v => v === option.value);
+              const current: (string | number)[] = isArrayValue(component.value)
+                ? component.value
+                : [];
+              const isSelected = current.some((v) => v === option.value);
               const result: (string | number)[] = isSelected
-                ? current.filter(v => v !== option.value)
+                ? current.filter((v) => v !== option.value)
                 : [...current, option.value];
               return result;
             })()
           : option.value;
-        
+
         // Type assertion needed: (string | number)[] is not assignable to string[] | number[]
         // Runtime array may contain mixed types even though type system separates them
         component.value = newValue as string | number | string[] | number[] | undefined;
         component.isOpen = false;
-        
+
         if (component.onChange) {
           component.onChange({
             value: newValue as string | number | string[] | number[],

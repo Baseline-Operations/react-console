@@ -5,7 +5,11 @@
 
 import type { ParsedArgs } from './parser';
 import type { ComponentMetadata } from './matcher';
-import { validateCommandParams, type ParamValidationResult, type ParamValidationError } from './paramValidator';
+import {
+  validateCommandParams,
+  type ParamValidationResult,
+  type ParamValidationError,
+} from './paramValidator';
 
 /**
  * Custom validator function
@@ -77,7 +81,7 @@ function validateConstraints(
   }
 
   // Enum validation
-  if (constraints.enum && !constraints.enum.includes(value as any)) {
+  if (constraints.enum && !constraints.enum.includes(value as string)) {
     return {
       valid: false,
       error: `Value must be one of: ${constraints.enum.join(', ')}`,
@@ -118,9 +122,10 @@ function validateConstraints(
 
     // Pattern validation (for strings)
     if (typeof value === 'string' && constraints.pattern) {
-      const pattern = typeof constraints.pattern === 'string' 
-        ? new RegExp(constraints.pattern)
-        : constraints.pattern;
+      const pattern =
+        typeof constraints.pattern === 'string'
+          ? new RegExp(constraints.pattern)
+          : constraints.pattern;
       if (!pattern.test(value)) {
         return {
           valid: false,
@@ -145,26 +150,32 @@ export function validateCommandParamsEnhanced(
 ): ParamValidationResult {
   // First run base validation
   const baseResult = validateCommandParams(parsedArgs, metadata);
-  
+
   if (!baseResult.valid) {
     return baseResult;
   }
 
   const errors: ParamValidationError[] = [];
   const validatedParams: Record<string, string | number | boolean> = { ...baseResult.params };
-  const validatedOptions: Record<string, string | number | boolean | string[]> = { ...baseResult.options };
+  const validatedOptions: Record<string, string | number | boolean | string[]> = {
+    ...baseResult.options,
+  };
 
   // Validate enhanced params
   if (enhancedParams) {
     for (const paramDef of enhancedParams) {
       const paramValue = validatedParams[paramDef.name];
-      
+
       if (paramValue === undefined) {
         continue; // Already validated by base validator
       }
 
       if (paramDef.constraints) {
-        const constraintResult = validateConstraints(paramValue, paramDef.constraints, paramDef.name);
+        const constraintResult = validateConstraints(
+          paramValue,
+          paramDef.constraints,
+          paramDef.name
+        );
         if (!constraintResult.valid) {
           errors.push({
             name: paramDef.name,
@@ -172,7 +183,10 @@ export function validateCommandParamsEnhanced(
             type: 'invalid_type',
           });
         } else if (constraintResult.normalizedValue !== undefined) {
-          validatedParams[paramDef.name] = constraintResult.normalizedValue as string | number | boolean;
+          validatedParams[paramDef.name] = constraintResult.normalizedValue as
+            | string
+            | number
+            | boolean;
         }
       }
     }
@@ -182,13 +196,17 @@ export function validateCommandParamsEnhanced(
   if (enhancedOptions) {
     for (const [optionName, optionDef] of Object.entries(enhancedOptions)) {
       const optionValue = validatedOptions[optionName];
-      
+
       if (optionValue === undefined) {
         continue; // Already validated by base validator
       }
 
       if (optionDef.constraints) {
-        const constraintResult = validateConstraints(optionValue, optionDef.constraints, optionName);
+        const constraintResult = validateConstraints(
+          optionValue,
+          optionDef.constraints,
+          optionName
+        );
         if (!constraintResult.valid) {
           errors.push({
             name: optionName,
@@ -196,7 +214,11 @@ export function validateCommandParamsEnhanced(
             type: 'invalid_type',
           });
         } else if (constraintResult.normalizedValue !== undefined) {
-          validatedOptions[optionName] = constraintResult.normalizedValue as string | number | boolean | string[];
+          validatedOptions[optionName] = constraintResult.normalizedValue as
+            | string
+            | number
+            | boolean
+            | string[];
         }
       }
     }

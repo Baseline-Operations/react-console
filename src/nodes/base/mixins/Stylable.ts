@@ -3,7 +3,15 @@
  * Type-safe using generics
  */
 
-import type { Constructor, StyleMap, BorderInfo, BorderWidth, Margin, Padding, BorderStyle } from '../types';
+import type {
+  Constructor,
+  StyleMap,
+  BorderInfo,
+  BorderWidth,
+  Margin,
+  Padding,
+  BorderStyle,
+} from '../types';
 import { BorderStyle as BorderStyleEnum } from '../types';
 import { Node } from '../Node';
 import { StyleMixinRegistry } from '../../../style/mixins/registry';
@@ -13,78 +21,82 @@ import { StyleMixinRegistry } from '../../../style/mixins/registry';
  */
 export class ComputedStyle {
   private styles: StyleMap;
-  
+
   constructor(styles: StyleMap) {
     this.styles = styles;
   }
-  
-  getProperty(key: string): any {
+
+  getProperty(key: string): unknown {
     return this.styles[key];
   }
-  
+
   getColor(): string | null {
     return this.styles.color || null;
   }
-  
+
   getBackgroundColor(): string | null {
     return this.styles.backgroundColor || null;
   }
-  
+
   getBorderColor(): string | null {
     return this.styles.borderColor || null;
   }
-  
+
   getBorderBackgroundColor(): string | null {
     return this.styles.borderBackgroundColor || null;
   }
-  
+
   getPosition(): string {
     return this.styles.position || 'relative';
   }
-  
+
   getZIndex(): number | null {
     return this.styles.zIndex ?? null;
   }
-  
+
   getDisplay(): string {
     return this.styles.display || 'block';
   }
-  
+
   getBold(): boolean {
     // Support both 'bold: true' and CSS-like 'fontWeight: bold'
     if (this.styles.bold) return true;
     const fontWeight = this.styles.fontWeight;
-    return fontWeight === 'bold' || fontWeight === 700 || (typeof fontWeight === 'number' && fontWeight >= 700);
+    return (
+      fontWeight === 'bold' ||
+      fontWeight === 700 ||
+      (typeof fontWeight === 'number' && fontWeight >= 700)
+    );
   }
-  
+
   getDim(): boolean {
     return this.styles.dim || false;
   }
-  
+
   getItalic(): boolean {
     // Support both 'italic: true' and CSS-like 'fontStyle: italic'
     if (this.styles.italic) return true;
     return this.styles.fontStyle === 'italic';
   }
-  
+
   getUnderline(): boolean {
     // Support both 'underline: true' and CSS-like 'textDecoration: underline'
     if (this.styles.underline) return true;
     const textDeco = this.styles.textDecoration;
     return textDeco === 'underline';
   }
-  
+
   getStrikethrough(): boolean {
     // Support both 'strikethrough: true' and CSS-like 'textDecoration: line-through'
     if (this.styles.strikethrough) return true;
     const textDeco = this.styles.textDecoration;
     return textDeco === 'line-through';
   }
-  
+
   getInverse(): boolean {
     return this.styles.inverse || false;
   }
-  
+
   getTextAlign(): 'left' | 'center' | 'right' {
     return (this.styles.textAlign as 'left' | 'center' | 'right') || 'left';
   }
@@ -93,7 +105,7 @@ export class ComputedStyle {
 /**
  * Theme type (placeholder - will be properly typed later)
  */
-export type Theme = any;
+export type Theme = Record<string, unknown>;
 
 /**
  * Style resolver - Resolves styles through cascade with mixin support
@@ -110,12 +122,12 @@ class StyleResolver {
   ): ComputedStyle {
     // 1. Default styles
     let resolved = { ...defaultStyle };
-    
+
     // 2. Theme styles (placeholder - will be fully implemented)
     if (theme) {
       // Theme resolution will be added later
     }
-    
+
     // 3. Style mixin styles (in priority order)
     for (const mixinName of appliedStyleMixins) {
       const mixin = StyleMixinRegistry.get(mixinName);
@@ -124,12 +136,12 @@ class StyleResolver {
         resolved = this.mergeStyles(resolved, mixinStyle);
       }
     }
-    
+
     // 4. Class styles (placeholder - will be fully implemented)
     if (className.length > 0) {
       // Class style resolution will be added later
     }
-    
+
     // 5. Inherited styles (from parent)
     const inherited: StyleMap = {};
     if (parentStyle) {
@@ -143,11 +155,11 @@ class StyleResolver {
           }
         }
       }
-      
+
       // Also add BaseStyle inheritable properties (color, backgroundColor)
       inheritableProps.add('color');
       inheritableProps.add('backgroundColor');
-      
+
       for (const prop of inheritableProps) {
         const currentValue = resolved[prop];
         // If current value is 'inherit' or undefined/null, inherit from parent
@@ -159,13 +171,13 @@ class StyleResolver {
         }
       }
     }
-    
+
     // 6. Inline styles (highest priority)
     resolved = this.mergeStyles(resolved, inherited, inlineStyle);
-    
+
     return new ComputedStyle(resolved);
   }
-  
+
   private mergeStyles(...styles: StyleMap[]): StyleMap {
     return Object.assign({}, ...styles);
   }
@@ -186,7 +198,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
     styleDirty: boolean = true;
     appliedStyleMixins: Set<string> = new Set();
     theme: Theme | null = null;
-    
+
     /**
      * Compute final style from all sources (cascade)
      * Order: Default -> Theme -> Style Mixin -> Class -> Inherited -> Inline
@@ -195,12 +207,13 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
       if (!this.styleDirty && this.computedStyle) {
         return this.computedStyle;
       }
-      
+
       const resolver = new StyleResolver();
-      const parentStyle = this.parent && 'computeStyle' in this.parent 
-        ? (this.parent as StylableNode).computeStyle() 
-        : undefined;
-      
+      const parentStyle =
+        this.parent && 'computeStyle' in this.parent
+          ? (this.parent as StylableNode).computeStyle()
+          : undefined;
+
       this.computedStyle = resolver.resolve(
         this,
         this.getDefaultStyle(),
@@ -210,11 +223,11 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         this.inlineStyle,
         parentStyle
       );
-      
+
       this.styleDirty = false;
       return this.computedStyle;
     }
-    
+
     /**
      * Apply inline style (highest priority)
      */
@@ -224,7 +237,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
       this.onUpdate();
       this.markChildrenStyleDirty();
     }
-    
+
     /**
      * Set class names for style resolution
      */
@@ -233,7 +246,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
       this.onUpdate();
       this.markChildrenStyleDirty();
     }
-    
+
     /**
      * Set theme for style resolution
      */
@@ -242,7 +255,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
       this.onUpdate();
       this.markChildrenStyleDirty();
     }
-    
+
     /**
      * Apply style mixin
      */
@@ -250,14 +263,14 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
       if (this.appliedStyleMixins.has(mixinName)) {
         return;
       }
-      
+
       const mixin = StyleMixinRegistry.get(mixinName);
       if (mixin && mixin.appliesTo(this)) {
         mixin.apply(this);
         this.appliedStyleMixins.add(mixinName);
       }
     }
-    
+
     /**
      * Update box model properties from style
      */
@@ -279,7 +292,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         this.margin.top = style.marginVertical;
         this.margin.bottom = style.marginVertical;
       }
-      
+
       // Handle padding - object form or individual properties
       if (style.padding !== undefined) {
         this.padding = this.normalizeSpacing(style.padding) as Padding;
@@ -297,18 +310,18 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         this.padding.top = style.paddingVertical;
         this.padding.bottom = style.paddingVertical;
       }
-      
+
       if (style.border !== undefined) {
         this.border = this.normalizeBorder(style);
       }
-      
+
       if (style.width !== undefined) {
         this.width = typeof style.width === 'number' ? style.width : null;
       }
       if (style.height !== undefined) {
         this.height = typeof style.height === 'number' ? style.height : null;
       }
-      
+
       if (style.position !== undefined) {
         this.position = style.position;
       }
@@ -318,7 +331,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
       if (style.bottom !== undefined) this.bottom = style.bottom;
       if (style.zIndex !== undefined) this.zIndex = style.zIndex;
     }
-    
+
     normalizeSpacing(spacing: number | Margin | Padding): Margin | Padding {
       if (typeof spacing === 'number') {
         return { top: spacing, right: spacing, bottom: spacing, left: spacing };
@@ -330,14 +343,14 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         left: spacing.left ?? 0,
       };
     }
-    
+
     normalizeBorder(style: StyleMap): BorderInfo {
       const border = style.border;
       const borderWidth = style.borderWidth;
       const borderStyle = (style.borderStyle as BorderStyle) || BorderStyleEnum.SINGLE;
       const borderColor = style.borderColor || null;
       const borderBackgroundColor = style.borderBackgroundColor || null;
-      
+
       // Handle border show: true for all sides, or object with individual sides
       let show = { top: false, right: false, bottom: false, left: false };
       if (border === true) {
@@ -352,7 +365,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
           left: border.left ?? false,
         };
       }
-      
+
       // Handle border width: number for all sides, or object with individual sides
       let width: BorderWidth = { top: 0, right: 0, bottom: 0, left: 0 };
       if (borderWidth !== undefined) {
@@ -372,10 +385,16 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         // Default width is 1 if border is enabled but width not specified
         width = { top: 1, right: 1, bottom: 1, left: 1 };
       }
-      
-      return { show, width, style: borderStyle, color: borderColor, backgroundColor: borderBackgroundColor };
+
+      return {
+        show,
+        width,
+        style: borderStyle,
+        color: borderColor,
+        backgroundColor: borderBackgroundColor,
+      };
     }
-    
+
     markChildrenStyleDirty(): void {
       for (const child of this.children) {
         if ('styleDirty' in child) {
@@ -384,7 +403,7 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         }
       }
     }
-    
+
     // This method must be implemented by classes using this mixin
     // We don't make it abstract here because mixins can't be abstract
     // Classes that use this mixin must implement it

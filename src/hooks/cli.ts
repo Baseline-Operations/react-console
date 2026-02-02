@@ -20,7 +20,7 @@ export function useCLIContext() {
 /**
  * Hook to get current command name
  * Returns undefined if no commands are being used
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
@@ -47,7 +47,7 @@ export function useCommandPath(): string[] {
  * Hook to get parsed command parameters as a named object
  * Returns empty object if no commands or no parameters
  * Parameter names come from the command definition
- * 
+ *
  * @example
  * ```tsx
  * // With command params: [{ name: 'env', type: 'string' }, { name: 'target', type: 'string' }]
@@ -104,7 +104,9 @@ export function useRouteParams(): Record<string, string> {
  */
 export function usePath(): string | undefined {
   const context = useCLIContext();
-  return context.route || (context.command.length > 0 ? '/' + context.command.join('/') : undefined);
+  return (
+    context.route || (context.command.length > 0 ? '/' + context.command.join('/') : undefined)
+  );
 }
 
 /**
@@ -128,7 +130,7 @@ export function useNavigate() {
 /**
  * Hook to access CLI configuration
  * Returns configuration value or undefined
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
@@ -138,13 +140,13 @@ export function useNavigate() {
  * }
  * ```
  */
-export function useConfig<T extends import('../utils/cli/config').ConfigValue = import('../utils/cli/config').ConfigValue>(
-  key: string,
-  defaultValue?: T
-): T | undefined {
+export function useConfig<
+  T extends import('../utils/cli/config').ConfigValue = import('../utils/cli/config').ConfigValue,
+>(key: string, defaultValue?: T): T | undefined {
   // Use dynamic import to avoid circular dependencies
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { getConfig, getConfigWithDefault } = require('../utils/cli/config') as typeof import('../utils/cli/config');
+
+  const { getConfig, getConfigWithDefault } =
+    require('../utils/cli/config') as typeof import('../utils/cli/config');
   if (defaultValue !== undefined) {
     return getConfigWithDefault(key, defaultValue) as T;
   }

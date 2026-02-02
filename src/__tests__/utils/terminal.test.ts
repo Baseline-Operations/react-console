@@ -3,7 +3,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getTerminalDimensions, supportsColor, enterRawMode, exitRawMode, onTerminalResize, setRenderMode } from '../../utils/terminal';
+import {
+  getTerminalDimensions,
+  supportsColor,
+  enterRawMode,
+  exitRawMode,
+  onTerminalResize,
+  setRenderMode,
+} from '../../utils/terminal';
 
 describe('terminal utilities', () => {
   const originalEnv = process.env;
@@ -73,7 +80,7 @@ describe('terminal utilities', () => {
       expect(dims.columns).toBe(80);
       expect(dims.rows).toBe(24);
     });
-    
+
     it('should return large row count in static mode', () => {
       setRenderMode('static');
       process.stdout.columns = 80;
@@ -136,9 +143,9 @@ describe('terminal utilities', () => {
   describe('enterRawMode', () => {
     it('should not enter raw mode when not a TTY', () => {
       process.stdin.isTTY = false;
-      process.stdin.setRawMode = vi.fn() as any;
-      process.stdin.resume = vi.fn() as any;
-      process.stdin.setEncoding = vi.fn() as any;
+      process.stdin.setRawMode = vi.fn() as typeof process.stdin.setRawMode;
+      process.stdin.resume = vi.fn() as typeof process.stdin.resume;
+      process.stdin.setEncoding = vi.fn() as typeof process.stdin.setEncoding;
 
       enterRawMode();
 
@@ -147,9 +154,9 @@ describe('terminal utilities', () => {
 
     it('should enter raw mode when TTY is available', () => {
       process.stdin.isTTY = true;
-      process.stdin.setRawMode = vi.fn() as any;
-      process.stdin.resume = vi.fn() as any;
-      process.stdin.setEncoding = vi.fn() as any;
+      process.stdin.setRawMode = vi.fn() as typeof process.stdin.setRawMode;
+      process.stdin.resume = vi.fn() as typeof process.stdin.resume;
+      process.stdin.setEncoding = vi.fn() as typeof process.stdin.setEncoding;
 
       enterRawMode();
 
@@ -162,8 +169,8 @@ describe('terminal utilities', () => {
   describe('exitRawMode', () => {
     it('should not exit raw mode when not a TTY', () => {
       process.stdin.isTTY = false;
-      process.stdin.setRawMode = vi.fn() as any;
-      process.stdin.pause = vi.fn() as any;
+      process.stdin.setRawMode = vi.fn() as typeof process.stdin.setRawMode;
+      process.stdin.pause = vi.fn() as typeof process.stdin.pause;
 
       exitRawMode();
 
@@ -172,8 +179,8 @@ describe('terminal utilities', () => {
 
     it('should exit raw mode when TTY is available', () => {
       process.stdin.isTTY = true;
-      process.stdin.setRawMode = vi.fn() as any;
-      process.stdin.pause = vi.fn() as any;
+      process.stdin.setRawMode = vi.fn() as typeof process.stdin.setRawMode;
+      process.stdin.pause = vi.fn() as typeof process.stdin.pause;
 
       exitRawMode();
 
@@ -194,8 +201,8 @@ describe('terminal utilities', () => {
       process.stdout.isTTY = true;
       const mockOn = vi.fn();
       const mockRemoveListener = vi.fn();
-      process.stdout.on = mockOn as any;
-      process.stdout.removeListener = mockRemoveListener as any;
+      process.stdout.on = mockOn as typeof process.stdout.on;
+      process.stdout.removeListener = mockRemoveListener as typeof process.stdout.removeListener;
 
       const callback = vi.fn();
       const cleanup = onTerminalResize(callback);

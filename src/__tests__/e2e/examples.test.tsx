@@ -1,7 +1,7 @@
 /**
  * E2E tests for example applications
  * Tests that examples render correctly and produce expected output
- * 
+ *
  * NOTE: These tests are skipped in vitest due to module resolution limitations
  * with dynamic require() in the render pipeline. Run examples manually with tsx
  * to verify rendering behavior.
@@ -14,7 +14,10 @@ import { Text, View, Input, Button } from '../../index';
 // import { render } from '../../index';
 
 // Mock render for testing purposes
-const render = (_component: JSX.Element, _options?: any): string => {
+interface RenderOptions {
+  mode?: 'static' | 'interactive';
+}
+const render = (_component: JSX.Element, _options?: RenderOptions): string => {
   // In the test environment, we can't use the real render due to require() issues
   // Return a mock output that passes basic tests
   return '[ANSI output mock - tests skipped in vitest]';
