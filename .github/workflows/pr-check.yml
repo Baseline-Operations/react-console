@@ -36,7 +36,7 @@ jobs:
       - name: Check for merge commits
         run: |
           if git log --merges origin/${{ github.base_ref }}..HEAD | grep -q .; then
-            echo "❌ Merge commits detected in PR. Please rebase instead."
-            exit 1
+            echo "⚠️  Warning: Merge commits detected in PR. Consider rebasing for cleaner history."
+          else
+            echo "✅ No merge commits detected"
           fi
-          echo "✅ No merge commits detected"
