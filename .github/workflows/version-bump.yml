@@ -5,6 +5,10 @@ on:
     types: [closed]
     branches: [main]
 
+concurrency:
+  group: version-bump
+  cancel-in-progress: true
+
 jobs:
   bump-version:
     name: Bump Version
@@ -13,11 +17,18 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,6 +59,7 @@ jobs:
 
       - name: Bump version
         id: version
+        if: steps.bump-type.outcome == 'success' && steps.bump-type.outputs.type != ''
         run: |
           # Get current version
           CURRENT_VERSION=$(node -p "require('./package.json').version")
@@ -81,12 +93,14 @@ jobs:
           npm version $NEW_VERSION --no-git-tag-version
 
       - name: Commit and push version bump
+        if: steps.bump-type.outcome == 'success' && steps.version.outputs.new_version != ''
         run: |
           git add package.json package-lock.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
           git push
 
       - name: Create git tag
+        if: steps.bump-type.outcome == 'success' && steps.version.outputs.new_version != ''
         run: |
           git tag "v${{ steps.version.outputs.new_version }}"
           git push origin "v${{ steps.version.outputs.new_version }}"
