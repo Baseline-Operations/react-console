@@ -2,7 +2,7 @@
 
 React 19+ TypeScript library for building console/terminal applications using JSX and React components.
 
-> **Alpha Notice**: This library is currently in alpha (v0.x). The API may change between versions without notice. We do not guarantee backwards compatibility until v1.0.0. Please pin your dependency to a specific version if stability is important for your project.
+> **Alpha Notice**: This library is currently in alpha (v0.x). The API may change between versions without notice. We do not guarantee backwards compatibility until v1.0.0. Please pin your dependency to a specific version if stability is important for your project. We will do our best to retain compatibility, but the goal will be to align with React Native by v1.0.0.
 
 ## Overview
 
