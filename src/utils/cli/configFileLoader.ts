@@ -124,8 +124,11 @@ export async function loadConfigFromTS(filePath: string): Promise<Config> {
     } catch {
       // Fallback to require for CommonJS
 
-      config = require(filePath);
-      config = (config as Record<string, unknown>).default || config;
+      config = require(filePath) as Config;
+      const configRecord = config as unknown as Record<string, unknown>;
+      if (configRecord.default) {
+        config = configRecord.default as Config;
+      }
     }
 
     loadFromFile(config);

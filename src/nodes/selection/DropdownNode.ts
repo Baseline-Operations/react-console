@@ -20,6 +20,10 @@ export type DropdownPosition = 'below' | 'above' | 'auto';
  * Dropdown node - dropdown selection
  */
 export class DropdownNode extends SelectionNode {
+  // Declare inherited mixin properties for TypeScript
+  declare focused: boolean;
+  declare disabled: boolean;
+
   // State
   public isOpen: boolean = false;
   public focusedIndex: number = 0;

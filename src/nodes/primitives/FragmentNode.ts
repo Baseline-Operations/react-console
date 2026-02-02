@@ -19,10 +19,13 @@ interface RenderableChild {
   render(buffer: OutputBuffer, context: RenderContext): RenderResult;
 }
 
+// Create the mixed-in base class with proper type handling
+const FragmentNodeBase = Stylable(Renderable(Node as unknown as Constructor<Node>));
+
 /**
  * Fragment node - groups children without creating a container
  */
-export class FragmentNode extends Stylable(Renderable(Node as Constructor<Node>)) {
+export class FragmentNode extends FragmentNodeBase {
   constructor(id?: string) {
     super(id);
     // Apply base style mixin

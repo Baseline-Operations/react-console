@@ -838,7 +838,7 @@ export function getStorage(): ApplicationStorage {
 export const storage: StorageAPI = new Proxy({} as StorageAPI, {
   get(_target, prop) {
     const instance = getStorage();
-    const value = (instance as Record<string | symbol, unknown>)[prop];
+    const value = (instance as unknown as Record<string | symbol, unknown>)[prop];
     return typeof value === 'function'
       ? (value as (...args: unknown[]) => unknown).bind(instance)
       : value;

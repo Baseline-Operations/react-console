@@ -3,7 +3,7 @@
  * Type-safe using generics
  */
 
-import type { Constructor, MouseButton, MouseAction } from '../types';
+import type { Constructor, AbstractConstructor, MouseButton, MouseAction } from '../types';
 import { MouseButton as MouseButtonEnum, MouseAction as MouseActionEnum } from '../types';
 import { Node } from '../Node';
 
@@ -62,15 +62,18 @@ export interface InputEvent {
 /**
  * Mixin that adds interactive capabilities to a node
  * Type-safe using generics
+ * Accepts both concrete and abstract constructors
  */
-export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
+export function Interactive<TBase extends Constructor<Node> | AbstractConstructor<Node>>(
+  Base: TBase
+) {
   // Mixins return classes that extend Base, but the final composed class will implement abstract methods
-  return class InteractiveNode extends Base {
+  return class InteractiveNode extends (Base as Constructor<Node>) {
     // Interactive state
     focused: boolean = false;
     disabled: boolean = false;
     tabIndex: number = 0;
-    
+
     // Event handlers
     onClick?: (event: MouseEvent) => void;
     onPress?: (event: MouseEvent) => void;
@@ -85,7 +88,7 @@ export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
     onMouseMove?: (event: MouseEvent) => void;
     onMouseEnter?: (event: MouseEvent) => void;
     onMouseLeave?: (event: MouseEvent) => void;
-    
+
     /**
      * Focus this node
      */
@@ -94,7 +97,7 @@ export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
       this.focused = true;
       this.onFocus?.();
     }
-    
+
     /**
      * Blur this node
      */
@@ -102,7 +105,7 @@ export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
       this.focused = false;
       this.onBlur?.();
     }
-    
+
     /**
      * Handle click event
      */
@@ -111,20 +114,20 @@ export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
       this.onClick?.(event);
       this.onPress?.(event);
     }
-    
+
     /**
      * Handle keyboard event
      */
     handleKeyboardEvent(event: KeyboardEvent): void {
       if (this.disabled) return;
-      
+
       if (event.key.return || event.key.char) {
         this.onKeyPress?.(event);
       }
-      
+
       this.onKeyDown?.(event);
     }
-    
+
     /**
      * Handle key up event
      */
@@ -132,17 +135,17 @@ export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
       if (this.disabled) return;
       this.onKeyUp?.(event);
     }
-    
+
     /**
      * Handle mouse event
      */
     handleMouseEvent(event: MouseEvent): void {
       if (this.disabled) return;
-      
+
       if (!this.containsPoint(event.x, event.y)) {
         return;
       }
-      
+
       switch (event.action) {
         case MouseActionEnum.PRESS:
           this.onMouseDown?.(event);
@@ -158,7 +161,7 @@ export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
           break;
       }
     }
-    
+
     /**
      * Handle change event
      */
@@ -166,7 +169,7 @@ export function Interactive<TBase extends Constructor<Node>>(Base: TBase) {
       if (this.disabled) return;
       this.onChange?.(event);
     }
-    
+
     /**
      * Check if point is within bounds
      */

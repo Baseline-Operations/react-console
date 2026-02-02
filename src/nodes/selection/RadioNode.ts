@@ -17,6 +17,10 @@ const DEFAULT_RADIO_UNSELECTED = '○'; // Empty circle
  * Radio node - radio button selection
  */
 export class RadioNode extends SelectionNode {
+  // Declare inherited mixin properties for TypeScript
+  declare focused: boolean;
+  declare disabled: boolean;
+
   // Interactive properties
   public autoFocus: boolean = false;
   public tabIndex?: number;

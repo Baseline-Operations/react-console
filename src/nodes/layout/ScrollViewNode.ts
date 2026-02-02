@@ -72,12 +72,20 @@ interface KeyEventData {
   end?: boolean;
 }
 
+// Create the mixed-in base class with proper type handling
+const ScrollViewNodeBase = Stylable(
+  Renderable(Layoutable(Interactive(Node as unknown as import('../base/types').Constructor<Node>)))
+);
+
 /**
  * ScrollView node - scrollable container with optional scrollbar
  */
-export class ScrollViewNode extends Stylable(
-  Renderable(Layoutable(Interactive(Node as import('../base/types').Constructor<Node>)))
-) {
+export class ScrollViewNode extends ScrollViewNodeBase {
+  // Declare inherited mixin properties for TypeScript
+  // Note: handleKeyboardEvent is overridden in this class, so no declare needed
+  declare focused: boolean;
+  declare disabled: boolean;
+
   // Flag to tell BufferRenderer that this node handles its own children rendering
   readonly handlesOwnChildren = true;
 
@@ -490,7 +498,11 @@ export class ScrollViewNode extends Stylable(
       }
     }
 
-    super.handleKeyboardEvent(event);
+    // Call parent class method via prototype (TypeScript doesn't see it due to mixin pattern)
+    const parentProto = Object.getPrototypeOf(Object.getPrototypeOf(this));
+    if (parentProto && typeof parentProto.handleKeyboardEvent === 'function') {
+      parentProto.handleKeyboardEvent.call(this, event);
+    }
   }
 
   computeLayout(constraints: LayoutConstraints): LayoutResult {

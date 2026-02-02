@@ -24,12 +24,15 @@ export interface SelectionOption {
   disabled?: boolean;
 }
 
+// Create the mixed-in base class with proper type handling
+const SelectionNodeBase = Stylable(
+  Renderable(Interactive(Node as unknown as import('../base/types').Constructor<Node>))
+);
+
 /**
  * Selection node - base for selection components
  */
-export class SelectionNode extends Stylable(
-  Renderable(Interactive(Node as import('../base/types').Constructor<Node>))
-) {
+export class SelectionNode extends SelectionNodeBase {
   protected options: SelectionOption[] = [];
   protected value: string | number | (string | number)[] | null = null;
   protected multiple: boolean = false;

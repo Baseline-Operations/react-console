@@ -19,10 +19,13 @@ export interface RouteNodeProps {
   children?: React.ReactNode;
 }
 
+// Create the mixed-in base class with proper type handling
+const RouteNodeBase = Stylable(Renderable(Layoutable(Node as unknown as Constructor<Node>)));
+
 /**
  * Route node - Route definition
  */
-export class RouteNode extends Stylable(Renderable(Layoutable(Node as Constructor<Node>))) {
+export class RouteNode extends RouteNodeBase {
   private path: string;
 
   constructor(props: RouteNodeProps | Record<string, unknown>, id?: string) {

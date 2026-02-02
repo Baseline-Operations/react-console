@@ -33,7 +33,9 @@ export function collectInteractiveComponents(node: Node, result: Node[], _depth:
     node.type === 'dropdown' ||
     node.type === 'list' ||
     node.type === 'scrollview' ||
-    (node.type === 'box' && (node.onClick || node.onPress));
+    (node.type === 'box' &&
+      ((node as unknown as { onClick?: unknown }).onClick ||
+        (node as unknown as { onPress?: unknown }).onPress));
 
   if (isInteractive) {
     result.push(node);

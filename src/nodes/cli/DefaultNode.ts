@@ -17,10 +17,13 @@ export interface DefaultNodeProps {
   children?: React.ReactNode;
 }
 
+// Create the mixed-in base class with proper type handling
+const DefaultNodeBase = Stylable(Renderable(Layoutable(Node as unknown as Constructor<Node>)));
+
 /**
  * Default node - Default/fallback component
  */
-export class DefaultNode extends Stylable(Renderable(Layoutable(Node as Constructor<Node>))) {
+export class DefaultNode extends DefaultNodeBase {
   constructor(props: DefaultNodeProps | Record<string, unknown> = {}, id?: string) {
     super(id);
     // Props stored for future use

@@ -34,13 +34,37 @@ interface TextMetrics {
   visibleWidth: number;
 }
 
+// Create the mixed-in base class with proper type handling
+const TextNodeBase = Stylable(
+  Renderable(Layoutable(Node as unknown as import('../base/types').Constructor<Node>))
+);
+
 /**
  * Text node - renders text content
  * Composed with Stylable and Renderable mixins
  */
-export class TextNode extends Stylable(
-  Renderable(Layoutable(Node as import('../base/types').Constructor<Node>))
-) {
+export class TextNode extends TextNodeBase {
+  // Declare inherited mixin properties for TypeScript
+  // From Renderable
+  declare renderBackground: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare renderBorder: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare registerRendering: (
+    bufferRegion: import('../base/mixins').BufferRegion,
+    zIndex: number,
+    viewport: import('../base/mixins/Renderable').Viewport | null
+  ) => void;
+  // From Stylable
+  declare computeStyle: () => import('../base/mixins/Stylable').ComputedStyle;
+  declare applyStyleMixin: (name: string) => void;
+
   private wrappedLines: string[] = [];
 
   constructor(id?: string) {
@@ -204,7 +228,7 @@ export class TextNode extends Stylable(
       lines: Array.from({ length: layout.dimensions.height }, (_, i) => context.y + i),
     };
 
-    this.registerRendering(bufferRegion, style.getZIndex() || 0, context.viewport);
+    this.registerRendering(bufferRegion, style.getZIndex() || 0, context.viewport ?? null);
 
     return {
       endX: context.x + layout.dimensions.width,
@@ -221,8 +245,8 @@ export class TextNode extends Stylable(
     _constraints: LayoutConstraints
   ): TextMetrics {
     const styledContent = applyStyles(content, {
-      color: style.getColor(),
-      backgroundColor: style.getBackgroundColor(),
+      color: style.getColor() ?? undefined,
+      backgroundColor: style.getBackgroundColor() ?? undefined,
       bold: style.getBold(),
     });
 
@@ -261,8 +285,8 @@ export class TextNode extends Stylable(
     const bgColor = style.getBackgroundColor();
 
     const styledLine = applyStyles(line, {
-      color: style.getColor(),
-      backgroundColor: bgColor,
+      color: style.getColor() ?? undefined,
+      backgroundColor: bgColor ?? undefined,
       bold: style.getBold(),
       dim: style.getDim(),
       italic: style.getItalic(),

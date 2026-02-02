@@ -192,14 +192,14 @@ export class StackingContextManager {
 
       if (node.parent) {
         interface StylableParent {
-          computeStyle(): unknown;
+          computeStyle(): ComputedStyle;
         }
         const parentStyle =
           'computeStyle' in node.parent
             ? (node.parent as unknown as StylableParent).computeStyle()
             : null;
         if (parentStyle) {
-          const parentContext = this.getContext(node.parent, parentStyle);
+          const parentContext = this.getContext(node.parent, parentStyle as ComputedStyle);
           parentContext.addChildContext(context);
         }
       } else {

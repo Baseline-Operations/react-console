@@ -58,10 +58,15 @@ interface RenderableChild {
   render(buffer: OutputBuffer, context: RenderContext): RenderResult;
 }
 
+// Create the mixed-in base class with proper type handling
+const CommandRouterNodeBase = Stylable(
+  Renderable(Layoutable(Node as unknown as Constructor<Node>))
+);
+
 /**
  * CommandRouter node - Root router for CLI applications
  */
-export class CommandRouterNode extends Stylable(Renderable(Layoutable(Node as Constructor<Node>))) {
+export class CommandRouterNode extends CommandRouterNodeBase {
   private parsedArgs: ParsedArgs = { command: [], options: {}, params: [] };
   private matchedComponent: Node | null = null;
 

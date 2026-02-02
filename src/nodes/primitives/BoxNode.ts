@@ -37,7 +37,38 @@ interface RenderableChild {
  * Box node - container for layout and styling
  * Composed with Stylable, Renderable, and Layoutable mixins
  */
-export class BoxNode extends Stylable(Renderable(Layoutable(Node as Constructor<Node>))) {
+// Create the mixed-in base class with proper type handling
+const BoxNodeBase = Stylable(Renderable(Layoutable(Node as unknown as Constructor<Node>)));
+
+export class BoxNode extends BoxNodeBase {
+  // Declare inherited mixin properties for TypeScript
+  // From Layoutable
+  declare display: DisplayMode;
+  declare layoutDirty: boolean;
+  declare updateStackingContext: () => void;
+  declare updateViewport: () => void;
+  // From Renderable
+  declare renderBackground: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare renderBorder: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare registerRendering: (
+    bufferRegion: import('../base/mixins').BufferRegion,
+    zIndex: number,
+    viewport: import('../base/mixins/Renderable').Viewport | null
+  ) => void;
+  declare renderBorderToCellBuffer: (context: import('../../buffer').CellRenderContext) => void;
+  // From Stylable
+  declare computeStyle: () => import('../base/mixins/Stylable').ComputedStyle;
+  declare updateBoxModelFromStyle: (style: StyleMap) => void;
+  declare applyStyleMixin: (name: string) => void;
+
   constructor(id?: string) {
     super(id);
     // Apply box style mixin
@@ -67,7 +98,7 @@ export class BoxNode extends Stylable(Renderable(Layoutable(Node as Constructor<
     const style = this.computeStyle();
     this.display = style.getDisplay() as DisplayMode;
 
-    this.updateBoxModelFromStyle(style);
+    this.updateBoxModelFromStyle(style.styles);
 
     if (
       this.border.show.top ||
@@ -551,15 +582,17 @@ export class BoxNode extends Stylable(Renderable(Layoutable(Node as Constructor<
     this.renderBorder(buffer, style, boxContext);
 
     // 4. Register rendering info
+    const boundsX = this.bounds?.x ?? 0;
+    const boundsY = this.bounds?.y ?? 0;
     const bufferRegion = {
-      startX: this.bounds.x,
-      startY: this.bounds.y,
-      endX: this.bounds.x + layoutResult.dimensions.width,
+      startX: boundsX,
+      startY: boundsY,
+      endX: boundsX + layoutResult.dimensions.width,
       endY: maxEndY,
-      lines: Array.from({ length: layoutResult.dimensions.height }, (_, i) => this.bounds.y + i),
+      lines: Array.from({ length: layoutResult.dimensions.height }, (_, i) => boundsY + i),
     };
 
-    this.registerRendering(bufferRegion, style.getZIndex() || 0, boxContext.viewport);
+    this.registerRendering(bufferRegion, style.getZIndex() || 0, boxContext.viewport ?? null);
 
     return {
       endX: this.bounds.x + layoutResult.dimensions.width,
@@ -595,10 +628,11 @@ export class BoxNode extends Stylable(Renderable(Layoutable(Node as Constructor<
       let contentAreaHeight = 0;
 
       if (flowChildLayouts.length > 0) {
-        const gap = style.getProperty('gap');
+        const gap = style.getProperty('gap') as { row?: number; column?: number } | number | null;
+        const rawRowGap = style.getProperty('rowGap');
         const rowGap: number =
-          style.getProperty('rowGap') ??
-          (typeof gap === 'object' ? (gap.column ?? 0) : typeof gap === 'number' ? gap : 0);
+          (typeof rawRowGap === 'number' ? rawRowGap : null) ??
+          (gap && typeof gap === 'object' ? (gap.column ?? 0) : typeof gap === 'number' ? gap : 0);
 
         if (isRow || this.display === DisplayModeEnum.GRID) {
           // ROW flexbox/GRID: Calculate parent content area from children
@@ -629,9 +663,10 @@ export class BoxNode extends Stylable(Renderable(Layoutable(Node as Constructor<
           // HTML/CSS behavior: Flex containers are BLOCK-LEVEL elements
           // Block elements fill their parent's available width by default
           // Only explicit width overrides this behavior
-          if (style.getProperty('width')) {
+          const explicitWidth = style.getProperty('width');
+          if (typeof explicitWidth === 'number') {
             // Explicit width set - use it (clamped to available)
-            contentAreaWidth = Math.min(style.getProperty('width'), maxContentWidth);
+            contentAreaWidth = Math.min(explicitWidth, maxContentWidth);
           } else {
             // Block-level behavior: fill available width
             contentAreaWidth = maxContentWidth;
@@ -672,8 +707,9 @@ export class BoxNode extends Stylable(Renderable(Layoutable(Node as Constructor<
           const availableAfterMargin =
             maxContentWidth - (selfMargin.left || 0) - (selfMargin.right || 0);
 
-          if (style.getProperty('width')) {
-            contentAreaWidth = Math.min(style.getProperty('width'), availableAfterMargin);
+          const colWidth = style.getProperty('width');
+          if (typeof colWidth === 'number') {
+            contentAreaWidth = Math.min(colWidth, availableAfterMargin);
           } else {
             contentAreaWidth = Math.max(0, availableAfterMargin);
           }

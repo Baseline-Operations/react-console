@@ -12,6 +12,7 @@ interface StylableNode {
     getProperty(name: string): unknown;
     getColor?(): string | null;
     getBackgroundColor?(): string | null;
+    getDisplay?(): string;
   };
 }
 
@@ -22,6 +23,15 @@ interface LayoutableNode {
     width: number;
     height: number;
   };
+}
+
+// Layout result with dimensions (for internal use)
+interface LayoutResultLocal {
+  bounds?: { x: number; y: number; width: number; height: number };
+  dimensions?: { width: number; height: number; contentWidth: number; contentHeight: number };
+  width: number;
+  height: number;
+  layout?: Record<string, unknown>;
 }
 
 /**
@@ -74,26 +84,23 @@ export class LayoutEngine {
     const flexDirection = style.getProperty('flexDirection') || 'row';
     const justifyContent = style.getProperty('justifyContent') || 'flex-start';
     const alignItems = style.getProperty('alignItems') || 'stretch';
-    const gap = style.getProperty('gap');
+    const gap = style.getProperty('gap') as { row?: number; column?: number } | number | null;
+    const rawRowGap = style.getProperty('rowGap');
+    const rawColumnGap = style.getProperty('columnGap');
     const rowGap: number =
-      style.getProperty('rowGap') ??
-      (typeof gap === 'object' ? (gap.row ?? 0) : typeof gap === 'number' ? gap : 0);
+      (typeof rawRowGap === 'number' ? rawRowGap : null) ??
+      (gap && typeof gap === 'object' ? (gap.row ?? 0) : typeof gap === 'number' ? gap : 0);
     const columnGap: number =
-      style.getProperty('columnGap') ??
-      (typeof gap === 'object' ? (gap.column ?? 0) : typeof gap === 'number' ? gap : 0);
+      (typeof rawColumnGap === 'number' ? rawColumnGap : null) ??
+      (gap && typeof gap === 'object' ? (gap.column ?? 0) : typeof gap === 'number' ? gap : 0);
 
     const isRow = flexDirection === 'row' || flexDirection === 'row-reverse';
     const isReverse = flexDirection === 'row-reverse' || flexDirection === 'column-reverse';
 
     // Step 1: Measure all children
-    interface LayoutResult {
-      bounds?: { x: number; y: number; width: number; height: number };
-      width: number;
-      height: number;
-    }
     const childData: Array<{
       node: Node;
-      layout: LayoutResult;
+      layout: LayoutResultLocal;
       width: number;
       height: number;
       flexGrow: number;
@@ -107,11 +114,17 @@ export class LayoutEngine {
         const childStyle =
           'computeStyle' in child ? (child as unknown as StylableNode).computeStyle() : null;
         const flex = childStyle?.getProperty('flex');
-        const flexGrow =
-          childStyle?.getProperty('flexGrow') ?? (typeof flex === 'number' ? flex : 0);
-        const flexShrink = childStyle?.getProperty('flexShrink') ?? 1;
-        const flexBasis = childStyle?.getProperty('flexBasis');
-        const order = childStyle?.getProperty('order') || 0;
+        const rawFlexGrow = childStyle?.getProperty('flexGrow');
+        const flexGrow: number =
+          (typeof rawFlexGrow === 'number' ? rawFlexGrow : null) ??
+          (typeof flex === 'number' ? flex : 0);
+        const rawFlexShrink = childStyle?.getProperty('flexShrink');
+        const flexShrink: number = typeof rawFlexShrink === 'number' ? rawFlexShrink : 1;
+        const rawFlexBasis = childStyle?.getProperty('flexBasis');
+        const flexBasis: number | undefined =
+          typeof rawFlexBasis === 'number' ? rawFlexBasis : undefined;
+        const rawOrder = childStyle?.getProperty('order');
+        const order: number = typeof rawOrder === 'number' ? rawOrder : 0;
 
         // Compute child layout with available space
         // For row direction, children share the row width; for column, they share column width
@@ -149,11 +162,13 @@ export class LayoutEngine {
               availableHeight: constraints.availableHeight,
             };
 
-        const childLayout = (child as unknown as LayoutableNode).computeLayout(childConstraints);
+        const childLayout = (child as unknown as LayoutableNode).computeLayout(
+          childConstraints
+        ) as LayoutResultLocal;
 
         // Ensure dimensions are valid (at least 1x1)
-        const layoutWidth = Math.max(1, childLayout.dimensions.width || 0);
-        const layoutHeight = Math.max(1, childLayout.dimensions.height || 0);
+        const layoutWidth = Math.max(1, childLayout.dimensions?.width || childLayout.width || 0);
+        const layoutHeight = Math.max(1, childLayout.dimensions?.height || childLayout.height || 0);
 
         childData.push({
           node: child,
@@ -216,12 +231,16 @@ export class LayoutEngine {
     // - So BOTH row and column flex containers should fill available width
     // - Height behavior differs: row = max child height, column = sum of children
     // This matches how HTML/CSS flexbox works
+    const explicitWidth = style?.getProperty('width');
+    const explicitHeight = style?.getProperty('height');
     const availableMainSize = isRow
-      ? nodeHasExplicitWidth
-        ? Math.min(style.getProperty('width'), maxContentWidth)
+      ? nodeHasExplicitWidth && typeof explicitWidth === 'number'
+        ? Math.min(explicitWidth, maxContentWidth)
         : maxContentWidth // Block-level: fill available width
-      : nodeHasExplicitHeight && constraints.maxHeight !== undefined
-        ? Math.min(style.getProperty('height'), maxContentHeight)
+      : nodeHasExplicitHeight &&
+          constraints.maxHeight !== undefined &&
+          typeof explicitHeight === 'number'
+        ? Math.min(explicitHeight, maxContentHeight)
         : totalMainSize + totalGap; // Height: auto-size based on children
     const freeSpace = availableMainSize - totalMainSize - totalGap;
 
@@ -481,9 +500,11 @@ export class LayoutEngine {
     // Get grid configuration using getProperty (more reliable than getter methods)
     const gridTemplateColumns = style?.getProperty?.('gridTemplateColumns');
     const gridTemplateRows = style?.getProperty?.('gridTemplateRows');
-    const gap = style?.getProperty?.('gap') || 0;
-    const rowGap = typeof gap === 'object' ? (gap.row ?? gap) : gap;
-    const columnGap = typeof gap === 'object' ? (gap.column ?? gap) : gap;
+    const gap = style?.getProperty?.('gap') as { row?: number; column?: number } | number | null;
+    const rowGap: number =
+      gap && typeof gap === 'object' ? (gap.row ?? 0) : typeof gap === 'number' ? gap : 0;
+    const columnGap: number =
+      gap && typeof gap === 'object' ? (gap.column ?? 0) : typeof gap === 'number' ? gap : 0;
 
     // Parse grid template columns
     // CSS Grid behavior: numbers in arrays are treated as fractional units (like 1fr)
@@ -574,19 +595,22 @@ export class LayoutEngine {
           maxHeight: rowHeight || constraints.maxHeight,
           availableWidth: effectiveWidth,
           availableHeight: rowHeight || constraints.availableHeight,
-        });
+        }) as LayoutResultLocal;
+
+        const childWidth = childLayout.dimensions?.width ?? childLayout.width ?? 0;
+        const childHeight = childLayout.dimensions?.height ?? childLayout.height ?? 0;
 
         childLayouts.push({
           node: child,
           bounds: {
             x: currentX,
             y: currentY,
-            width: childLayout.dimensions.width,
-            height: childLayout.dimensions.height,
+            width: childWidth,
+            height: childHeight,
           },
         });
 
-        maxRowHeight = Math.max(maxRowHeight, childLayout.dimensions.height);
+        maxRowHeight = Math.max(maxRowHeight, childHeight);
 
         // Move to next column(s)
         currentCol += spanCols;
@@ -645,12 +669,12 @@ export class LayoutEngine {
             availableHeight: constraints.availableHeight
               ? constraints.availableHeight - currentY - collapsedMargin
               : undefined,
-          });
+          }) as LayoutResultLocal | null;
 
-          if (childLayout && childLayout.dimensions) {
+          if (childLayout) {
             // Ensure dimensions are valid (at least 1x1 for text nodes)
-            const width = Math.max(1, childLayout.dimensions.width || 0);
-            const height = Math.max(1, childLayout.dimensions.height || 0);
+            const width = Math.max(1, childLayout.dimensions?.width || childLayout.width || 0);
+            const height = Math.max(1, childLayout.dimensions?.height || childLayout.height || 0);
 
             // Position child accounting for collapsed margin
             childLayouts.push({
@@ -703,7 +727,7 @@ export class LayoutEngine {
     style: ReturnType<StylableNode['computeStyle']>
   ): Record<string, unknown> {
     return {
-      display: style.getDisplay(),
+      display: style.getDisplay?.() ?? style.getProperty('display') ?? 'block',
       flexDirection: style.getProperty('flexDirection'),
       justifyContent: style.getProperty('justifyContent'),
       alignItems: style.getProperty('alignItems'),

@@ -5,12 +5,14 @@
 
 import type {
   Constructor,
+  AbstractConstructor,
   StyleMap,
   BorderInfo,
   BorderWidth,
   Margin,
   Padding,
   BorderStyle,
+  Position,
 } from '../types';
 import { BorderStyle as BorderStyleEnum } from '../types';
 import { Node } from '../Node';
@@ -20,7 +22,7 @@ import { StyleMixinRegistry } from '../../../style/mixins/registry';
  * Computed style class (placeholder - will be fully implemented with style system)
  */
 export class ComputedStyle {
-  private styles: StyleMap;
+  readonly styles: StyleMap;
 
   constructor(styles: StyleMap) {
     this.styles = styles;
@@ -31,36 +33,43 @@ export class ComputedStyle {
   }
 
   getColor(): string | null {
-    return this.styles.color || null;
+    const color = this.styles.color;
+    return typeof color === 'string' ? color : null;
   }
 
   getBackgroundColor(): string | null {
-    return this.styles.backgroundColor || null;
+    const bg = this.styles.backgroundColor;
+    return typeof bg === 'string' ? bg : null;
   }
 
   getBorderColor(): string | null {
-    return this.styles.borderColor || null;
+    const bc = this.styles.borderColor;
+    return typeof bc === 'string' ? bc : null;
   }
 
   getBorderBackgroundColor(): string | null {
-    return this.styles.borderBackgroundColor || null;
+    const bbg = this.styles.borderBackgroundColor;
+    return typeof bbg === 'string' ? bbg : null;
   }
 
   getPosition(): string {
-    return this.styles.position || 'relative';
+    const pos = this.styles.position;
+    return typeof pos === 'string' ? pos : 'relative';
   }
 
   getZIndex(): number | null {
-    return this.styles.zIndex ?? null;
+    const z = this.styles.zIndex;
+    return typeof z === 'number' ? z : null;
   }
 
   getDisplay(): string {
-    return this.styles.display || 'block';
+    const d = this.styles.display;
+    return typeof d === 'string' ? d : 'block';
   }
 
   getBold(): boolean {
     // Support both 'bold: true' and CSS-like 'fontWeight: bold'
-    if (this.styles.bold) return true;
+    if (this.styles.bold === true) return true;
     const fontWeight = this.styles.fontWeight;
     return (
       fontWeight === 'bold' ||
@@ -70,35 +79,37 @@ export class ComputedStyle {
   }
 
   getDim(): boolean {
-    return this.styles.dim || false;
+    return this.styles.dim === true;
   }
 
   getItalic(): boolean {
     // Support both 'italic: true' and CSS-like 'fontStyle: italic'
-    if (this.styles.italic) return true;
+    if (this.styles.italic === true) return true;
     return this.styles.fontStyle === 'italic';
   }
 
   getUnderline(): boolean {
     // Support both 'underline: true' and CSS-like 'textDecoration: underline'
-    if (this.styles.underline) return true;
+    if (this.styles.underline === true) return true;
     const textDeco = this.styles.textDecoration;
     return textDeco === 'underline';
   }
 
   getStrikethrough(): boolean {
     // Support both 'strikethrough: true' and CSS-like 'textDecoration: line-through'
-    if (this.styles.strikethrough) return true;
+    if (this.styles.strikethrough === true) return true;
     const textDeco = this.styles.textDecoration;
     return textDeco === 'line-through';
   }
 
   getInverse(): boolean {
-    return this.styles.inverse || false;
+    return this.styles.inverse === true;
   }
 
   getTextAlign(): 'left' | 'center' | 'right' {
-    return (this.styles.textAlign as 'left' | 'center' | 'right') || 'left';
+    const ta = this.styles.textAlign;
+    if (ta === 'center' || ta === 'right') return ta;
+    return 'left';
   }
 }
 
@@ -186,11 +197,12 @@ class StyleResolver {
 /**
  * Mixin that adds styling capabilities to a node
  * Type-safe using generics
+ * Accepts both concrete and abstract constructors
  */
-export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
+export function Stylable<TBase extends Constructor<Node> | AbstractConstructor<Node>>(Base: TBase) {
   // Mixins return classes that extend Base, but the final composed class will implement abstract methods
   // TypeScript requires implementation, but we use type assertion to allow abstract methods in mixins
-  return class StylableNode extends Base {
+  return class StylableNode extends (Base as Constructor<Node>) {
     // Style System
     inlineStyle: StyleMap = {};
     className: string[] = [];
@@ -275,40 +287,64 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
      * Update box model properties from style
      */
     updateBoxModelFromStyle(style: StyleMap): void {
+      // Helper to extract number value
+      const toNumber = (val: unknown): number | undefined =>
+        typeof val === 'number' ? val : undefined;
+
       // Handle margin - object form or individual properties
       if (style.margin !== undefined) {
-        this.margin = this.normalizeSpacing(style.margin) as Margin;
+        const margin = style.margin;
+        if (typeof margin === 'number' || typeof margin === 'object') {
+          this.margin = this.normalizeSpacing(margin as number | Margin) as Margin;
+        }
       }
       // Individual margin properties override object form
-      if (style.marginTop !== undefined) this.margin.top = style.marginTop;
-      if (style.marginRight !== undefined) this.margin.right = style.marginRight;
-      if (style.marginBottom !== undefined) this.margin.bottom = style.marginBottom;
-      if (style.marginLeft !== undefined) this.margin.left = style.marginLeft;
-      if (style.marginHorizontal !== undefined) {
-        this.margin.left = style.marginHorizontal;
-        this.margin.right = style.marginHorizontal;
+      const marginTop = toNumber(style.marginTop);
+      const marginRight = toNumber(style.marginRight);
+      const marginBottom = toNumber(style.marginBottom);
+      const marginLeft = toNumber(style.marginLeft);
+      const marginHorizontal = toNumber(style.marginHorizontal);
+      const marginVertical = toNumber(style.marginVertical);
+
+      if (marginTop !== undefined) this.margin.top = marginTop;
+      if (marginRight !== undefined) this.margin.right = marginRight;
+      if (marginBottom !== undefined) this.margin.bottom = marginBottom;
+      if (marginLeft !== undefined) this.margin.left = marginLeft;
+      if (marginHorizontal !== undefined) {
+        this.margin.left = marginHorizontal;
+        this.margin.right = marginHorizontal;
       }
-      if (style.marginVertical !== undefined) {
-        this.margin.top = style.marginVertical;
-        this.margin.bottom = style.marginVertical;
+      if (marginVertical !== undefined) {
+        this.margin.top = marginVertical;
+        this.margin.bottom = marginVertical;
       }
 
       // Handle padding - object form or individual properties
       if (style.padding !== undefined) {
-        this.padding = this.normalizeSpacing(style.padding) as Padding;
+        const padding = style.padding;
+        if (typeof padding === 'number' || typeof padding === 'object') {
+          this.padding = this.normalizeSpacing(padding as number | Padding) as Padding;
+        }
       }
       // Individual padding properties override object form
-      if (style.paddingTop !== undefined) this.padding.top = style.paddingTop;
-      if (style.paddingRight !== undefined) this.padding.right = style.paddingRight;
-      if (style.paddingBottom !== undefined) this.padding.bottom = style.paddingBottom;
-      if (style.paddingLeft !== undefined) this.padding.left = style.paddingLeft;
-      if (style.paddingHorizontal !== undefined) {
-        this.padding.left = style.paddingHorizontal;
-        this.padding.right = style.paddingHorizontal;
+      const paddingTop = toNumber(style.paddingTop);
+      const paddingRight = toNumber(style.paddingRight);
+      const paddingBottom = toNumber(style.paddingBottom);
+      const paddingLeft = toNumber(style.paddingLeft);
+      const paddingHorizontal = toNumber(style.paddingHorizontal);
+      const paddingVertical = toNumber(style.paddingVertical);
+
+      if (paddingTop !== undefined) this.padding.top = paddingTop;
+      if (paddingRight !== undefined) this.padding.right = paddingRight;
+      if (paddingBottom !== undefined) this.padding.bottom = paddingBottom;
+      if (paddingLeft !== undefined) this.padding.left = paddingLeft;
+      if (paddingHorizontal !== undefined) {
+        this.padding.left = paddingHorizontal;
+        this.padding.right = paddingHorizontal;
       }
-      if (style.paddingVertical !== undefined) {
-        this.padding.top = style.paddingVertical;
-        this.padding.bottom = style.paddingVertical;
+      if (paddingVertical !== undefined) {
+        this.padding.top = paddingVertical;
+        this.padding.bottom = paddingVertical;
       }
 
       if (style.border !== undefined) {
@@ -322,14 +358,28 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         this.height = typeof style.height === 'number' ? style.height : null;
       }
 
-      if (style.position !== undefined) {
-        this.position = style.position;
+      if (style.position !== undefined && typeof style.position === 'string') {
+        this.position = style.position as Position;
       }
-      if (style.top !== undefined) this.top = style.top;
-      if (style.left !== undefined) this.left = style.left;
-      if (style.right !== undefined) this.right = style.right;
-      if (style.bottom !== undefined) this.bottom = style.bottom;
-      if (style.zIndex !== undefined) this.zIndex = style.zIndex;
+      if (style.top !== undefined) {
+        const top = style.top;
+        this.top = typeof top === 'number' || typeof top === 'string' ? top : null;
+      }
+      if (style.left !== undefined) {
+        const left = style.left;
+        this.left = typeof left === 'number' || typeof left === 'string' ? left : null;
+      }
+      if (style.right !== undefined) {
+        const right = style.right;
+        this.right = typeof right === 'number' || typeof right === 'string' ? right : null;
+      }
+      if (style.bottom !== undefined) {
+        const bottom = style.bottom;
+        this.bottom = typeof bottom === 'number' || typeof bottom === 'string' ? bottom : null;
+      }
+      if (style.zIndex !== undefined && typeof style.zIndex === 'number') {
+        this.zIndex = style.zIndex;
+      }
     }
 
     normalizeSpacing(spacing: number | Margin | Padding): Margin | Padding {
@@ -347,9 +397,28 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
     normalizeBorder(style: StyleMap): BorderInfo {
       const border = style.border;
       const borderWidth = style.borderWidth;
-      const borderStyle = (style.borderStyle as BorderStyle) || BorderStyleEnum.SINGLE;
-      const borderColor = style.borderColor || null;
-      const borderBackgroundColor = style.borderBackgroundColor || null;
+      const borderStyle = (
+        typeof style.borderStyle === 'string' ? style.borderStyle : BorderStyleEnum.SINGLE
+      ) as BorderStyle;
+      const borderColor = typeof style.borderColor === 'string' ? style.borderColor : null;
+      const borderBackgroundColor =
+        typeof style.borderBackgroundColor === 'string' ? style.borderBackgroundColor : null;
+
+      // Type for border object with individual sides
+      interface BorderSides {
+        top?: boolean;
+        right?: boolean;
+        bottom?: boolean;
+        left?: boolean;
+      }
+
+      // Type for border width object with individual sides
+      interface BorderWidthSides {
+        top?: number;
+        right?: number;
+        bottom?: number;
+        left?: number;
+      }
 
       // Handle border show: true for all sides, or object with individual sides
       let show = { top: false, right: false, bottom: false, left: false };
@@ -358,11 +427,12 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
         show = { top: true, right: true, bottom: true, left: true };
       } else if (typeof border === 'object' && border !== null) {
         // border: { top: true, right: true, ... } for individual sides
+        const borderObj = border as BorderSides;
         show = {
-          top: border.top ?? false,
-          right: border.right ?? false,
-          bottom: border.bottom ?? false,
-          left: border.left ?? false,
+          top: borderObj.top ?? false,
+          right: borderObj.right ?? false,
+          bottom: borderObj.bottom ?? false,
+          left: borderObj.left ?? false,
         };
       }
 
@@ -374,11 +444,12 @@ export function Stylable<TBase extends Constructor<Node>>(Base: TBase) {
           width = { top: borderWidth, right: borderWidth, bottom: borderWidth, left: borderWidth };
         } else if (typeof borderWidth === 'object' && borderWidth !== null) {
           // borderWidth: { top: 1, right: 1, ... } for individual sides
+          const bwObj = borderWidth as BorderWidthSides;
           width = {
-            top: borderWidth.top ?? 0,
-            right: borderWidth.right ?? 0,
-            bottom: borderWidth.bottom ?? 0,
-            left: borderWidth.left ?? 0,
+            top: bwObj.top ?? 0,
+            right: bwObj.right ?? 0,
+            bottom: bwObj.bottom ?? 0,
+            left: bwObj.left ?? 0,
           };
         }
       } else if (show.top || show.right || show.bottom || show.left) {

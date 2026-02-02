@@ -266,6 +266,13 @@ export interface NodeState {
 
 /**
  * Base constructor type for mixins
+ * Supports both concrete and abstract classes
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type Constructor<T = {}> = new (...args: unknown[]) => T;
+
+/**
+ * Abstract constructor type for mixins that need to extend abstract classes
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type AbstractConstructor<T = {}> = abstract new (...args: unknown[]) => T;

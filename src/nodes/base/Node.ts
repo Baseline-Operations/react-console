@@ -17,18 +17,18 @@ import { decodeHtmlEntities } from '../../utils/measure';
 import { debug } from '../../utils/debug';
 import type { ViewStyle, TextStyle } from '../../types';
 
-// Types for dynamic node capabilities
-interface RenderingInfo {
+// Types for dynamic node capabilities (exported for mixin type inference)
+export interface RenderingInfo {
   layerId?: string;
   zIndex?: number;
 }
 
-interface StackingContextInfo {
+export interface StackingContextInfo {
   zIndex: number;
   nodes: Node[];
 }
 
-interface ViewportInfo {
+export interface ViewportInfo {
   bounds: BoundingBox;
   scrollOffset?: { x: number; y: number };
 }
@@ -69,6 +69,7 @@ interface FocusableNode extends Node {
   autoFocus?: boolean;
   onFocus?: (event?: unknown) => void;
   onBlur?: () => void;
+  onKeyDown?: (event: unknown) => void;
 }
 
 /**
@@ -712,7 +713,6 @@ export abstract class Node {
     number
   > {
     const { NodeFactory } = require('../NodeFactory');
-    const now = (): number => Date.now();
 
     const getPublicInstance = (instance: Node): Node => instance;
 
@@ -725,15 +725,16 @@ export abstract class Node {
     };
 
     const getChildHostContext = (
-      parentHostContext: { x: number; y: number; width: number },
+      parentHostContext: object,
       _type: string,
-      _props: Record<string, unknown>
-    ): { x: number; y: number; width: number } => {
+      _rootContainer: Node
+    ): object => {
       return parentHostContext;
     };
 
-    const prepareForCommit = (): void => {
+    const prepareForCommit = (_containerInfo: Node): Record<string, unknown> | null => {
       debug('[hostConfig] prepareForCommit');
+      return null;
     };
     const resetAfterCommit = (): void => {
       debug('[hostConfig] resetAfterCommit');
@@ -756,30 +757,46 @@ export abstract class Node {
       // Handle different type formats
       let typeString: string;
 
+      // Type for function components with optional displayName
+      interface FunctionComponent {
+        (...args: unknown[]): unknown;
+        name?: string;
+        displayName?: string;
+      }
+      // Type for React elements with type property
+      interface ReactElementLike {
+        type?: unknown;
+        $$typeof?: symbol;
+      }
+
       if (typeof type === 'string') {
         typeString = type;
       } else if (typeof type === 'function') {
         // Function component - try to get name, or default to Box
-        typeString = type.name || type.displayName || 'Box';
+        const fn = type as FunctionComponent;
+        typeString = fn.name || fn.displayName || 'Box';
       } else if (type && typeof type === 'object') {
         // Object type - could be React element or other object
+        const elem = type as ReactElementLike;
         if ('type' in type) {
           // Has type property - could be React element
-          const innerType = type.type;
+          const innerType = elem.type;
           if (typeof innerType === 'string') {
             typeString = innerType;
           } else if (typeof innerType === 'function') {
-            typeString = innerType.name || innerType.displayName || 'Box';
+            const innerFn = innerType as FunctionComponent;
+            typeString = innerFn.name || innerFn.displayName || 'Box';
           } else {
             typeString = 'Box';
           }
         } else if ('$$typeof' in type) {
           // React element with $$typeof - extract type
-          const elementType = type.type;
+          const elementType = elem.type;
           if (typeof elementType === 'string') {
             typeString = elementType;
           } else if (typeof elementType === 'function') {
-            typeString = elementType.name || elementType.displayName || 'Box';
+            const elemFn = elementType as FunctionComponent;
+            typeString = elemFn.name || elemFn.displayName || 'Box';
           } else {
             typeString = 'Box';
           }
@@ -813,11 +830,14 @@ export abstract class Node {
 
     const createTextInstance = (
       text: string,
-      _rootContainerInstance: unknown,
-      _hostContext: { x: number; y: number; width: number },
+      _rootContainerInstance: Node,
+      _hostContext: object,
       _internalInstanceHandle: unknown
-    ): TextInstance => {
-      return { text, parentNode: null };
+    ): Node => {
+      // Create a text instance that satisfies the Node interface requirement
+      // but is handled specially in appendInitialChild
+      const textInstance: TextInstance = { text, parentNode: null };
+      return textInstance as unknown as Node;
     };
 
     const appendInitialChild = (
@@ -870,9 +890,9 @@ export abstract class Node {
       _type: string,
       _oldProps: Record<string, unknown>,
       _newProps: Record<string, unknown>,
-      _rootContainerInstance: unknown,
-      _hostContext: { x: number; y: number; width: number }
-    ): Record<string, unknown> | null => {
+      _rootContainerInstance: Node,
+      _hostContext: object
+    ): unknown[] | null => {
       // Log significant prop changes (disabled, label, etc.)
       if (_oldProps.disabled !== _newProps.disabled) {
         debug('[hostConfig] prepareUpdate: disabled changed', {
@@ -881,7 +901,8 @@ export abstract class Node {
           newDisabled: _newProps.disabled,
         });
       }
-      return _newProps;
+      // Return update payload as array - react-reconciler expects unknown[]
+      return [_oldProps, _newProps];
     };
 
     const shouldSetTextContent = (_type: string, _props: Record<string, unknown>): boolean => {
@@ -890,19 +911,7 @@ export abstract class Node {
 
     const getCurrentEventPriority = (): number => 0;
 
-    let currentUpdatePriority: number = 0;
-
-    const resolveUpdatePriority = (): number => currentUpdatePriority;
-    const setCurrentUpdatePriority = (priority: number): void => {
-      currentUpdatePriority = priority;
-    };
-    const getCurrentUpdatePriority = (): number => currentUpdatePriority;
-    const resolveEventType = (): string => 'unknown';
-    const resolveEventTimeStamp = (): number => now();
-
     // Use default scheduling from react-reconciler
-    // Only define scheduleTimeout which ink also defines
-    const requestPostPaintCallback = (_callback: () => void): void => {};
 
     const appendChild = (parentInstance: Node, child: Node | string): void => {
       appendInitialChild(parentInstance, child);
@@ -967,29 +976,28 @@ export abstract class Node {
       removeChild(container, child);
     };
 
-    const commitTextUpdate = (
-      textInstance: TextInstance,
-      _oldText: string,
-      newText: string
-    ): void => {
+    const commitTextUpdate = (textInstance: Node, _oldText: string, newText: string): void => {
+      // Cast to TextInstance for internal use
+      const textInst = textInstance as unknown as TextInstance;
       // Update the text instance
-      textInstance.text = newText;
+      textInst.text = newText;
 
       // Update the parent node's content if it's a TextNode
-      if (textInstance.parentNode && textInstance.parentNode.type === 'text') {
-        textInstance.parentNode.setContent(newText);
+      if (textInst.parentNode && textInst.parentNode.type === 'text') {
+        textInst.parentNode.setContent(newText);
       }
     };
 
     const commitUpdate = (
       instance: Node,
+      updatePayload: unknown[],
       _type: string,
       _oldProps: Record<string, unknown>,
       newProps: Record<string, unknown>,
       _internalHandle: unknown
     ): void => {
-      // react-reconciler 0.31 passes: instance, type, oldProps, newProps, internalHandle
-      // Note: the order is oldProps THEN newProps (opposite of what some docs suggest)
+      // react-reconciler 0.31 passes: instance, updatePayload, type, oldProps, newProps, internalHandle
+      // updatePayload comes from prepareUpdate
 
       const extInstance = instance as unknown as RenderableNode;
       debug('[hostConfig] commitUpdate', {
@@ -997,6 +1005,7 @@ export abstract class Node {
         id: extInstance.componentId,
         disabled: newProps.disabled,
         oldDisabled: _oldProps.disabled,
+        updatePayload,
       });
 
       if (newProps.style && extInstance.setStyle) {
@@ -1084,20 +1093,8 @@ export abstract class Node {
       container.children = [];
     };
 
-    const maySuspendCommit = (_type: string, _props: Record<string, unknown>): boolean => false;
-    const preloadInstance = (_type: string, _props: Record<string, unknown>): void => {};
-    const startSuspendingCommit = (): void => {};
-    const suspendInstance = (_type: string, _props: Record<string, unknown>): void => {};
-    const waitForCommitToBeReady = (): ((initiateCommit: () => void) => () => void) | null => null;
-
-    // Called when a fiber is deleted to clean up any associated resources
-    const detachDeletedInstance = (_instance: Node): void => {
-      // Clean up any references or resources
-      // This is called after the component has been unmounted
-    };
-
     return {
-      now,
+      // Note: 'now' is not part of react-reconciler HostConfig, removed
       getPublicInstance,
       getRootHostContext,
       getChildHostContext,
@@ -1110,14 +1107,14 @@ export abstract class Node {
       prepareUpdate,
       shouldSetTextContent,
       getCurrentEventPriority,
-      resolveUpdatePriority,
-      setCurrentUpdatePriority,
-      getCurrentUpdatePriority,
-      resolveEventType,
-      resolveEventTimeStamp,
+      // Note: These properties are internal helpers, not part of HostConfig
+      // resolveUpdatePriority, setCurrentUpdatePriority, getCurrentUpdatePriority,
+      // resolveEventType, resolveEventTimeStamp are used internally but not in returned config
       // Let react-reconciler use default scheduling
-      scheduleTimeout: setTimeout,
-      cancelTimeout: clearTimeout,
+      // Wrap setTimeout/clearTimeout to handle Node.js Timeout type
+      scheduleTimeout: (fn: (...args: unknown[]) => unknown, delay?: number) =>
+        setTimeout(fn, delay) as unknown as number,
+      cancelTimeout: (id: number) => clearTimeout(id as unknown as NodeJS.Timeout),
       noTimeout: -1,
       appendChild,
       appendChildToContainer,
@@ -1136,23 +1133,14 @@ export abstract class Node {
       supportsPersistence: false,
       supportsHydration: false,
       isPrimaryRenderer: true,
-      NotPendingTransition: null,
-      HostTransitionContext: null,
-      requestPostPaintCallback,
-      shouldAttemptEagerTransition: () => false,
-      resetFormInstance: () => {},
-      maySuspendCommit,
-      preloadInstance,
-      startSuspendingCommit,
-      suspendInstance,
-      waitForCommitToBeReady,
-      detachDeletedInstance,
-      // Instance lifecycle callbacks
+      // Required additional properties
+      preparePortalMount: () => {},
+      getInstanceFromNode: () => null,
       beforeActiveInstanceBlur: () => {},
       afterActiveInstanceBlur: () => {},
       prepareScopeUpdate: () => {},
       getInstanceFromScope: () => null,
-      getInstanceFromNode: () => null,
+      detachDeletedInstance: () => {},
     };
   }
 

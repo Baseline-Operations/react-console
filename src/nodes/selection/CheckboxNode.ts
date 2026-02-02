@@ -17,6 +17,10 @@ const DEFAULT_CHECKBOX_UNCHECKED = '□'; // Empty square (or use ☐)
  * Checkbox node - checkbox selection (supports multiple selection)
  */
 export class CheckboxNode extends SelectionNode {
+  // Declare inherited mixin properties for TypeScript
+  declare focused: boolean;
+  declare disabled: boolean;
+
   // Interactive properties
   public autoFocus: boolean = false;
   public tabIndex?: number;

@@ -152,30 +152,30 @@ export class NodeFactory {
 
       case 'input':
       case 'Input':
-        const inputNode = new InputNode(props.id);
+        const inputNode = new InputNode(typeof props.id === 'string' ? props.id : undefined);
         if (props.value !== undefined) {
           inputNode.setValue(String(props.value));
         }
-        if (props.placeholder) {
+        if (props.placeholder && typeof props.placeholder === 'string') {
           inputNode.setPlaceholder(props.placeholder);
         }
-        if (props.maxLength) {
+        if (props.maxLength && typeof props.maxLength === 'number') {
           inputNode.setMaxLength(props.maxLength);
         }
-        if (props.multiline) {
-          inputNode.setMultiline(props.multiline);
+        if (props.multiline !== undefined) {
+          inputNode.setMultiline(Boolean(props.multiline));
         }
-        if (props.maxLines) {
+        if (props.maxLines && typeof props.maxLines === 'number') {
           inputNode.setMaxLines(props.maxLines);
         }
-        if (props.mask) {
+        if (props.mask && typeof props.mask === 'string') {
           inputNode.setMask(props.mask);
         }
         if (props.type) {
           inputNode.setInputType(props.type === 'number' ? 'number' : 'text');
         }
         // Set focus-related props
-        const extInputNode = inputNode as ExtendedNode;
+        const extInputNode = inputNode as unknown as ExtendedNode;
         if (props.autoFocus !== undefined) {
           extInputNode.autoFocus = Boolean(props.autoFocus);
         }
@@ -210,8 +210,8 @@ export class NodeFactory {
 
       case 'button':
       case 'Button':
-        const buttonNode = new ButtonNode(props.id);
-        if (props.label) {
+        const buttonNode = new ButtonNode(typeof props.id === 'string' ? props.id : undefined);
+        if (props.label && typeof props.label === 'string') {
           buttonNode.setLabel(props.label);
         } else if (props.content) {
           buttonNode.setContent(String(props.content));
@@ -229,7 +229,7 @@ export class NodeFactory {
           buttonNode.disabled = Boolean(props.disabled);
         }
         // Set focus-related props
-        const extButtonNode = buttonNode as ExtendedNode;
+        const extButtonNode = buttonNode as unknown as ExtendedNode;
         if (props.autoFocus !== undefined) {
           extButtonNode.autoFocus = Boolean(props.autoFocus);
         }
@@ -257,7 +257,7 @@ export class NodeFactory {
         }
         // Set style if provided
         if (props.style) {
-          buttonNode.setStyle(props.style as ViewStyle | TextStyle);
+          buttonNode.setStyle(props.style as Record<string, unknown>);
         }
         node = buttonNode as unknown as Node;
         break;
@@ -291,7 +291,13 @@ export class NodeFactory {
           );
         }
         if (props.scrollbarStyle) {
-          scrollViewNode.scrollbarStyle = props.scrollbarStyle as ViewStyle | TextStyle;
+          scrollViewNode.scrollbarStyle = props.scrollbarStyle as {
+            width?: number;
+            trackChar?: string;
+            thumbChar?: string;
+            trackColor?: string;
+            thumbColor?: string;
+          };
         }
         if (props.scrollStep !== undefined) {
           scrollViewNode.scrollStep = props.scrollStep as number;
@@ -309,7 +315,7 @@ export class NodeFactory {
           ) => void;
         }
         if (props.style) {
-          scrollViewNode.setStyle(props.style as ViewStyle | TextStyle);
+          scrollViewNode.setStyle(props.style as Record<string, unknown>);
         }
         node = scrollViewNode as unknown as Node;
         break;

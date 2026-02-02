@@ -30,12 +30,81 @@ interface ButtonStateStyle {
   bold?: boolean;
 }
 
+// Create the mixed-in base class with proper type handling
+const ButtonNodeBase = Stylable(
+  Renderable(Interactive(Node as unknown as import('../base/types').Constructor<Node>))
+);
+
+// Interface to declare mixed-in properties for TypeScript
+interface ButtonNodeMixins {
+  // From Interactive mixin
+  focused: boolean;
+  disabled: boolean;
+  tabIndex: number;
+  onClick?: (event: MouseEvent) => void;
+  onPress?: (event: MouseEvent) => void;
+  onKeyDown?: (event: KeyboardEvent) => void;
+  onChange?: (event: { value: unknown; target: unknown }) => void;
+  handleClick(event: MouseEvent): void;
+  handleKeyboardEvent(event: KeyboardEvent): void;
+  // From Renderable mixin
+  renderBackground(
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ): void;
+  renderBorder(
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ): void;
+  registerRendering(
+    bufferRegion: import('../base/mixins').BufferRegion,
+    zIndex: number,
+    viewport: import('../base/mixins/Renderable').Viewport | null
+  ): void;
+  // From Stylable mixin
+  inlineStyle: import('../base/types').StyleMap;
+  computeStyle(): import('../base/mixins/Stylable').ComputedStyle;
+  setStyle(style: import('../base/types').StyleMap): void;
+  applyStyleMixin(mixinName: string): void;
+}
+
 /**
  * Button node - clickable button
  */
-export class ButtonNode extends Stylable(
-  Renderable(Interactive(Node as import('../base/types').Constructor<Node>))
-) {
+export class ButtonNode extends ButtonNodeBase implements ButtonNodeMixins {
+  // Declare mixed-in properties for TypeScript (they exist at runtime via mixins)
+  // Note: Methods that are overridden in this class should not be declared here
+  declare focused: boolean;
+  declare disabled: boolean;
+  declare tabIndex: number;
+  declare onClick?: (event: MouseEvent) => void;
+  declare onPress?: (event: MouseEvent) => void;
+  declare onKeyDown?: (event: KeyboardEvent) => void;
+  declare onChange?: (event: { value: unknown; target: unknown }) => void;
+  declare handleClick: (event: MouseEvent) => void;
+  // handleKeyboardEvent is overridden in this class, so no declare needed
+  declare renderBackground: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare renderBorder: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare registerRendering: (
+    bufferRegion: import('../base/mixins').BufferRegion,
+    zIndex: number,
+    viewport: import('../base/mixins/Renderable').Viewport | null
+  ) => void;
+  declare inlineStyle: import('../base/types').StyleMap;
+  declare computeStyle: () => import('../base/mixins/Stylable').ComputedStyle;
+  declare setStyle: (style: import('../base/types').StyleMap) => void;
+  declare applyStyleMixin: (mixinName: string) => void;
+
   private label: string = '';
   private _isHovered: boolean = false;
   private _isPressed: boolean = false;
@@ -179,7 +248,7 @@ export class ButtonNode extends Stylable(
       lines: [context.y],
     };
 
-    this.registerRendering(bufferRegion, style.getZIndex() || 0, context.viewport);
+    this.registerRendering(bufferRegion, style.getZIndex() || 0, context.viewport ?? null);
 
     return {
       endX: context.x + layout.dimensions.width,
@@ -318,7 +387,7 @@ export class ButtonNode extends Stylable(
     const isPressed = this._isPressed;
     const isDisabled = this.disabled;
 
-    let bgColor = style.getBackgroundColor();
+    let bgColor: string | undefined = style.getBackgroundColor() ?? undefined;
     let fgColor = style.getColor() || '#ffffff';
     let bold = style.getBold();
 
@@ -368,7 +437,11 @@ export class ButtonNode extends Stylable(
       event.preventDefault();
     }
 
-    super.handleKeyboardEvent(event);
+    // Call parent class method via prototype (TypeScript doesn't see it due to mixin pattern)
+    const parentProto = Object.getPrototypeOf(Object.getPrototypeOf(this));
+    if (parentProto && typeof parentProto.handleKeyboardEvent === 'function') {
+      parentProto.handleKeyboardEvent.call(this, event);
+    }
   }
 
   /**

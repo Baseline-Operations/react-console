@@ -3,7 +3,7 @@
  * Uses the multi-buffer system for all rendering
  */
 
-import type { Constructor, BoundingBox } from '../types';
+import type { Constructor, AbstractConstructor, BoundingBox } from '../types';
 import { Node } from '../Node';
 import type { ComputedStyle } from './Stylable';
 import { RenderingTreeRegistry } from '../../../render/RenderingTree';
@@ -111,10 +111,13 @@ export interface BufferRegion {
  * Mixin that adds rendering capabilities to a node
  * Type-safe using generics
  * Provides default render implementation that can be overridden
+ * Accepts both concrete and abstract constructors
  */
-export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
+export function Renderable<TBase extends Constructor<Node> | AbstractConstructor<Node>>(
+  Base: TBase
+) {
   // Mixins return classes that extend Base, but the final composed class will implement abstract methods
-  return class RenderableNode extends Base {
+  return class RenderableNode extends (Base as Constructor<Node>) {
     // Rendering state
     renderingInfo: RenderingInfo | null = null;
     renderDirty: boolean = true;
@@ -190,7 +193,7 @@ export function Renderable<TBase extends Constructor<Node>>(Base: TBase) {
       };
 
       const zIndex = style && 'getZIndex' in style ? style.getZIndex() || 0 : 0;
-      this.registerRendering(bufferRegion, zIndex, context.viewport);
+      this.registerRendering(bufferRegion, zIndex, context.viewport ?? null);
 
       return {
         endX: bounds.x + bounds.width,

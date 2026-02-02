@@ -23,12 +23,75 @@ import { debug } from '../../utils/debug';
 // Default visible width for input fields (not including focus indicators)
 const DEFAULT_INPUT_WIDTH = 20;
 
+// Create the mixed-in base class with proper type handling
+const InputNodeBase = Stylable(
+  Renderable(Interactive(Node as unknown as import('../base/types').Constructor<Node>))
+);
+
+// Interface to declare mixed-in properties for TypeScript
+interface InputNodeMixins {
+  // From Interactive mixin
+  focused: boolean;
+  disabled: boolean;
+  tabIndex: number;
+  onClick?: (event: unknown) => void;
+  onChange?: (event: { value: unknown; target: unknown }) => void;
+  handleKeyboardEvent(event: KeyboardEvent): void;
+  // From Renderable mixin
+  renderBackground(
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ): void;
+  renderBorder(
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ): void;
+  registerRendering(
+    bufferRegion: import('../base/mixins').BufferRegion,
+    zIndex: number,
+    viewport: import('../base/mixins/Renderable').Viewport | null
+  ): void;
+  // From Stylable mixin
+  inlineStyle: import('../base/types').StyleMap;
+  computeStyle(): import('../base/mixins/Stylable').ComputedStyle;
+  setStyle(style: import('../base/types').StyleMap): void;
+  applyStyleMixin(mixinName: string): void;
+}
+
 /**
  * Input node - text input field
  */
-export class InputNode extends Stylable(
-  Renderable(Interactive(Node as import('../base/types').Constructor<Node>))
-) {
+export class InputNode extends InputNodeBase implements InputNodeMixins {
+  // Declare mixed-in properties for TypeScript (they exist at runtime via mixins)
+  // Note: Methods that are overridden in this class should not be declared here
+  declare focused: boolean;
+  declare disabled: boolean;
+  declare tabIndex: number;
+  declare onClick?: (event: unknown) => void;
+  declare onChange?: (event: { value: unknown; target: unknown }) => void;
+  // handleKeyboardEvent is overridden in this class, so no declare needed
+  declare renderBackground: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare renderBorder: (
+    buffer: OutputBuffer,
+    style: import('../base/mixins/Stylable').ComputedStyle,
+    context: RenderContext
+  ) => void;
+  declare registerRendering: (
+    bufferRegion: import('../base/mixins').BufferRegion,
+    zIndex: number,
+    viewport: import('../base/mixins/Renderable').Viewport | null
+  ) => void;
+  declare inlineStyle: import('../base/types').StyleMap;
+  declare computeStyle: () => import('../base/mixins/Stylable').ComputedStyle;
+  declare setStyle: (style: import('../base/types').StyleMap) => void;
+  declare applyStyleMixin: (mixinName: string) => void;
+
   private value: string = '';
   private placeholder: string = '';
   private maxLength: number | null = null;
@@ -82,7 +145,7 @@ export class InputNode extends Stylable(
     const borderWidth = this.border.width;
 
     // Check if width is explicitly set via style
-    const styleWidth = this.style?.width;
+    const styleWidth = this.inlineStyle?.width;
     const hasExplicitWidth = styleWidth !== undefined && styleWidth !== null;
 
     // Use fixed width - input scrolls horizontally, doesn't grow
@@ -168,7 +231,7 @@ export class InputNode extends Stylable(
       lines: [context.y],
     };
 
-    this.registerRendering(bufferRegion, style.getZIndex() || 0, context.viewport);
+    this.registerRendering(bufferRegion, style.getZIndex() || 0, context.viewport ?? null);
 
     return {
       endX: context.x + layout.dimensions.width,
@@ -470,7 +533,7 @@ export class InputNode extends Stylable(
 
     // Use different styling for focused vs unfocused
     const isFocused = this.focused;
-    const bgColor = isFocused ? '#333333' : style.getBackgroundColor();
+    const bgColor = isFocused ? '#333333' : (style.getBackgroundColor() ?? undefined);
     const fgColor = isFocused ? textColor || '#ffffff' : textColor || 'gray';
 
     const styledText = applyStyles(text, {
@@ -544,7 +607,11 @@ export class InputNode extends Stylable(
     // Update scroll to keep cursor visible
     this.ensureCursorVisible();
 
-    super.handleKeyboardEvent(event);
+    // Call parent class method via prototype (TypeScript doesn't see it due to mixin pattern)
+    const parentProto = Object.getPrototypeOf(Object.getPrototypeOf(this));
+    if (parentProto && typeof parentProto.handleKeyboardEvent === 'function') {
+      parentProto.handleKeyboardEvent.call(this, event);
+    }
   }
 
   private handleNewline(): void {

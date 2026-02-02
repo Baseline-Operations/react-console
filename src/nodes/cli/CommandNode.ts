@@ -39,10 +39,13 @@ export interface CommandNodeProps {
   children?: React.ReactNode;
 }
 
+// Create the mixed-in base class with proper type handling
+const CommandNodeBase = Stylable(Renderable(Layoutable(Node as unknown as Constructor<Node>)));
+
 /**
  * Command node - Command definition
  */
-export class CommandNode extends Stylable(Renderable(Layoutable(Node as Constructor<Node>))) {
+export class CommandNode extends CommandNodeBase {
   private name: string;
   private aliases?: string[];
 

@@ -3,11 +3,12 @@
  * Type-safe using generics
  */
 
-import type { Constructor, DisplayMode, BoundingBox } from '../types';
+import type { Constructor, AbstractConstructor, DisplayMode, BoundingBox } from '../types';
 import { DisplayMode as DisplayModeEnum } from '../types';
 import { Node } from '../Node';
 import { StackingContext, StackingContextManager } from '../../../render/StackingContext';
 import { ViewportManager } from '../../../render/Viewport';
+import type { ComputedStyle } from './Stylable';
 
 /**
  * Layout constraints type
@@ -50,10 +51,13 @@ export interface ChildLayout {
 /**
  * Mixin that adds layout capabilities to a node
  * Type-safe using generics
+ * Accepts both concrete and abstract constructors
  */
-export function Layoutable<TBase extends Constructor<Node>>(Base: TBase) {
+export function Layoutable<TBase extends Constructor<Node> | AbstractConstructor<Node>>(
+  Base: TBase
+) {
   // Mixins return classes that extend Base, but the final composed class will implement abstract methods
-  return class LayoutableNode extends Base {
+  return class LayoutableNode extends (Base as Constructor<Node>) {
     // Layout state
     layoutDirty: boolean = true;
     display: DisplayMode = DisplayModeEnum.BLOCK;
@@ -86,7 +90,7 @@ export function Layoutable<TBase extends Constructor<Node>>(Base: TBase) {
      */
     updateStackingContext(): void {
       interface StylableNode {
-        computeStyle(): unknown;
+        computeStyle(): ComputedStyle;
       }
       interface NodeWithStackingContext {
         stackingContext?: unknown;
@@ -97,14 +101,20 @@ export function Layoutable<TBase extends Constructor<Node>>(Base: TBase) {
 
       const style = (this as unknown as StylableNode).computeStyle();
 
-      this.createsStackingContext = StackingContext.createsStackingContext(this, style);
+      this.createsStackingContext = StackingContext.createsStackingContext(
+        this,
+        style as unknown as ComputedStyle
+      );
 
       if (this.createsStackingContext) {
         const manager = StackingContextManager.get();
-        this.stackingContext = manager.getContext(this, style);
+        const ctx = manager.getContext(this, style as unknown as ComputedStyle);
+        // StackingContext.getContext returns StackingContext but we store as StackingContextInfo
+        this.stackingContext = ctx as unknown as typeof this.stackingContext;
       } else if (this.parent) {
         // Inherit parent's stacking context
-        this.stackingContext = (this.parent as unknown as NodeWithStackingContext).stackingContext;
+        this.stackingContext = (this.parent as unknown as NodeWithStackingContext)
+          .stackingContext as typeof this.stackingContext;
       }
     }
 
@@ -113,7 +123,7 @@ export function Layoutable<TBase extends Constructor<Node>>(Base: TBase) {
      */
     updateViewport(): void {
       interface NodeWithViewport {
-        viewport?: { clip(bounds: BoundingBox): BoundingBox };
+        viewport?: { clip?(bounds: BoundingBox): BoundingBox };
       }
       // Skip if bounds not set yet (will be set during layout)
       if (!this.bounds) return;
@@ -122,14 +132,19 @@ export function Layoutable<TBase extends Constructor<Node>>(Base: TBase) {
       const manager = ViewportManager.get();
 
       if (this.isScrollable()) {
-        this.viewport = manager.createViewport(this, bounds);
+        this.viewport = manager.createViewport(this, bounds) as unknown as typeof this.viewport;
       } else if (this.parent) {
         // Inherit parent's viewport
-        this.viewport = (this.parent as unknown as NodeWithViewport).viewport;
+        this.viewport = (this.parent as unknown as NodeWithViewport)
+          .viewport as typeof this.viewport;
       }
 
-      if (this.viewport) {
-        this.clippingArea = this.viewport.clip(bounds);
+      if (
+        this.viewport &&
+        'clip' in this.viewport &&
+        typeof (this.viewport as NodeWithViewport['viewport'])?.clip === 'function'
+      ) {
+        this.clippingArea = (this.viewport as NodeWithViewport['viewport'])!.clip!(bounds);
       } else {
         this.clippingArea = bounds;
       }

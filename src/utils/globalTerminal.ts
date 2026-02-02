@@ -99,7 +99,7 @@ class GlobalTerminalImpl implements GlobalTerminal {
   setFocusedComponent(component: ConsoleNode | null): void {
     this._focusedComponent = component;
     // Also update focusedNodeId when component is set
-    this._focusedNodeId = component?.id ?? null;
+    this._focusedNodeId = (component as unknown as { id?: string | null })?.id ?? null;
   }
 
   getFocusedComponent(): ConsoleNode | null {
