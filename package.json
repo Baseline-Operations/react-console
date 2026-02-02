@@ -97,7 +97,7 @@
   "dependencies": {
     "ansi-escapes": "^7.2.0",
     "cli-cursor": "^5.0.0",
-    "react-reconciler": "^0.31.0"
+    "react-reconciler": "^0.33.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.25.0",
@@ -107,7 +107,7 @@
     "@babel/preset-typescript": "^7.25.0",
     "@types/node": "^22.10.1",
     "@types/react": "^19.0.0",
-    "@types/react-reconciler": "^0.28.5",
+    "@types/react-reconciler": "^0.33.0",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "babel-plugin-react-compiler": "^19.0.0-beta-45e3631b-20250413",
