@@ -9,7 +9,44 @@ jobs:
     name: Auto-merge Dependabot PRs
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
+      - name: Add version label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get the PR title to determine update type
+            const title = context.payload.pull_request.title;
+
+            // Dependabot titles are like "Bump package from 1.0.0 to 2.0.0"
+            // Check if it's a major update (first number changes)
+            const match = title.match(/from (\d+)\.\d+\.\d+ to (\d+)\.\d+\.\d+/);
+
+            let label = 'patch';
+            if (match) {
+              const [, fromMajor, toMajor] = match;
+              if (fromMajor !== toMajor) {
+                label = 'major';
+              } else {
+                // Check minor version
+                const minorMatch = title.match(/from \d+\.(\d+)\.\d+ to \d+\.(\d+)\.\d+/);
+                if (minorMatch && minorMatch[1] !== minorMatch[2]) {
+                  label = 'minor';
+                }
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [label]
+            });
+
+            console.log(`Added ${label} label to Dependabot PR`);
+
       - name: Auto-merge Dependabot PRs
         uses: fastify/github-action-merge-dependabot@v3
         with:
