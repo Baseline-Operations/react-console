@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Validate commit message format (optional - can be enhanced with commitlint)
 # For now, just ensure it's not empty
 if [ -z "$1" ]; then
