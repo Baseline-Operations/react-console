@@ -109,7 +109,7 @@ export const componentRegistry = new ComponentRegistryClass();
 /**
  * Register a custom component type
  * @param registration - Component registration
- * 
+ *
  * @example
  * ```ts
  * registerComponent({

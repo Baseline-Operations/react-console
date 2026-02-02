@@ -9,7 +9,7 @@ import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
 
 /**
  * Props for the Box component
- * 
+ *
  * @example
  * ```tsx
  * <Box
@@ -52,23 +52,23 @@ export interface BoxProps {
 
 /**
  * Box component - Container for layout and styling with full layout support
- * 
+ *
  * Similar to React Native's View component, provides a block-level container with:
  * - CSS-like styling (flexbox, grid, borders, padding, margins)
  * - Responsive sizing (percentages, viewport units)
  * - Scrollbar support (horizontal and vertical)
  * - Position support (absolute, relative, fixed)
- * 
+ *
  * @param props - Box component props
  * @returns React element representing a Box container
- * 
+ *
  * @example
  * ```tsx
  * // Basic box with border
  * <Box style={{ border: 'single', padding: 2 }}>
  *   <Text>Content</Text>
  * </Box>
- * 
+ *
  * // Scrollable box with scrollbars
  * <Box
  *   scrollable={true}
@@ -78,7 +78,7 @@ export interface BoxProps {
  * >
  *   <Text>Long content that overflows</Text>
  * </Box>
- * 
+ *
  * // Flexbox layout
  * <Box style={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
  *   <Text>Item 1</Text>
@@ -86,8 +86,8 @@ export interface BoxProps {
  * </Box>
  * ```
  */
-export function Box({ 
-  children, 
+export function Box({
+  children,
   style,
   className,
   fullscreen,
@@ -99,7 +99,7 @@ export function Box({
   scrollbarTrackChar,
   scrollTop,
   scrollLeft,
-  ...legacyProps 
+  ...legacyProps
 }: BoxProps) {
   // Merge className with style prop and legacy props (className < style < legacy props)
   const mergedStyle = mergeClassNameAndStyle(className, style, legacyProps);

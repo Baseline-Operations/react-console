@@ -87,7 +87,7 @@ export interface CommandProps extends StyleProps {
 /**
  * Command component
  * Defines a CLI command with optional nested commands (subcommands)
- * 
+ *
  * @example
  * ```tsx
  * <Command name="build" description="Build project">

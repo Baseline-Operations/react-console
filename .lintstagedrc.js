@@ -1,24 +1,12 @@
 module.exports = {
   // TypeScript and TypeScript React files
-  '**/*.{ts,tsx}': [
-    'eslint --fix',
-    'prettier --write',
-  ],
-  // JavaScript and JavaScript React files
-  '**/*.{js,jsx}': [
-    'eslint --fix',
-    'prettier --write',
-  ],
+  '**/*.{ts,tsx}': ['eslint --fix', 'prettier --write'],
+  // JavaScript config files (eslint ignores these, only format)
+  '**/*.{js,jsx}': ['prettier --write'],
   // JSON files
-  '**/*.json': [
-    'prettier --write',
-  ],
+  '**/*.json': ['prettier --write'],
   // Markdown files
-  '**/*.md': [
-    'prettier --write',
-  ],
+  '**/*.md': ['prettier --write'],
   // YAML files
-  '**/*.{yml,yaml}': [
-    'prettier --write',
-  ],
+  '**/*.{yml,yaml}': ['prettier --write'],
 };

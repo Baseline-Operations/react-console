@@ -1,6 +1,6 @@
 /**
  * Terminal Dimensions Context Provider
- * 
+ *
  * Provides terminal dimensions context for components that need reactive terminal size.
  * Useful for components that need to adjust layout based on terminal dimensions.
  */
@@ -20,12 +20,12 @@ const TerminalDimensionsContext = createContext<TerminalDimensionsContextValue |
 
 /**
  * Terminal Dimensions Provider
- * 
+ *
  * Provides terminal dimensions context to child components.
  * Automatically updates when terminal is resized.
- * 
+ *
  * @param children - Child components
- * 
+ *
  * @example
  * ```tsx
  * function App() {
@@ -37,7 +37,11 @@ const TerminalDimensionsContext = createContext<TerminalDimensionsContextValue |
  * }
  * ```
  */
-export function TerminalDimensionsProvider({ children }: { children: ReactNode }): React.JSX.Element {
+export function TerminalDimensionsProvider({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
   const [dimensions, setDimensions] = useState<TerminalDimensions>(() => {
     return terminal.dimensions;
   });
@@ -69,17 +73,17 @@ export function TerminalDimensionsProvider({ children }: { children: ReactNode }
 
 /**
  * Hook to use terminal dimensions context
- * 
+ *
  * Returns terminal dimensions from the nearest TerminalDimensionsProvider.
- * 
+ *
  * @returns Terminal dimensions context value
  * @throws Error if used outside TerminalDimensionsProvider
- * 
+ *
  * @example
  * ```tsx
  * function ResponsiveComponent() {
  *   const { dimensions, columns, rows } = useTerminalDimensionsContext();
- *   
+ *
  *   return (
  *     <View>
  *       <Text>Size: {columns}x{rows}</Text>

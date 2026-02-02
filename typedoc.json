@@ -10,13 +10,7 @@
   "excludeInternal": true,
   "includeVersion": true,
   "categorizeByGroup": true,
-  "categoryOrder": [
-    "Components",
-    "Hooks",
-    "Utilities",
-    "Types",
-    "*"
-  ],
+  "categoryOrder": ["Components", "Hooks", "Utilities", "Types", "*"],
   "gitRevision": "main",
   "sort": ["source-order", "alphabetical"],
   "kindSortOrder": [

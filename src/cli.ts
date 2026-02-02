@@ -1,11 +1,11 @@
 /**
  * CLI Application Framework
  * Convenient exports for building CLI applications with React Console
- * 
+ *
  * @example
  * ```tsx
  * import { CLIApp, CommandRouter, Command, Route, Default } from 'react-console/cli';
- * 
+ *
  * function App() {
  *   return (
  *     <CLIApp name="my-app" version="1.0.0">
@@ -32,7 +32,12 @@ export { Default } from './components/cli/Default';
 export type { DefaultProps, DefaultLifecycleHook } from './components/cli/Default';
 
 // Help system
-export type { HelpProps, HelpAppInfo, HelpCommandInfo, HelpRouteInfo } from './components/cli/HelpProps';
+export type {
+  HelpProps,
+  HelpAppInfo,
+  HelpCommandInfo,
+  HelpRouteInfo,
+} from './components/cli/HelpProps';
 
 // Hooks
 export {
@@ -50,29 +55,18 @@ export {
 } from './hooks/cli';
 
 // Utilities
-export {
-  parseCommandLineArgs,
-  extractPathParams,
-  matchRoutePath,
-} from './utils/cli/parser';
+export { parseCommandLineArgs, extractPathParams, matchRoutePath } from './utils/cli/parser';
 export type { ParsedArgs } from './utils/cli/parser';
 
 // Enhanced parser (deprecated - features merged into base parser)
 // @deprecated Use parseCommandLineArgs instead - all features are now in the base parser
-export {
-  parseCommandLineArgsEnhanced,
-} from './utils/cli/parserEnhanced';
+export { parseCommandLineArgsEnhanced } from './utils/cli/parserEnhanced';
 
-export {
-  validateCommandParams,
-  formatValidationErrors,
-} from './utils/cli/paramValidator';
+export { validateCommandParams, formatValidationErrors } from './utils/cli/paramValidator';
 export type { ParamValidationError, ParamValidationResult } from './utils/cli/paramValidator';
 
 // Enhanced parameter validation (for advanced use cases)
-export {
-  validateCommandParamsEnhanced,
-} from './utils/cli/paramValidatorEnhanced';
+export { validateCommandParamsEnhanced } from './utils/cli/paramValidatorEnhanced';
 export type {
   CustomValidator,
   ValidationConstraint,
@@ -80,24 +74,13 @@ export type {
   EnhancedOptionDefinition,
 } from './utils/cli/paramValidatorEnhanced';
 
-export {
-  findSimilarCommands,
-  formatUnknownCommandError,
-} from './utils/cli/commandSuggestions';
+export { findSimilarCommands, formatUnknownCommandError } from './utils/cli/commandSuggestions';
 
-export {
-  resolveOptionAliases,
-  findOptionByAlias,
-} from './utils/cli/optionResolver';
+export { resolveOptionAliases, findOptionByAlias } from './utils/cli/optionResolver';
 
-export {
-  normalizeOptionValues,
-} from './utils/cli/optionNormalizer';
+export { normalizeOptionValues } from './utils/cli/optionNormalizer';
 
-export {
-  isVersionRequested,
-  getAppVersion,
-} from './utils/cli/version';
+export { isVersionRequested, getAppVersion } from './utils/cli/version';
 
 export {
   generateCompletions,
@@ -111,10 +94,7 @@ export {
   generateEnhancedCompletions,
   generateEnhancedCompletionScript,
 } from './utils/cli/completionEnhanced';
-export type {
-  CompletionContext,
-  EnhancedCompletionOptions,
-} from './utils/cli/completionEnhanced';
+export type { CompletionContext, EnhancedCompletionOptions } from './utils/cli/completionEnhanced';
 
 export {
   addToHistory,
@@ -169,25 +149,15 @@ export {
 export type { CommandExecutionResult } from './utils/cli/commandExecutor';
 
 // Internal components (exported for advanced use cases)
-export {
-  VersionDisplay,
-} from './utils/cli/components/VersionDisplay';
+export { VersionDisplay } from './utils/cli/components/VersionDisplay';
 export type { VersionDisplayProps } from './utils/cli/components/VersionDisplay';
-export {
-  ValidationError,
-} from './utils/cli/components/ValidationError';
+export { ValidationError } from './utils/cli/components/ValidationError';
 export type { ValidationErrorProps } from './utils/cli/components/ValidationError';
-export {
-  UnknownCommandError,
-} from './utils/cli/components/UnknownCommandError';
+export { UnknownCommandError } from './utils/cli/components/UnknownCommandError';
 export type { UnknownCommandErrorProps } from './utils/cli/components/UnknownCommandError';
-export {
-  MiddlewareStopped,
-} from './utils/cli/components/MiddlewareStopped';
+export { MiddlewareStopped } from './utils/cli/components/MiddlewareStopped';
 export type { MiddlewareStoppedProps } from './utils/cli/components/MiddlewareStopped';
-export {
-  RouteBlocked,
-} from './utils/cli/components/RouteBlocked';
+export { RouteBlocked } from './utils/cli/components/RouteBlocked';
 export type { RouteBlockedProps } from './utils/cli/components/RouteBlocked';
 
 // Interactive CLI utilities (for advanced use cases)

@@ -16,12 +16,9 @@ export interface OptionsSectionProps {
  * Options section component
  * Displays all available options with their parameters, aliases, defaults, and descriptions
  */
-export function OptionsSection({
-  options,
-  helpAvailable,
-}: OptionsSectionProps): ReactNode {
+export function OptionsSection({ options, helpAvailable }: OptionsSectionProps): ReactNode {
   const hasOptions = Object.keys(options).length > 0 || helpAvailable;
-  
+
   if (!hasOptions) {
     return null;
   }
@@ -33,17 +30,13 @@ export function OptionsSection({
         <Text key={index}>
           {'  '}
           --{name}
-          {opt.aliases && opt.aliases.length > 0 && (
-            <>, -{opt.aliases.join(', -')}</>
-          )}
+          {opt.aliases && opt.aliases.length > 0 && <>, -{opt.aliases.join(', -')}</>}
           {opt.type !== 'boolean' && <> &lt;{opt.type}&gt;</>}
           {opt.default !== undefined && <> (default: {String(opt.default)})</>}
           {opt.description && <> - {opt.description}</>}
         </Text>
       ))}
-      {helpAvailable && (
-        <Text>  --help, -h    Show this help message</Text>
-      )}
+      {helpAvailable && <Text> --help, -h Show this help message</Text>}
     </>
   );
 }

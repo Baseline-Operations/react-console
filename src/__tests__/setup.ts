@@ -1,6 +1,6 @@
 /**
  * Vitest setup file
- * 
+ *
  * This file runs before each test file and sets up common configurations.
  * Individual tests can override these defaults using their own mocks.
  */

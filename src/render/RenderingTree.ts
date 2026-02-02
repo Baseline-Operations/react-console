@@ -11,13 +11,13 @@ import type { BufferRegion, RenderingInfo } from '../nodes/base/mixins/Renderabl
 export class RenderingTree {
   private renderingInfo: Map<Node, RenderingInfo> = new Map();
   private root: RenderingInfo | null = null;
-  
+
   /**
    * Register rendering info for a component
    */
   register(info: RenderingInfo): void {
     this.renderingInfo.set(info.component, info);
-    
+
     const parent = info.component.parent;
     if (parent) {
       const parentInfo = this.renderingInfo.get(parent);
@@ -28,14 +28,14 @@ export class RenderingTree {
       this.root = info;
     }
   }
-  
+
   /**
    * Get rendering info for a component
    */
   get(component: Node): RenderingInfo | undefined {
     return this.renderingInfo.get(component);
   }
-  
+
   /**
    * Get all components in a buffer region
    */
@@ -48,7 +48,7 @@ export class RenderingTree {
     }
     return components;
   }
-  
+
   /**
    * Get all visible components
    */
@@ -61,23 +61,22 @@ export class RenderingTree {
     }
     return visible;
   }
-  
+
   /**
    * Get components sorted by z-index
    */
   getComponentsByZIndex(): Node[] {
-    const sorted = Array.from(this.renderingInfo.values())
-      .sort((a, b) => a.zIndex - b.zIndex);
-    return sorted.map(info => info.component);
+    const sorted = Array.from(this.renderingInfo.values()).sort((a, b) => a.zIndex - b.zIndex);
+    return sorted.map((info) => info.component);
   }
-  
+
   /**
    * Get root rendering info
    */
   getRoot(): RenderingInfo | null {
     return this.root;
   }
-  
+
   /**
    * Clear all rendering info
    */
@@ -85,17 +84,12 @@ export class RenderingTree {
     this.renderingInfo.clear();
     this.root = null;
   }
-  
+
   /**
    * Check if two buffer regions intersect
    */
   private regionsIntersect(a: BufferRegion, b: BufferRegion): boolean {
-    return !(
-      a.endX <= b.startX ||
-      b.endX <= a.startX ||
-      a.endY <= b.startY ||
-      b.endY <= a.startY
-    );
+    return !(a.endX <= b.startX || b.endX <= a.startX || a.endY <= b.startY || b.endY <= a.startY);
   }
 }
 
@@ -104,11 +98,11 @@ export class RenderingTree {
  */
 class RenderingTreeRegistry {
   private static tree: RenderingTree = new RenderingTree();
-  
+
   static get(): RenderingTree {
     return this.tree;
   }
-  
+
   static reset(): void {
     this.tree = new RenderingTree();
   }

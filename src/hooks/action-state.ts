@@ -1,6 +1,6 @@
 /**
  * React 19 Action State Hook Integration
- * 
+ *
  * Provides utilities for using React 19's useActionState hook in terminal applications.
  * Useful for form submissions and actions that need to track pending/error states.
  */
@@ -9,17 +9,17 @@ import { useActionState } from 'react';
 
 /**
  * Hook for action state management in terminal applications
- * 
+ *
  * Wraps React 19's `useActionState` hook with terminal-specific patterns.
  * Useful for form submissions and actions that need to track pending, error, and success states.
- * 
+ *
  * @template T - Type of the action state
  * @template P - Type of the action parameters
  * @param action - Async action function that takes parameters and returns state
  * @param initialState - Initial state value
  * @param permalink - Optional permalink (not used in terminal, can be undefined)
  * @returns Tuple of [state, formAction, isPending]
- * 
+ *
  * @example
  * ```tsx
  * async function submitForm(prevState: { message: string }, formData: FormData) {
@@ -30,13 +30,13 @@ import { useActionState } from 'react';
  *   await saveToStorage(name);
  *   return { message: 'Saved successfully' };
  * }
- * 
+ *
  * function FormComponent() {
  *   const [state, formAction, isPending] = useActionStateTerminal(
  *     submitForm,
  *     { message: '' }
  *   );
- *   
+ *
  *   return (
  *     <View>
  *       <Text>{state.message}</Text>
@@ -64,7 +64,7 @@ export function useActionStateTerminal<T, P = FormData>(
     initialState as Awaited<T>,
     permalink
   );
-  
+
   // dispatch from useActionState with payload overload takes the payload
   return [state as T, dispatch as (params: P) => void, isPending];
 }

@@ -103,9 +103,9 @@ export const middlewareRegistry = new MiddlewareRegistry();
 
 /**
  * Register global middleware
- * 
+ *
  * @param middleware - Middleware function
- * 
+ *
  * @example
  * ```ts
  * registerGlobalMiddleware((args, metadata) => {
@@ -119,10 +119,10 @@ export function registerGlobalMiddleware(middleware: CommandMiddleware): void {
 
 /**
  * Register middleware for a command
- * 
+ *
  * @param commandPath - Command path (e.g., 'build' or 'build dev')
  * @param middleware - Middleware function
- * 
+ *
  * @example
  * ```ts
  * registerCommandMiddleware('build', (args, metadata) => {
@@ -141,7 +141,7 @@ export function registerCommandMiddleware(
 
 /**
  * Execute middleware chain
- * 
+ *
  * @param commandPath - Command path array
  * @param parsedArgs - Parsed arguments
  * @param metadata - Component metadata

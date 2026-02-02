@@ -23,7 +23,7 @@ export interface CommandExecutionResult {
 /**
  * Execute a command and return result
  * This is a utility for non-interactive command execution
- * 
+ *
  * @param _parsedArgs - Parsed command arguments
  * @param _metadata - Component metadata
  * @returns Execution result
@@ -43,7 +43,7 @@ export function executeCommand(
 
 /**
  * Check if a command should exit after execution
- * 
+ *
  * @param _metadata - Component metadata
  * @param parsedArgs - Parsed arguments
  * @returns True if command should exit
@@ -56,18 +56,19 @@ export function shouldExitAfterCommand(
   if (parsedArgs.options.exit || parsedArgs.options['--exit']) {
     return true;
   }
-  
+
   // Non-interactive commands should exit
-  const appMetadata = typeof global !== 'undefined' && global.__react_console_cli_app__ 
-    ? global.__react_console_cli_app__ 
-    : undefined;
-  
+  const appMetadata =
+    typeof global !== 'undefined' && global.__react_console_cli_app__
+      ? global.__react_console_cli_app__
+      : undefined;
+
   return appMetadata?.interactive === false;
 }
 
 /**
  * Get exit code for command execution
- * 
+ *
  * @param _metadata - Component metadata
  * @param parsedArgs - Parsed arguments
  * @param executionResult - Execution result
@@ -82,7 +83,7 @@ export function getCommandExitCode(
   if (executionResult) {
     return executionResult.exitCode;
   }
-  
+
   // Use --exit-code option if provided
   const exitCodeOption = parsedArgs.options['exit-code'] || parsedArgs.options['exitCode'];
   if (typeof exitCodeOption === 'number') {
@@ -94,11 +95,12 @@ export function getCommandExitCode(
       return code;
     }
   }
-  
+
   // Use app-level exit code
-  const appMetadata = typeof global !== 'undefined' && global.__react_console_cli_app__ 
-    ? global.__react_console_cli_app__ 
-    : undefined;
-  
+  const appMetadata =
+    typeof global !== 'undefined' && global.__react_console_cli_app__
+      ? global.__react_console_cli_app__
+      : undefined;
+
   return appMetadata?.exitCode ?? 0;
 }

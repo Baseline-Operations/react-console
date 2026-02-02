@@ -10,23 +10,23 @@ import type { RenderingInfo } from '../nodes/base/mixins/Renderable';
  */
 export class ComponentInstance {
   readonly node: Node;
-  
+
   parent: ComponentInstance | null = null;
   children: ComponentInstance[] = [];
   sibling: ComponentInstance | null = null;
-  
+
   mounted: boolean = false;
   updated: boolean = false;
   rendered: boolean = false;
   renderingInfo: RenderingInfo | null = null;
-  
+
   needsUpdate: boolean = false;
   updatePriority: number = 0;
-  
+
   constructor(node: Node) {
     this.node = node;
   }
-  
+
   /**
    * Mount this instance to the tree
    */
@@ -41,7 +41,7 @@ export class ComponentInstance {
     }
     this.mounted = true;
   }
-  
+
   /**
    * Unmount this instance from the tree
    */
@@ -62,7 +62,7 @@ export class ComponentInstance {
     this.sibling = null;
     this.mounted = false;
   }
-  
+
   /**
    * Mark this instance for update
    */
@@ -70,7 +70,7 @@ export class ComponentInstance {
     this.needsUpdate = true;
     this.updatePriority = priority;
   }
-  
+
   /**
    * Get all descendant instances
    */
@@ -82,7 +82,7 @@ export class ComponentInstance {
     }
     return descendants;
   }
-  
+
   /**
    * Get all ancestor instances
    */

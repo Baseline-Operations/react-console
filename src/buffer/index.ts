@@ -1,15 +1,15 @@
 /**
  * Multi-Buffer Rendering System
- * 
+ *
  * This module provides a cell-based multi-buffer rendering system for
  * terminal UI applications. It supports:
- * 
+ *
  * - Cell-level styling and color tracking
  * - Z-index layering with proper compositing
  * - Diff-based updates for efficient rendering
  * - Background color inheritance
  * - Component tracking per cell
- * 
+ *
  * @module buffer
  */
 
@@ -37,12 +37,7 @@ export { CompositeBuffer, blendColors, compositeCells } from './CompositeBuffer'
 export { DisplayBuffer } from './DisplayBuffer';
 
 // ANSI Generation
-export {
-  ANSIGenerator,
-  fgColor,
-  bgColor,
-  reset,
-} from './ANSIGenerator';
+export { ANSIGenerator, fgColor, bgColor, reset } from './ANSIGenerator';
 
 // Main Renderer
 export {

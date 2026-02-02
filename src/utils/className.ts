@@ -116,7 +116,7 @@ export const classNameRegistry = new ClassNameRegistry();
 
 /**
  * Register class name mappings
- * 
+ *
  * @example
  * ```tsx
  * registerClassNames({
@@ -139,7 +139,7 @@ export function registerClass(className: string, style: ViewStyle | TextStyle): 
 
 /**
  * Resolve class names to style object
- * 
+ *
  * @example
  * ```tsx
  * const style = resolveClassName('text-red bg-blue p-2');
@@ -161,26 +161,22 @@ export function mergeClassNameWithStyle(
   inlineStyle?: ViewStyle | TextStyle | (ViewStyle | TextStyle)[]
 ): ViewStyle | TextStyle | undefined {
   const classNameStyle = resolveClassName(className);
-  
+
   if (!classNameStyle && !inlineStyle) {
     return undefined;
   }
-  
+
   if (!classNameStyle) {
-    return Array.isArray(inlineStyle) 
-      ? Object.assign({}, ...inlineStyle)
-      : inlineStyle;
+    return Array.isArray(inlineStyle) ? Object.assign({}, ...inlineStyle) : inlineStyle;
   }
-  
+
   if (!inlineStyle) {
     return classNameStyle;
   }
-  
+
   // Merge: inline style takes precedence
-  const inline = Array.isArray(inlineStyle)
-    ? Object.assign({}, ...inlineStyle)
-    : inlineStyle;
-  
+  const inline = Array.isArray(inlineStyle) ? Object.assign({}, ...inlineStyle) : inlineStyle;
+
   return { ...classNameStyle, ...inline };
 }
 

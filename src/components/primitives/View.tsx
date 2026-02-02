@@ -1,7 +1,7 @@
 /**
  * View component - React Native-like container for layout and styling
  * Terminal equivalent of React Native's View component
- * 
+ *
  * Note: View is functionally identical to Box. Use Box for more explicit naming,
  * or View for React Native compatibility.
  */
@@ -13,9 +13,9 @@ import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
 
 /**
  * Props for the View component
- * 
+ *
  * View is an alias for Box with the same functionality. See BoxProps for details.
- * 
+ *
  * @example
  * ```tsx
  * <View style={{ padding: 2, backgroundColor: 'cyan' }}>
@@ -55,24 +55,24 @@ export interface ViewProps {
 /**
  * View component - React Native-like pattern for terminal
  * Block-level container for layout (functionally identical to Box)
- * 
+ *
  * Use View for React Native compatibility, or Box for more explicit naming.
  * Both components have identical functionality and props.
- * 
+ *
  * @param props - View component props (same as BoxProps)
  * @returns React element representing a View container
- * 
+ *
  * @example
  * ```tsx
  * <View style={{ padding: 2 }}>
  *   <Text>Hello World</Text>
  * </View>
  * ```
- * 
+ *
  * @see Box - For component with identical functionality
  */
-function ViewComponent({ 
-  children, 
+function ViewComponent({
+  children,
   style,
   className,
   fullscreen,
@@ -84,7 +84,7 @@ function ViewComponent({
   scrollbarTrackChar,
   scrollTop,
   scrollLeft,
-  ...legacyProps 
+  ...legacyProps
 }: ViewProps) {
   // Merge className with style prop and legacy props (className < style < legacy props)
   const mergedStyle = mergeClassNameAndStyle(className, style, legacyProps);

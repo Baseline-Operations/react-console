@@ -4,7 +4,16 @@
  * Router is an alias for CommandRouter
  */
 
-import { type ReactNode, useMemo, createContext, useState, useEffect, useLayoutEffect, isValidElement, cloneElement } from 'react';
+import {
+  type ReactNode,
+  useMemo,
+  createContext,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  isValidElement,
+  cloneElement,
+} from 'react';
 import { parseCommandLineArgs } from '../../utils/cli/parser';
 import { matchComponent, extractComponentMetadata } from '../../utils/cli/matcher';
 import { generateHelpComponent } from '../../utils/cli/help';
@@ -32,7 +41,12 @@ import type { ParsedArgs } from '../../utils/cli/parser';
 import type { HelpProps } from './HelpProps';
 import { createNavigateFunction } from './CommandRouter/routing';
 import { getMatchedMetadata } from './CommandRouter/matching';
-import { executeMiddlewareChain, executeBeforeHooksChain, executeAfterHooksChain, validateCommandParameters } from './CommandRouter/execution';
+import {
+  executeMiddlewareChain,
+  executeBeforeHooksChain,
+  executeAfterHooksChain,
+  validateCommandParameters,
+} from './CommandRouter/execution';
 import { checkRouteGuards } from './CommandRouter/guards';
 import type { ParamValidationResult } from '../../utils/cli/paramValidator';
 
@@ -75,11 +89,14 @@ export interface CLIStateContextValue {
   route?: string;
   routeParams?: Record<string, string>;
   isDefault: boolean;
-  navigate: (path: string, navOptions?: {
-    params?: Record<string, string>;
-    options?: Record<string, string | number | boolean | string[]>;
-    carryOver?: boolean;
-  }) => void;
+  navigate: (
+    path: string,
+    navOptions?: {
+      params?: Record<string, string>;
+      options?: Record<string, string | number | boolean | string[]>;
+      carryOver?: boolean;
+    }
+  ) => void;
 }
 
 const CLIStateContext = createContext<CLIStateContextValue | null>(null);
@@ -88,7 +105,7 @@ const CLIStateContext = createContext<CLIStateContextValue | null>(null);
  * CommandRouter component
  * Root router that handles command/route routing and automatically selects components
  * based on parsed command-line arguments
- * 
+ *
  * @example
  * ```tsx
  * <CommandRouter description="Main application router">
@@ -130,7 +147,10 @@ export function CommandRouter({
   });
 
   // Extract metadata once (with router-level noHelp cascading)
-  const metadata = useMemo(() => extractComponentMetadata(children, routerNoHelp), [children, routerNoHelp]);
+  const metadata = useMemo(
+    () => extractComponentMetadata(children, routerNoHelp),
+    [children, routerNoHelp]
+  );
 
   // Match component based on parsed args (before alias resolution, as commands don't use aliases)
   const matchResult = useMemo(() => {
@@ -141,7 +161,6 @@ export function CommandRouter({
   const matchedMetadata = useMemo(() => {
     return getMatchedMetadata(matchResult, parsedArgs, metadata);
   }, [matchResult, parsedArgs, metadata]);
-
 
   // Collect all options for alias resolution (use parsedArgs.command for matching, not resolvedArgs)
   const allOptions = useMemo(() => {
@@ -167,7 +186,9 @@ export function CommandRouter({
   // Set CLI config from normalized args (after alias resolution and normalization)
   useEffect(() => {
     if (normalizedArgs.options && Object.keys(normalizedArgs.options).length > 0) {
-      setCLIConfig(normalizedArgs.options as Record<string, import('../../utils/cli/config').ConfigValue>);
+      setCLIConfig(
+        normalizedArgs.options as Record<string, import('../../utils/cli/config').ConfigValue>
+      );
     }
   }, [normalizedArgs.options]);
 
@@ -182,10 +203,21 @@ export function CommandRouter({
       return;
     }
 
-    executeBeforeHooksChain(matchedMetadata, normalizedArgs, middlewareResult.args, matchResult.isDefault).catch(err => {
+    executeBeforeHooksChain(
+      matchedMetadata,
+      normalizedArgs,
+      middlewareResult.args,
+      matchResult.isDefault
+    ).catch((err) => {
       console.error('Error in before hook:', err);
     });
-  }, [matchedMetadata, normalizedArgs, middlewareResult.args, matchResult.isDefault, middlewareResult.shouldStop]);
+  }, [
+    matchedMetadata,
+    normalizedArgs,
+    middlewareResult.args,
+    matchResult.isDefault,
+    middlewareResult.shouldStop,
+  ]);
 
   // Execute after lifecycle hooks (after render/unmount)
   useEffect(() => {
@@ -195,11 +227,22 @@ export function CommandRouter({
 
     // Return cleanup for after hook
     return () => {
-      executeAfterHooksChain(matchedMetadata, normalizedArgs, middlewareResult.args, matchResult.isDefault).catch(err => {
+      executeAfterHooksChain(
+        matchedMetadata,
+        normalizedArgs,
+        middlewareResult.args,
+        matchResult.isDefault
+      ).catch((err) => {
         console.error('Error in after hook:', err);
       });
     };
-  }, [matchedMetadata, normalizedArgs, middlewareResult.args, matchResult.isDefault, middlewareResult.shouldStop]);
+  }, [
+    matchedMetadata,
+    normalizedArgs,
+    middlewareResult.args,
+    matchResult.isDefault,
+    middlewareResult.shouldStop,
+  ]);
 
   // Validate parameters if matched metadata exists (using middleware-modified and alias-resolved args)
   const validationResult = useMemo<ParamValidationResult | null>(() => {
@@ -218,24 +261,29 @@ export function CommandRouter({
 
   // Check for unknown command error (only if commands are defined and a command was provided)
   // MUST be before any early returns (React hooks rule)
-  const hasCommands = useMemo(() => metadata.some(m => m.type === 'command'), [metadata]);
+  const hasCommands = useMemo(() => metadata.some((m) => m.type === 'command'), [metadata]);
   const hasUnknownCommand = resolvedArgs.command.length > 0 && matchResult.isDefault && hasCommands;
 
   // Add to history if command was executed (not help, not error, not default without commands)
   // MUST be before any early returns (React hooks rule)
   useEffect(() => {
-    const appMetadata = typeof global !== 'undefined' && global.__react_console_cli_app__ ? global.__react_console_cli_app__ : undefined;
+    const appMetadata =
+      typeof global !== 'undefined' && global.__react_console_cli_app__
+        ? global.__react_console_cli_app__
+        : undefined;
     const isInteractive = appMetadata?.interactive !== false;
-    
+
     if (isInteractive && !middlewareResult.shouldStop && normalizedArgs.command.length > 0) {
       // Don't add help commands or errors to history
-      const isHelp = normalizedArgs.options.help || 
-                    normalizedArgs.options['--help'] || 
-                    parsedArgs.options.h || 
-                    parsedArgs.options['-h'];
-      const hasError = (validationResult && !validationResult.valid) || 
-                      (hasCommands && hasUnknownCommand && showUnknownCommandError);
-      
+      const isHelp =
+        normalizedArgs.options.help ||
+        normalizedArgs.options['--help'] ||
+        parsedArgs.options.h ||
+        parsedArgs.options['-h'];
+      const hasError =
+        (validationResult && !validationResult.valid) ||
+        (hasCommands && hasUnknownCommand && showUnknownCommandError);
+
       if (!isHelp && !hasError) {
         addToHistory(normalizedArgs.command, {
           options: middlewareResult.args.options,
@@ -243,7 +291,17 @@ export function CommandRouter({
         });
       }
     }
-  }, [normalizedArgs.command, middlewareResult.args, middlewareResult.shouldStop, validationResult, hasCommands, hasUnknownCommand, showUnknownCommandError, normalizedArgs.options, parsedArgs.options]);
+  }, [
+    normalizedArgs.command,
+    middlewareResult.args,
+    middlewareResult.shouldStop,
+    validationResult,
+    hasCommands,
+    hasUnknownCommand,
+    showUnknownCommandError,
+    normalizedArgs.options,
+    parsedArgs.options,
+  ]);
 
   // Handle exit after execution for non-interactive commands
   // MUST be before any early returns (React hooks rule)
@@ -252,19 +310,22 @@ export function CommandRouter({
       return;
     }
 
-    const appMetadata = typeof global !== 'undefined' && global.__react_console_cli_app__ 
-      ? global.__react_console_cli_app__ 
-      : undefined;
-    
+    const appMetadata =
+      typeof global !== 'undefined' && global.__react_console_cli_app__
+        ? global.__react_console_cli_app__
+        : undefined;
+
     const isInteractive = appMetadata?.interactive !== false;
-    const shouldExit = matchedMetadata.exitAfterExecution || 
-                      (!isInteractive && shouldExitAfterCommand(matchedMetadata, normalizedArgs));
-    
+    const shouldExit =
+      matchedMetadata.exitAfterExecution ||
+      (!isInteractive && shouldExitAfterCommand(matchedMetadata, normalizedArgs));
+
     if (shouldExit) {
-      const exitCode = matchedMetadata.exitCode !== undefined 
-        ? matchedMetadata.exitCode 
-        : getCommandExitCode(matchedMetadata, normalizedArgs);
-      
+      const exitCode =
+        matchedMetadata.exitCode !== undefined
+          ? matchedMetadata.exitCode
+          : getCommandExitCode(matchedMetadata, normalizedArgs);
+
       // Exit after a short delay to allow rendering
       setTimeout(() => {
         exit(exitCode);
@@ -305,7 +366,9 @@ export function CommandRouter({
     const redirectPath = guardResult.path;
     // Update parsedArgs to navigate to redirect path
     const redirectArgs: ParsedArgs = {
-      command: redirectPath.startsWith('/') ? redirectPath.slice(1).split('/').filter(Boolean) : [redirectPath],
+      command: redirectPath.startsWith('/')
+        ? redirectPath.slice(1).split('/').filter(Boolean)
+        : [redirectPath],
       options: parsedArgs.options,
       params: parsedArgs.params,
     };
@@ -333,37 +396,47 @@ export function CommandRouter({
   }
 
   // Prepare help props data
-  const appMetadata = typeof global !== 'undefined' && global.__react_console_cli_app__ ? global.__react_console_cli_app__ : undefined;
-  const commands = metadata.filter(m => m.type === 'command');
-  const routes = metadata.filter(m => m.type === 'route');
-  const defaults = metadata.filter(m => m.type === 'default');
-  
+  const appMetadata =
+    typeof global !== 'undefined' && global.__react_console_cli_app__
+      ? global.__react_console_cli_app__
+      : undefined;
+  const commands = metadata.filter((m) => m.type === 'command');
+  const routes = metadata.filter((m) => m.type === 'route');
+  const defaults = metadata.filter((m) => m.type === 'default');
+
   // Find specific help for current command/route (using normalized args)
   const specificHelp = findHelp(normalizedArgs, children);
-  
+
   // Build command info if command exists
-  const commandInfo: HelpProps['command'] | undefined = specificHelp?.type === 'command' && specificHelp.name ? {
-    name: specificHelp.name,
-    command: specificHelp.name,
-    commandPath: normalizedArgs.command,
-    aliases: specificHelp.aliases,
-    path: specificHelp.path,
-    description: specificHelp.description,
-    subcommands: specificHelp.children?.filter(c => c.type === 'command'),
-    defaultComponent: specificHelp.children?.find(c => c.type === 'default'),
-  } : normalizedArgs.command.length > 0 ? {
-    name: normalizedArgs.command[0],
-    command: normalizedArgs.command[0],
-    commandPath: normalizedArgs.command,
-    description: specificHelp?.description,
-  } : undefined;
-  
+  const commandInfo: HelpProps['command'] | undefined =
+    specificHelp?.type === 'command' && specificHelp.name
+      ? {
+          name: specificHelp.name,
+          command: specificHelp.name,
+          commandPath: normalizedArgs.command,
+          aliases: specificHelp.aliases,
+          path: specificHelp.path,
+          description: specificHelp.description,
+          subcommands: specificHelp.children?.filter((c) => c.type === 'command'),
+          defaultComponent: specificHelp.children?.find((c) => c.type === 'default'),
+        }
+      : normalizedArgs.command.length > 0
+        ? {
+            name: normalizedArgs.command[0],
+            command: normalizedArgs.command[0],
+            commandPath: normalizedArgs.command,
+            description: specificHelp?.description,
+          }
+        : undefined;
+
   // Build route info if route exists
-  const routeInfo: HelpProps['route'] | undefined = matchResult.route ? {
-    route: matchResult.route,
-    routeParams: matchResult.routeParams,
-    description: specificHelp?.description,
-  } : undefined;
+  const routeInfo: HelpProps['route'] | undefined = matchResult.route
+    ? {
+        route: matchResult.route,
+        routeParams: matchResult.routeParams,
+        description: specificHelp?.description,
+      }
+    : undefined;
 
   // Build help props
   const helpProps: HelpProps = {
@@ -387,11 +460,12 @@ export function CommandRouter({
   // Check for version flag (before help check)
   const versionRequested = isVersionRequested(normalizedArgs);
   if (versionRequested) {
-    const appMetadata = typeof global !== 'undefined' && global.__react_console_cli_app__ 
-      ? global.__react_console_cli_app__ 
-      : undefined;
+    const appMetadata =
+      typeof global !== 'undefined' && global.__react_console_cli_app__
+        ? global.__react_console_cli_app__
+        : undefined;
     const version = getAppVersion();
-    
+
     if (version && appMetadata?.name) {
       return (
         <CLIStateContext.Provider value={contextValue}>
@@ -410,18 +484,19 @@ export function CommandRouter({
 
   // Check if help is disabled (router-level or command-level)
   const helpAvailable = !routerNoHelp && isHelpAvailable(normalizedArgs, metadata);
-  
+
   // If --help flag, render help component or auto-generated help (only if help is available)
   // Check both resolved name and common aliases
   // MUST compute before any early returns (used in useEffect)
-  const helpRequested = normalizedArgs.options.help || 
-                        normalizedArgs.options['--help'] || 
-                        parsedArgs.options.h || 
-                        parsedArgs.options['-h'];
-  
+  const helpRequested =
+    normalizedArgs.options.help ||
+    normalizedArgs.options['--help'] ||
+    parsedArgs.options.h ||
+    parsedArgs.options['-h'];
+
   if (helpRequested && helpAvailable) {
     let helpComponent: ReactNode | null = null;
-    
+
     // Check for custom help prop first (router level)
     if (help) {
       if (typeof help === 'function') {
@@ -446,7 +521,7 @@ export function CommandRouter({
         helpComponent = helpValue;
       }
     }
-    
+
     // Auto-generate help if no custom help found
     if (!helpComponent) {
       if (specificHelp) {
@@ -479,16 +554,16 @@ export function CommandRouter({
         );
       }
     }
-    
+
     // Handle auto-exit after rendering help
     // We'll use a HelpWrapper component to handle the exit logic
     // HelpWrapper wraps help and automatically exits after rendering (if autoExit is true)
     return (
       <CLIStateContext.Provider value={contextValue}>
-        <HelpWrapper 
-          help={helpComponent} 
+        <HelpWrapper
+          help={helpComponent}
           autoExit={helpAutoExit !== false} // Default to true if not explicitly set to false
-          exitCode={helpExitCode} 
+          exitCode={helpExitCode}
         />
       </CLIStateContext.Provider>
     );
@@ -502,9 +577,12 @@ export function CommandRouter({
       </CLIStateContext.Provider>
     );
   }
-  
+
   if (hasUnknownCommand && showUnknownCommandError) {
-    const appMetadata = typeof global !== 'undefined' && global.__react_console_cli_app__ ? global.__react_console_cli_app__ : undefined;
+    const appMetadata =
+      typeof global !== 'undefined' && global.__react_console_cli_app__
+        ? global.__react_console_cli_app__
+        : undefined;
     const suggestions = findSimilarCommands(normalizedArgs.command[0]!, metadata);
     return (
       <CLIStateContext.Provider value={contextValue}>
@@ -519,19 +597,20 @@ export function CommandRouter({
   }
 
   // Update context with validated params/options if validation passed (use middleware-modified args)
-  const validatedContextValue: CLIStateContextValue = validationResult && validationResult.valid
-    ? {
-        ...contextValue,
-        command: normalizedArgs.command,
-        options: validationResult.options,
-        params: Object.values(validationResult.params),
-      }
-    : {
-        ...contextValue,
-        command: normalizedArgs.command,
-        options: middlewareResult.args.options,
-        params: middlewareResult.args.params,
-      };
+  const validatedContextValue: CLIStateContextValue =
+    validationResult && validationResult.valid
+      ? {
+          ...contextValue,
+          command: normalizedArgs.command,
+          options: validationResult.options,
+          params: Object.values(validationResult.params),
+        }
+      : {
+          ...contextValue,
+          command: normalizedArgs.command,
+          options: middlewareResult.args.options,
+          params: middlewareResult.args.params,
+        };
 
   // Render the matched component with context
   return (

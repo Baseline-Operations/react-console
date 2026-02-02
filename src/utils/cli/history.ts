@@ -40,7 +40,13 @@ class CommandHistory {
   /**
    * Add entry to history
    */
-  add(command: string[], args: { options: Record<string, string | number | boolean | string[]>; params: (string | number | boolean)[] }): void {
+  add(
+    command: string[],
+    args: {
+      options: Record<string, string | number | boolean | string[]>;
+      params: (string | number | boolean)[];
+    }
+  ): void {
     const entry: HistoryEntry = {
       command: [...command],
       args: {
@@ -97,7 +103,7 @@ class CommandHistory {
    */
   search(pattern: string): HistoryEntry[] {
     const lowerPattern = pattern.toLowerCase();
-    return this.history.filter(entry => {
+    return this.history.filter((entry) => {
       const cmdStr = entry.command.join(' ').toLowerCase();
       return cmdStr.includes(lowerPattern);
     });
@@ -133,13 +139,16 @@ export const commandHistory = new CommandHistory();
 
 /**
  * Add command to history
- * 
+ *
  * @param command - Command path
  * @param args - Parsed arguments
  */
 export function addToHistory(
   command: string[],
-  args: { options: Record<string, string | number | boolean | string[]>; params: (string | number | boolean)[] }
+  args: {
+    options: Record<string, string | number | boolean | string[]>;
+    params: (string | number | boolean)[];
+  }
 ): void {
   commandHistory.add(command, args);
 }

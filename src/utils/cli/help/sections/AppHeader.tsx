@@ -15,11 +15,7 @@ export interface AppHeaderProps {
  * App header section component
  * Displays application name, version, and description
  */
-export function AppHeader({
-  appName,
-  appVersion,
-  appDescription,
-}: AppHeaderProps): ReactNode {
+export function AppHeader({ appName, appVersion, appDescription }: AppHeaderProps): ReactNode {
   return (
     <>
       {appName && (

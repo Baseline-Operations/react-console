@@ -36,7 +36,7 @@ export interface ComponentRegistryEntry {
  */
 class ComponentRegistry {
   private registry: Map<string, ComponentRegistryEntry> = new Map();
-  
+
   /**
    * Register a custom component type
    * @param entry - Component registry entry
@@ -47,7 +47,7 @@ class ComponentRegistry {
     }
     this.registry.set(entry.type, entry);
   }
-  
+
   /**
    * Register a component type with a custom renderer
    * @param type - Component type name
@@ -68,7 +68,7 @@ class ComponentRegistry {
       ...options,
     });
   }
-  
+
   /**
    * Get registry entry for a component type
    * @param type - Component type name
@@ -77,7 +77,7 @@ class ComponentRegistry {
   get(type: string): ComponentRegistryEntry | undefined {
     return this.registry.get(type);
   }
-  
+
   /**
    * Check if a component type is registered
    * @param type - Component type name
@@ -86,7 +86,7 @@ class ComponentRegistry {
   has(type: string): boolean {
     return this.registry.has(type);
   }
-  
+
   /**
    * Unregister a component type
    * @param type - Component type name
@@ -94,7 +94,7 @@ class ComponentRegistry {
   unregister(type: string): void {
     this.registry.delete(type);
   }
-  
+
   /**
    * Get all registered component types
    * @returns Array of registered type names
@@ -102,7 +102,7 @@ class ComponentRegistry {
   getAllTypes(): string[] {
     return Array.from(this.registry.keys());
   }
-  
+
   /**
    * Clear all registrations
    */
@@ -130,11 +130,11 @@ export interface PluginConfig {
 class PluginAPI {
   private plugins: Map<string, PluginConfig> = new Map();
   private componentRegistry: ComponentRegistry;
-  
+
   constructor(registry: ComponentRegistry) {
     this.componentRegistry = registry;
   }
-  
+
   /**
    * Register a plugin
    * @param config - Plugin configuration
@@ -143,25 +143,25 @@ class PluginAPI {
     if (!config.name) {
       throw new Error('Plugin name is required');
     }
-    
+
     if (this.plugins.has(config.name)) {
       console.warn(`Plugin "${config.name}" is already registered. Overwriting.`);
     }
-    
+
     // Register plugin components
     if (config.components) {
       for (const component of config.components) {
         this.componentRegistry.register(component);
       }
     }
-    
+
     // Register plugin renderers
     if (config.renderers) {
       for (const [type, renderer] of Object.entries(config.renderers)) {
         this.componentRegistry.registerComponent(type, renderer);
       }
     }
-    
+
     // Call plugin onRegister hook
     if (config.onRegister) {
       try {
@@ -170,10 +170,10 @@ class PluginAPI {
         console.error(`Error in plugin "${config.name}" onRegister hook:`, error);
       }
     }
-    
+
     this.plugins.set(config.name, config);
   }
-  
+
   /**
    * Unregister a plugin
    * @param name - Plugin name
@@ -184,7 +184,7 @@ class PluginAPI {
       console.warn(`Plugin "${name}" is not registered.`);
       return;
     }
-    
+
     // Call plugin onUnregister hook
     if (plugin.onUnregister) {
       try {
@@ -193,23 +193,23 @@ class PluginAPI {
         console.error(`Error in plugin "${name}" onUnregister hook:`, error);
       }
     }
-    
+
     // Unregister plugin components
     if (plugin.components) {
       for (const component of plugin.components) {
         this.componentRegistry.unregister(component.type);
       }
     }
-    
+
     if (plugin.renderers) {
       for (const type of Object.keys(plugin.renderers)) {
         this.componentRegistry.unregister(type);
       }
     }
-    
+
     this.plugins.delete(name);
   }
-  
+
   /**
    * Get plugin configuration
    * @param name - Plugin name
@@ -218,7 +218,7 @@ class PluginAPI {
   getPlugin(name: string): PluginConfig | undefined {
     return this.plugins.get(name);
   }
-  
+
   /**
    * Get all registered plugins
    * @returns Array of plugin names
@@ -226,7 +226,7 @@ class PluginAPI {
   getAllPlugins(): string[] {
     return Array.from(this.plugins.keys());
   }
-  
+
   /**
    * Check if a plugin is registered
    * @param name - Plugin name

@@ -1,6 +1,6 @@
 /**
  * React Hooks for Input State
- * 
+ *
  * Provides React hooks for managing input component state:
  * - Input value and cursor position
  * - Multiline input state
@@ -11,20 +11,20 @@ import type { ConsoleNode } from '../types';
 
 /**
  * Hook for managing input component state
- * 
+ *
  * Returns the current input value, cursor position, and multiline state
  * for a specific input component. Useful for building custom input components
  * or accessing input state programmatically.
- * 
+ *
  * @param inputRef - Reference to the input ConsoleNode
  * @returns Object with input state and helper functions
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const [inputNode, setInputNode] = useState<ConsoleNode | null>(null);
  *   const { value, cursorPosition, isMultiline, setValue, setCursorPosition } = useInputState(inputNode);
- *   
+ *
  *   return (
  *     <View>
  *       <Input
@@ -46,7 +46,7 @@ export function useInputState(inputRef: ConsoleNode | null | undefined): {
   setCursorPosition: (position: number) => void;
 } {
   const [value, setValueState] = useState<string | number | null>(() => {
-    return inputRef?.type === 'input' ? (inputRef.value as string | number | null) ?? null : null;
+    return inputRef?.type === 'input' ? ((inputRef.value as string | number | null) ?? null) : null;
   });
 
   const [cursorPosition, setCursorPositionState] = useState<number>(() => {
@@ -78,15 +78,18 @@ export function useInputState(inputRef: ConsoleNode | null | undefined): {
     }
   }, [inputRef, value, cursorPosition]);
 
-  const setValue = useCallback((newValue: string | number | null) => {
-    if (inputRef?.type === 'input') {
-      inputRef.value = newValue as string | number | undefined;
-      setValueState(newValue);
-      // Update cursor position based on new value
-      const newCursor = typeof newValue === 'string' ? newValue.length : 0;
-      setCursorPositionState(newCursor);
-    }
-  }, [inputRef]);
+  const setValue = useCallback(
+    (newValue: string | number | null) => {
+      if (inputRef?.type === 'input') {
+        inputRef.value = newValue as string | number | undefined;
+        setValueState(newValue);
+        // Update cursor position based on new value
+        const newCursor = typeof newValue === 'string' ? newValue.length : 0;
+        setCursorPositionState(newCursor);
+      }
+    },
+    [inputRef]
+  );
 
   const setCursorPosition = useCallback((position: number) => {
     // Cursor position is managed internally by the renderer

@@ -1,6 +1,6 @@
 /**
  * Theme type definitions for React Console
- * 
+ *
  * Defines the structure of themes and theme-aware style properties.
  */
 
@@ -8,7 +8,7 @@ import type { Color, TextStyle, ViewStyle } from '../types';
 
 /**
  * Theme color palette
- * 
+ *
  * Defines all colors used in the theme system.
  * Colors can be named ANSI colors or hex/RGB values.
  */
@@ -27,7 +27,7 @@ export interface ThemeColors {
   textWarning: Color;
   /** Info text color */
   textInfo: Color;
-  
+
   /** Primary background color */
   background: Color;
   /** Secondary background color */
@@ -42,14 +42,14 @@ export interface ThemeColors {
   backgroundWarning: Color;
   /** Info background color */
   backgroundInfo: Color;
-  
+
   /** Border color */
   border: Color;
   /** Focused border color */
   borderFocused: Color;
   /** Disabled border color */
   borderDisabled: Color;
-  
+
   /** Primary action color (for buttons, links) */
   primary: Color;
   /** Primary action background */
@@ -62,7 +62,7 @@ export interface ThemeColors {
 
 /**
  * Component-specific theme styles
- * 
+ *
  * Defines default styles for specific component types.
  */
 export interface ComponentTheme {
@@ -80,7 +80,7 @@ export interface ComponentTheme {
 
 /**
  * Complete theme definition
- * 
+ *
  * Contains all theme values including colors, component styles, and text styles.
  */
 export interface Theme {
@@ -105,7 +105,7 @@ export interface Theme {
 
 /**
  * Theme-aware style properties
- * 
+ *
  * Allows using theme color references in styles.
  * Theme colors are resolved at render time.
  */
@@ -114,7 +114,10 @@ export type ThemeColor = keyof ThemeColors | Color;
 /**
  * Theme-aware style that can reference theme colors
  */
-export interface ThemeAwareStyle extends Omit<ViewStyle, 'color' | 'backgroundColor'>, Omit<TextStyle, 'color' | 'backgroundColor'> {
+export interface ThemeAwareStyle
+  extends
+    Omit<ViewStyle, 'color' | 'backgroundColor'>,
+    Omit<TextStyle, 'color' | 'backgroundColor'> {
   /** Theme-aware color (can reference theme.colors.*) */
   color?: ThemeColor;
   /** Theme-aware background color (can reference theme.colors.*) */

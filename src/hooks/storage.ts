@@ -1,6 +1,6 @@
 /**
  * React Hooks for Storage - Async state system for React Console storage
- * 
+ *
  * Provides React hooks for working with storage as reactive state.
  * Storage changes trigger React re-renders automatically.
  */
@@ -53,19 +53,19 @@ class StorageEventEmitter {
   emit(key: string): void {
     const keyListeners = this.listeners.get(key);
     if (keyListeners) {
-      keyListeners.forEach(callback => callback());
+      keyListeners.forEach((callback) => callback());
     }
-    this.allListeners.forEach(callback => callback());
+    this.allListeners.forEach((callback) => callback());
   }
 
   /**
    * Emit change event for all keys (e.g., on clear)
    */
   emitAll(): void {
-    this.listeners.forEach(listeners => {
-      listeners.forEach(callback => callback());
+    this.listeners.forEach((listeners) => {
+      listeners.forEach((callback) => callback());
     });
-    this.allListeners.forEach(callback => callback());
+    this.allListeners.forEach((callback) => callback());
   }
 }
 
@@ -74,19 +74,19 @@ const storageEvents = new StorageEventEmitter();
 
 /**
  * Hook to use storage as reactive state
- * 
+ *
  * Similar to useState, but persists to storage and syncs across components.
  * Storage changes trigger re-renders automatically.
- * 
+ *
  * @param key - Storage key
  * @param defaultValue - Default value if key doesn't exist
  * @returns [value, setValue, removeValue] tuple
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const [username, setUsername] = useStorage('username', 'guest');
- *   
+ *
  *   return (
  *     <View>
  *       <Text>Hello, {username}!</Text>
@@ -131,15 +131,24 @@ export function useStorage<T extends StorageValue>(
     return unsubscribe;
   }, [key, defaultValue]);
 
-  const setValue = useCallback((newValue: T | null) => {
-    if (newValue === null) {
-      storage.removeItem(key);
-    } else {
-      (storage.setItem as <T extends StorageValue>(key: string, value: T, options?: { ttl?: number }) => void)(key, newValue);
-    }
-    setValueState(newValue);
-    storageEvents.emit(key);
-  }, [key]);
+  const setValue = useCallback(
+    (newValue: T | null) => {
+      if (newValue === null) {
+        storage.removeItem(key);
+      } else {
+        (
+          storage.setItem as <T extends StorageValue>(
+            key: string,
+            value: T,
+            options?: { ttl?: number }
+          ) => void
+        )(key, newValue);
+      }
+      setValueState(newValue);
+      storageEvents.emit(key);
+    },
+    [key]
+  );
 
   const removeValue = useCallback(() => {
     storage.removeItem(key);
@@ -152,19 +161,19 @@ export function useStorage<T extends StorageValue>(
 
 /**
  * Hook to use storage with TTL (time-to-live)
- * 
+ *
  * Similar to useStorage, but with automatic expiration.
- * 
+ *
  * @param key - Storage key
  * @param defaultValue - Default value if key doesn't exist
  * @param ttl - Time to live in milliseconds
  * @returns [value, setValue, removeValue] tuple
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const [token, setToken] = useStorageWithTTL('token', null, 3600000); // 1 hour
- *   
+ *
  *   return (
  *     <View>
  *       <Text>Token expires in 1 hour</Text>
@@ -199,15 +208,18 @@ export function useStorageWithTTL<T extends StorageValue>(
     return unsubscribe;
   }, [key, defaultValue]);
 
-  const setValue = useCallback((newValue: T | null) => {
-    if (newValue === null) {
-      storage.removeItem(key);
-    } else {
-      storage.setItem<T>(key, newValue, { ttl });
-    }
-    setValueState(newValue);
-    storageEvents.emit(key);
-  }, [key, ttl]);
+  const setValue = useCallback(
+    (newValue: T | null) => {
+      if (newValue === null) {
+        storage.removeItem(key);
+      } else {
+        storage.setItem<T>(key, newValue, { ttl });
+      }
+      setValueState(newValue);
+      storageEvents.emit(key);
+    },
+    [key, ttl]
+  );
 
   const removeValue = useCallback(() => {
     storage.removeItem(key);
@@ -220,18 +232,18 @@ export function useStorageWithTTL<T extends StorageValue>(
 
 /**
  * Hook to listen to all storage changes
- * 
+ *
  * Useful for debugging or syncing external state.
- * 
+ *
  * @param callback - Callback called when any storage value changes
- * 
+ *
  * @example
  * ```tsx
  * function DebugComponent() {
  *   useStorageListener(() => {
  *     console.log('Storage changed:', storage.keys());
  *   });
- *   
+ *
  *   return <Text>Storage listener active</Text>;
  * }
  * ```
@@ -245,10 +257,10 @@ export function useStorageListener(callback: () => void): void {
 
 /**
  * Clear all storage
- * 
+ *
  * Clears all storage for the current application and triggers re-renders
  * in all components using storage hooks.
- * 
+ *
  * @example
  * ```tsx
  * function SettingsComponent() {
@@ -270,7 +282,7 @@ export function clearStorage(): void {
 /**
  * Internal function to notify storage hooks of changes
  * Called by storage system when values change externally
- * 
+ *
  * @internal
  */
 export function notifyStorageChange(key: string): void {
@@ -280,7 +292,7 @@ export function notifyStorageChange(key: string): void {
 /**
  * Internal function to notify storage hooks of clear
  * Called by storage system when storage is cleared
- * 
+ *
  * @internal
  */
 export function notifyStorageClear(): void {

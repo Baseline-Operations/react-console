@@ -15,7 +15,13 @@ export type { SelectOption } from '../../types';
 export function formatOptionDisplay(
   option: { label: string; value: string | number },
   selected: boolean,
-  format?: string | ((option: { label: string; value: string | number }, selected: boolean, index?: number) => string),
+  format?:
+    | string
+    | ((
+        option: { label: string; value: string | number },
+        selected: boolean,
+        index?: number
+      ) => string),
   index?: number
 ): string {
   if (typeof format === 'function') {

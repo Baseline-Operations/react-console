@@ -60,7 +60,7 @@ describe('StyleSheet', () => {
       const base = { color: 'red', bold: true } as TextStyle;
       const override = { color: 'blue' } as TextStyle;
       const result = StyleSheet.flatten([base, override]);
-      
+
       expect(result).toEqual({ color: 'blue', bold: true });
     });
 
@@ -68,7 +68,7 @@ describe('StyleSheet', () => {
       const base = { color: 'red' } as TextStyle;
       const override = { bold: true } as TextStyle;
       const result = StyleSheet.flatten([base, false, null, override, undefined]);
-      
+
       expect(result).toEqual({ color: 'red', bold: true });
     });
 
@@ -76,7 +76,7 @@ describe('StyleSheet', () => {
       const base = { padding: 1, border: 'single' } as ViewStyle;
       const override = { padding: 2, backgroundColor: 'blue' } as ViewStyle;
       const result = StyleSheet.flatten([base, override]);
-      
+
       expect(result).toEqual({
         padding: 2,
         border: 'single',
@@ -89,7 +89,7 @@ describe('StyleSheet', () => {
       const style2 = { color: 'green' } as TextStyle;
       const style3 = { bold: false, underline: true } as TextStyle;
       const result = StyleSheet.flatten([style1, style2, style3]);
-      
+
       expect(result).toEqual({
         color: 'green',
         bold: false,
@@ -101,7 +101,7 @@ describe('StyleSheet', () => {
       const viewStyle = { padding: 2 } as ViewStyle;
       const textStyle = { color: 'red' } as TextStyle;
       const result = StyleSheet.flatten([viewStyle, textStyle]);
-      
+
       expect(result).toEqual({
         padding: 2,
         color: 'red',
@@ -115,7 +115,7 @@ describe('StyleSheet', () => {
       const style2 = { bold: true } as TextStyle;
       const flattenResult = StyleSheet.flatten([style1, style2]);
       const composeResult = StyleSheet.compose(style1, style2);
-      
+
       expect(composeResult).toEqual(flattenResult);
     });
 
@@ -124,7 +124,7 @@ describe('StyleSheet', () => {
       const variant = { bold: true } as TextStyle;
       const override = { color: 'blue' } as TextStyle;
       const result = StyleSheet.compose(base, variant, override);
-      
+
       expect(result).toEqual({ color: 'blue', bold: true });
     });
 
@@ -133,7 +133,7 @@ describe('StyleSheet', () => {
       const conditional = false;
       const override = { bold: true } as TextStyle;
       const result = StyleSheet.compose(base, conditional, override);
-      
+
       expect(result).toEqual({ color: 'red', bold: true });
     });
 

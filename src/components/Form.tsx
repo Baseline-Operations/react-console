@@ -16,7 +16,9 @@ export interface FormValidationResult {
   errors: FormFieldError[];
 }
 
-export type FormValidator<T = Record<string, unknown>> = (values: T) => FormValidationResult | Promise<FormValidationResult>;
+export type FormValidator<T = Record<string, unknown>> = (
+  values: T
+) => FormValidationResult | Promise<FormValidationResult>;
 
 export interface FormProps extends StyleProps {
   children?: ReactNode;
@@ -35,10 +37,10 @@ export interface FormProps extends StyleProps {
 
 /**
  * Form component - Form wrapper with validation and state management
- * 
+ *
  * Provides form state management, validation, and submission handling.
  * Collects values from form fields and validates them before submission.
- * 
+ *
  * @example
  * ```tsx
  * <Form
@@ -69,7 +71,7 @@ export function Form({
   ...handlers
 }: FormProps) {
   const [errors] = useState<FormFieldError[]>([]);
-  
+
   // Form state management would be implemented via React Context
   // Values would be collected from form fields and validated on submission
   // For now, this is a basic structure that provides the Form wrapper
@@ -78,7 +80,7 @@ export function Form({
   // For now, this is a basic structure that can be enhanced
   // The form state management (values, errors, touched) and submission would be managed via context
   // Form fields would register themselves and collect values for submission
-  
+
   return createConsoleNode('box', {
     style: {
       display: 'flex',

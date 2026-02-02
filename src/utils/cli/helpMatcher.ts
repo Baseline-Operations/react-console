@@ -81,10 +81,7 @@ export function findRouteHelp(
  * Find help for current command/route based on parsed args
  * Returns the most specific help available with cascading fallback
  */
-export function findHelp(
-  parsedArgs: ParsedArgs,
-  children: ReactNode
-): ComponentMetadata | null {
+export function findHelp(parsedArgs: ParsedArgs, children: ReactNode): ComponentMetadata | null {
   const metadata = extractComponentMetadata(children);
 
   // If there's a command path, try to find command help
@@ -96,7 +93,8 @@ export function findHelp(
   }
 
   // Try to find route help
-  const pathFromCommand = parsedArgs.command.length > 0 ? '/' + parsedArgs.command.join('/') : undefined;
+  const pathFromCommand =
+    parsedArgs.command.length > 0 ? '/' + parsedArgs.command.join('/') : undefined;
   if (pathFromCommand) {
     const routeHelp = findRouteHelp(pathFromCommand, metadata);
     if (routeHelp) {

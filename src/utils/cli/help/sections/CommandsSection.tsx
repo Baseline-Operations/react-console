@@ -17,10 +17,7 @@ export interface CommandsSectionProps {
  * Commands section component
  * Displays all available commands
  */
-export function CommandsSection({
-  commands,
-  options = {},
-}: CommandsSectionProps): ReactNode {
+export function CommandsSection({ commands, options = {} }: CommandsSectionProps): ReactNode {
   if (commands.length === 0) {
     return null;
   }

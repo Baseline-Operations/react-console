@@ -136,20 +136,14 @@ export function registerGlobalAfterHook(hook: LifecycleHook): void {
 /**
  * Register before hook for a command
  */
-export function registerBeforeHook(
-  commandPath: string,
-  hook: LifecycleHook
-): void {
+export function registerBeforeHook(commandPath: string, hook: LifecycleHook): void {
   lifecycleRegistry.registerBefore(commandPath, hook);
 }
 
 /**
  * Register after hook for a command
  */
-export function registerAfterHook(
-  commandPath: string,
-  hook: LifecycleHook
-): void {
+export function registerAfterHook(commandPath: string, hook: LifecycleHook): void {
   lifecycleRegistry.registerAfter(commandPath, hook);
 }
 

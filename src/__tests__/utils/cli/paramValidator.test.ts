@@ -17,8 +17,16 @@ describe('validateNumber', () => {
   });
 
   it('should return error for invalid number string', () => {
-    expect(validateNumber('abc')).toEqual({ valid: false, value: null, error: 'Invalid number format' });
-    expect(validateNumber('')).toEqual({ valid: false, value: null, error: 'Invalid number format' });
+    expect(validateNumber('abc')).toEqual({
+      valid: false,
+      value: null,
+      error: 'Invalid number format',
+    });
+    expect(validateNumber('')).toEqual({
+      valid: false,
+      value: null,
+      error: 'Invalid number format',
+    });
     expect(validateNumber('12abc')).toEqual({ valid: true, value: 12 }); // Parses what it can
   });
 });
@@ -32,14 +40,21 @@ describe('validateString', () => {
 });
 
 describe('validateCommandParams', () => {
-  const createMetadata = (params?: ComponentMetadata['params'], options?: ComponentMetadata['options']): ComponentMetadata => ({
+  const createMetadata = (
+    params?: ComponentMetadata['params'],
+    options?: ComponentMetadata['options']
+  ): ComponentMetadata => ({
     type: 'command',
     name: 'test',
     params,
     options,
   });
 
-  const createParsedArgs = (command: string[] = [], options: Record<string, string | boolean> = {}, params: string[] = []): ParsedArgs => ({
+  const createParsedArgs = (
+    command: string[] = [],
+    options: Record<string, string | boolean> = {},
+    params: string[] = []
+  ): ParsedArgs => ({
     command,
     options,
     params,
@@ -49,30 +64,26 @@ describe('validateCommandParams', () => {
     const metadata = createMetadata();
     const args = createParsedArgs(['test']);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.params).toEqual({});
     expect(result.options).toEqual({});
   });
 
   it('should validate required string parameter', () => {
-    const metadata = createMetadata([
-      { name: 'name', type: 'string', required: true },
-    ]);
+    const metadata = createMetadata([{ name: 'name', type: 'string', required: true }]);
     const args = createParsedArgs(['test'], {}, ['hello']);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.params).toEqual({ name: 'hello' });
   });
 
   it('should fail when required parameter is missing', () => {
-    const metadata = createMetadata([
-      { name: 'name', type: 'string', required: true },
-    ]);
+    const metadata = createMetadata([{ name: 'name', type: 'string', required: true }]);
     const args = createParsedArgs(['test'], {}, []);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]?.name).toBe('name');
@@ -80,34 +91,28 @@ describe('validateCommandParams', () => {
   });
 
   it('should validate optional parameter', () => {
-    const metadata = createMetadata([
-      { name: 'name', type: 'string', required: false },
-    ]);
+    const metadata = createMetadata([{ name: 'name', type: 'string', required: false }]);
     const args = createParsedArgs(['test'], {}, []);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.params).toEqual({});
   });
 
   it('should validate number parameter', () => {
-    const metadata = createMetadata([
-      { name: 'count', type: 'number', required: true },
-    ]);
+    const metadata = createMetadata([{ name: 'count', type: 'number', required: true }]);
     const args = createParsedArgs(['test'], {}, ['42']);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.params).toEqual({ count: 42 });
   });
 
   it('should fail when number parameter is invalid', () => {
-    const metadata = createMetadata([
-      { name: 'count', type: 'number', required: true },
-    ]);
+    const metadata = createMetadata([{ name: 'count', type: 'number', required: true }]);
     const args = createParsedArgs(['test'], {}, ['abc']);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]?.name).toBe('count');
@@ -120,7 +125,7 @@ describe('validateCommandParams', () => {
     });
     const args = createParsedArgs(['test'], { verbose: true });
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.options).toEqual({ verbose: true });
   });
@@ -131,7 +136,7 @@ describe('validateCommandParams', () => {
     });
     const args = createParsedArgs(['test'], { output: 'build' });
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.options).toEqual({ output: 'build' });
   });
@@ -142,7 +147,7 @@ describe('validateCommandParams', () => {
     });
     const args = createParsedArgs(['test'], {});
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.options).toEqual({ output: 'dist' });
   });
@@ -154,19 +159,18 @@ describe('validateCommandParams', () => {
     ]);
     const args = createParsedArgs(['test'], {}, ['src', 'dist']);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.params).toEqual({ source: 'src', target: 'dist' });
   });
 
   it('should validate mixed params and options', () => {
-    const metadata = createMetadata(
-      [{ name: 'file', type: 'string', required: true }],
-      { minify: { type: 'boolean', default: false } }
-    );
+    const metadata = createMetadata([{ name: 'file', type: 'string', required: true }], {
+      minify: { type: 'boolean', default: false },
+    });
     const args = createParsedArgs(['test'], { minify: true }, ['app.js']);
     const result = validateCommandParams(args, metadata);
-    
+
     expect(result.valid).toBe(true);
     expect(result.params).toEqual({ file: 'app.js' });
     expect(result.options).toEqual({ minify: true });

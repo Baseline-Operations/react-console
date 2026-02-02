@@ -21,7 +21,7 @@ export interface CompletionResult {
  */
 function getAllCommandNames(metadata: ComponentMetadata[]): string[] {
   const names: string[] = [];
-  
+
   for (const item of metadata) {
     if (item.type === 'command') {
       if (item.name) {
@@ -36,13 +36,13 @@ function getAllCommandNames(metadata: ComponentMetadata[]): string[] {
       }
     }
   }
-  
+
   return names;
 }
 
 /**
  * Generate completion suggestions for a command path
- * 
+ *
  * @param commandPath - Current command path (partial or complete)
  * @param metadata - Component metadata
  * @param parsedArgs - Parsed arguments (for context)
@@ -73,9 +73,13 @@ export function generateCompletions(
   }
 
   // Find matching command in metadata
-  const findCommand = (md: ComponentMetadata[], path: string[], index: number): ComponentMetadata | null => {
+  const findCommand = (
+    md: ComponentMetadata[],
+    path: string[],
+    index: number
+  ): ComponentMetadata | null => {
     if (index >= path.length) return null;
-    
+
     const cmdName = path[index]!;
     for (const item of md) {
       if (item.type === 'command' && (item.name === cmdName || item.aliases?.includes(cmdName))) {
@@ -98,7 +102,7 @@ export function generateCompletions(
     // Command not found - suggest commands that start with the last part
     const lastPart = commandPath[commandPath.length - 1] || '';
     const allCommands = getAllCommandNames(metadata);
-    const suggestions = allCommands.filter(cmd => 
+    const suggestions = allCommands.filter((cmd) =>
       cmd.toLowerCase().startsWith(lastPart.toLowerCase())
     );
     return {
@@ -120,11 +124,11 @@ export function generateCompletions(
         }
       }
     }
-    
+
     // If there's a partial subcommand, filter suggestions
     if (commandPath.length > 1) {
       const lastPart = commandPath[commandPath.length - 1] || '';
-      const filtered = subcommands.filter(cmd => 
+      const filtered = subcommands.filter((cmd) =>
         cmd.toLowerCase().startsWith(lastPart.toLowerCase())
       );
       return {
@@ -132,7 +136,7 @@ export function generateCompletions(
         complete: filtered.length === 1 && filtered[0] === lastPart,
       };
     }
-    
+
     return {
       suggestions: [...new Set(subcommands)].sort(),
       complete: false,
@@ -145,7 +149,7 @@ export function generateCompletions(
     for (const [name, opt] of Object.entries(matchedCommand.options)) {
       options.push(`--${name}`);
       if (opt.aliases) {
-        options.push(...opt.aliases.map(alias => `-${alias}`));
+        options.push(...opt.aliases.map((alias) => `-${alias}`));
       }
     }
     return {
@@ -163,7 +167,7 @@ export function generateCompletions(
 
 /**
  * Format completions for shell output
- * 
+ *
  * @param result - Completion result
  * @returns Formatted string for shell completion
  */
@@ -173,18 +177,15 @@ export function formatCompletions(result: CompletionResult): string {
 
 /**
  * Generate bash/zsh completion script
- * 
+ *
  * @param appName - Application name
  * @param metadata - Component metadata
  * @returns Completion script content
  */
-export function generateCompletionScript(
-  appName: string,
-  metadata: ComponentMetadata[]
-): string {
+export function generateCompletionScript(appName: string, metadata: ComponentMetadata[]): string {
   const allCommands = getAllCommandNames(metadata);
   const commandsList = allCommands.join(' ');
-  
+
   // Collect all options with their aliases
   const getAllOptions = (md: ComponentMetadata[]): string[] => {
     const options: string[] = [];
@@ -205,10 +206,10 @@ export function generateCompletionScript(
     }
     return [...new Set(options)];
   };
-  
+
   const allOptions = getAllOptions(metadata);
   const optionsList = ['--help', '-h', '--version', '-v', ...allOptions].join(' ');
-  
+
   return `# ${appName} completion script
 # Install: source <(${appName} completion)
 # Or add to your .bashrc/.zshrc: source <(${appName} completion)

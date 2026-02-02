@@ -62,22 +62,38 @@ describe('validation utilities', () => {
 
   describe('composeValidators', () => {
     it('should combine multiple validators', () => {
-      const validator1 = (value: number) => ({ valid: value > 0, value, error: value <= 0 ? 'Must be positive' : undefined });
-      const validator2 = (value: number) => ({ valid: value < 100, value, error: value >= 100 ? 'Must be less than 100' : undefined });
-      
+      const validator1 = (value: number) => ({
+        valid: value > 0,
+        value,
+        error: value <= 0 ? 'Must be positive' : undefined,
+      });
+      const validator2 = (value: number) => ({
+        valid: value < 100,
+        value,
+        error: value >= 100 ? 'Must be less than 100' : undefined,
+      });
+
       const composed = composeValidators(validator1, validator2);
       const result = composed(50);
-      
+
       expect(result.valid).toBe(true);
     });
 
     it('should fail if any validator fails', () => {
-      const validator1 = (value: number) => ({ valid: value > 0, value, error: value <= 0 ? 'Must be positive' : undefined });
-      const validator2 = (value: number) => ({ valid: value < 100, value, error: value >= 100 ? 'Must be less than 100' : undefined });
-      
+      const validator1 = (value: number) => ({
+        valid: value > 0,
+        value,
+        error: value <= 0 ? 'Must be positive' : undefined,
+      });
+      const validator2 = (value: number) => ({
+        valid: value < 100,
+        value,
+        error: value >= 100 ? 'Must be less than 100' : undefined,
+      });
+
       const composed = composeValidators(validator1, validator2);
       const result = composed(150);
-      
+
       expect(result.valid).toBe(false);
     });
   });

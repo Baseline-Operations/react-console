@@ -40,34 +40,25 @@ export function HelpContent({
   routerOptions,
   routerNoHelp,
 }: HelpContentProps): ReactNode {
-  const commands = metadata.filter(m => m.type === 'command');
-  const defaults = metadata.filter(m => m.type === 'default');
-  
+  const commands = metadata.filter((m) => m.type === 'command');
+  const defaults = metadata.filter((m) => m.type === 'default');
+
   // Collect all options from command path + router
-  const allOptions = parsedArgs && parsedArgs.command.length > 0
-    ? collectCommandOptions(parsedArgs.command, metadata, routerOptions)
-    : routerOptions || {};
+  const allOptions =
+    parsedArgs && parsedArgs.command.length > 0
+      ? collectCommandOptions(parsedArgs.command, metadata, routerOptions)
+      : routerOptions || {};
   const helpAvailable = parsedArgs
     ? isHelpAvailable(parsedArgs, metadata) && !routerNoHelp
     : !routerNoHelp;
 
   return (
     <>
-      <AppHeader
-        appName={appName}
-        appVersion={appVersion}
-        appDescription={appDescription}
-      />
+      <AppHeader appName={appName} appVersion={appVersion} appDescription={appDescription} />
       <CommandsSection commands={commands} options={options} />
       <DefaultSection defaultComponent={defaults[0]} />
-      <UsageSection
-        commands={commands}
-        appName={appName}
-      />
-      <OptionsSection
-        options={allOptions}
-        helpAvailable={helpAvailable}
-      />
+      <UsageSection commands={commands} appName={appName} />
+      <OptionsSection options={allOptions} helpAvailable={helpAvailable} />
     </>
   );
 }

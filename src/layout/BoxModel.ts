@@ -35,11 +35,11 @@ export function resolveSize(
   if (size === null || size === undefined) {
     return null;
   }
-  
+
   if (typeof size === 'number') {
     return size;
   }
-  
+
   if (typeof size === 'string') {
     // Handle percentage
     if (size.endsWith('%')) {
@@ -48,7 +48,7 @@ export function resolveSize(
         return Math.round((percent / 100) * reference);
       }
     }
-    
+
     // Handle viewport units
     if (size.endsWith('vw') || size.endsWith('vh')) {
       if (!terminalDims) {
@@ -60,7 +60,7 @@ export function resolveSize(
         return Math.round((value / 100) * viewportSize);
       }
     }
-    
+
     // Handle character units
     if (size.endsWith('ch')) {
       const value = parseFloat(size);
@@ -68,7 +68,7 @@ export function resolveSize(
         return Math.round(value);
       }
     }
-    
+
     // Handle pixel-like units (treat as characters in terminal)
     if (size.endsWith('px')) {
       const value = parseFloat(size);
@@ -77,7 +77,7 @@ export function resolveSize(
       }
     }
   }
-  
+
   return null;
 }
 
@@ -129,16 +129,24 @@ export function calculateTotalDimensions(
   padding: Padding,
   margin: Margin
 ): Dimensions {
-  const totalWidth = contentWidth + 
-    borderWidth.left + borderWidth.right + 
-    padding.left + padding.right + 
-    margin.left + margin.right;
-  
-  const totalHeight = contentHeight + 
-    borderWidth.top + borderWidth.bottom + 
-    padding.top + padding.bottom + 
-    margin.top + margin.bottom;
-  
+  const totalWidth =
+    contentWidth +
+    borderWidth.left +
+    borderWidth.right +
+    padding.left +
+    padding.right +
+    margin.left +
+    margin.right;
+
+  const totalHeight =
+    contentHeight +
+    borderWidth.top +
+    borderWidth.bottom +
+    padding.top +
+    padding.bottom +
+    margin.top +
+    margin.bottom;
+
   return {
     width: totalWidth,
     height: totalHeight,
@@ -162,7 +170,7 @@ export function normalizeSpacing<T extends Margin | Padding>(
       left: spacing,
     } as T;
   }
-  
+
   return {
     ...defaultValue,
     ...spacing,
@@ -179,7 +187,7 @@ export function normalizeBorderWidth(
   if (borderWidth === undefined) {
     return defaultWidth;
   }
-  
+
   if (typeof borderWidth === 'number') {
     return {
       top: borderWidth,
@@ -188,7 +196,7 @@ export function normalizeBorderWidth(
       left: borderWidth,
     };
   }
-  
+
   return {
     ...defaultWidth,
     ...borderWidth,

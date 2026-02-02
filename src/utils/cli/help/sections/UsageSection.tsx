@@ -15,10 +15,7 @@ export interface UsageSectionProps {
  * Usage section component
  * Displays usage examples for commands
  */
-export function UsageSection({
-  commands,
-  appName,
-}: UsageSectionProps): ReactNode {
+export function UsageSection({ commands, appName }: UsageSectionProps): ReactNode {
   if (commands.length === 0) {
     return null;
   }

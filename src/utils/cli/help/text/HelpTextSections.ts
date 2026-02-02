@@ -13,10 +13,7 @@ import { collectCommandOptions, isHelpAvailable } from '../../optionCollector';
 /**
  * Build app header section text
  */
-export function buildAppHeaderText(
-  appName?: string,
-  appVersion?: string
-): string[] {
+export function buildAppHeaderText(appName?: string, appVersion?: string): string[] {
   return appName ? [`${appName}${appVersion ? ` v${appVersion}` : ''}`, ''] : [];
 }
 
@@ -34,32 +31,32 @@ export function buildCommandsSectionText(
   commands: ComponentMetadata[],
   options: HelpOptions = {}
 ): string[] {
-  return commands.length > 0 
-    ? ['Commands:', '', ...commands.flatMap((cmd) => [...generateCommandHelpText(cmd, options, 0), ''])]
+  return commands.length > 0
+    ? [
+        'Commands:',
+        '',
+        ...commands.flatMap((cmd) => [...generateCommandHelpText(cmd, options, 0), '']),
+      ]
     : [];
 }
-
 
 /**
  * Build default section text
  */
 export function buildDefaultSectionText(defaultComponent?: ComponentMetadata): string[] {
-  return defaultComponent?.description
-    ? ['Default:', `  ${defaultComponent.description}`, '']
-    : [];
+  return defaultComponent?.description ? ['Default:', `  ${defaultComponent.description}`, ''] : [];
 }
 
 /**
  * Build usage section text
  */
-export function buildUsageSectionText(
-  commands: ComponentMetadata[],
-  appName?: string
-): string[] {
+export function buildUsageSectionText(commands: ComponentMetadata[], appName?: string): string[] {
   return commands.length > 0
     ? [
         'Usage:',
-        ...(commands.length > 0 && commands[0]?.name ? [`  ${appName || 'app'} ${commands[0].name} [options]`] : []),
+        ...(commands.length > 0 && commands[0]?.name
+          ? [`  ${appName || 'app'} ${commands[0].name} [options]`]
+          : []),
         '',
         'For more information on a specific command, use:',
         `  ${appName || 'app'} <command> --help`,
@@ -75,7 +72,7 @@ export function buildOptionsSectionText(
   allOptions: Record<string, CommandOption>,
   helpAvailable: boolean
 ): string[] {
-  return (Object.keys(allOptions).length > 0 || helpAvailable)
+  return Object.keys(allOptions).length > 0 || helpAvailable
     ? [
         'Options:',
         ...Object.entries(allOptions).map(([name, opt]) => {
@@ -103,13 +100,14 @@ export function buildHelpText(
   routerOptions?: Record<string, CommandOption>,
   routerNoHelp?: boolean
 ): string {
-  const commands = metadata.filter(m => m.type === 'command');
-  const defaults = metadata.filter(m => m.type === 'default');
-  
+  const commands = metadata.filter((m) => m.type === 'command');
+  const defaults = metadata.filter((m) => m.type === 'default');
+
   // Collect all options from command path + router
-  const allOptions = parsedArgs && parsedArgs.command.length > 0
-    ? collectCommandOptions(parsedArgs.command, metadata, routerOptions)
-    : routerOptions || {};
+  const allOptions =
+    parsedArgs && parsedArgs.command.length > 0
+      ? collectCommandOptions(parsedArgs.command, metadata, routerOptions)
+      : routerOptions || {};
   const helpAvailable = parsedArgs
     ? isHelpAvailable(parsedArgs, metadata) && !routerNoHelp
     : !routerNoHelp;

@@ -50,12 +50,11 @@ export class ConsoleErrorHandler extends BaseErrorHandler {
 
   handle(error: Error, type: ErrorType, context?: Record<string, unknown>): void {
     const allContext = { ...this.context, ...context };
-    const contextStr = this.includeContext && Object.keys(allContext).length > 0
-      ? ` ${JSON.stringify(allContext, null, 2)}`
-      : '';
-    const stackStr = this.includeStack && error.stack
-      ? `\n${error.stack}`
-      : '';
+    const contextStr =
+      this.includeContext && Object.keys(allContext).length > 0
+        ? ` ${JSON.stringify(allContext, null, 2)}`
+        : '';
+    const stackStr = this.includeStack && error.stack ? `\n${error.stack}` : '';
 
     console.error(`[React Console ${type} Error]${contextStr}: ${error.message}${stackStr}`);
   }

@@ -41,10 +41,10 @@ export interface PromptProps extends StyleProps {
 
 /**
  * Prompt component - Question/answer prompts with validation
- * 
+ *
  * Displays a question and an input field. Validates input and shows errors.
  * Supports Enter to submit, Escape to cancel.
- * 
+ *
  * @example
  * ```tsx
  * <Prompt
@@ -100,14 +100,14 @@ export function Prompt({
 
   const handleSubmit = (event: InputEvent) => {
     const submitValue = String(event.value);
-    
+
     // Final validation
     if (required && !submitValue.trim()) {
       setError('This field is required');
       setTouched(true);
       return;
     }
-    
+
     if (validate) {
       const validationError = validate(submitValue);
       if (validationError) {
@@ -116,7 +116,7 @@ export function Prompt({
         return;
       }
     }
-    
+
     // Valid - submit
     setError(undefined);
     onSubmit?.(submitValue);
@@ -148,7 +148,7 @@ export function Prompt({
         type: type === 'number' ? 'number' : 'text',
         value,
         placeholder,
-        mask: type === 'password' ? (mask || '*') : undefined,
+        mask: type === 'password' ? mask || '*' : undefined,
         maxLength,
         invalid: !!error && touched,
         validationError: error && touched ? error : undefined,

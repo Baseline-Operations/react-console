@@ -155,13 +155,13 @@ export class ScreenBuffer {
   private buffer: string[][] = [];
   private width: number;
   private height: number;
-  
+
   constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
     this.clear();
   }
-  
+
   /**
    * Clear the buffer
    */
@@ -170,7 +170,7 @@ export class ScreenBuffer {
       .fill(null)
       .map(() => Array(this.width).fill(' '));
   }
-  
+
   /**
    * Set a character at a specific position
    * @param x - Column (0-indexed)
@@ -182,7 +182,7 @@ export class ScreenBuffer {
       this.buffer[y]![x] = char.length > 0 ? char[0]! : ' ';
     }
   }
-  
+
   /**
    * Set a string starting at a specific position
    * @param x - Starting column (0-indexed)
@@ -196,7 +196,7 @@ export class ScreenBuffer {
       }
     }
   }
-  
+
   /**
    * Get character at a specific position
    * @param x - Column (0-indexed)
@@ -209,23 +209,23 @@ export class ScreenBuffer {
     }
     return ' ';
   }
-  
+
   /**
    * Render buffer to string
    * @returns Rendered buffer as string
    */
   render(): string {
-    return this.buffer.map(row => row.join('')).join('\n');
+    return this.buffer.map((row) => row.join('')).join('\n');
   }
-  
+
   /**
    * Get buffer as array of lines
    * @returns Array of lines
    */
   getLines(): string[] {
-    return this.buffer.map(row => row.join(''));
+    return this.buffer.map((row) => row.join(''));
   }
-  
+
   /**
    * Resize buffer
    * @param width - New width
@@ -236,19 +236,19 @@ export class ScreenBuffer {
     const oldHeight = this.height;
     this.width = width;
     this.height = height;
-    
+
     // Create new buffer
     const newBuffer: string[][] = Array(this.height)
       .fill(null)
       .map(() => Array(this.width).fill(' '));
-    
+
     // Copy old buffer content
     for (let y = 0; y < Math.min(oldHeight, this.height); y++) {
       for (let x = 0; x < Math.min(oldWidth, this.width); x++) {
         newBuffer[y]![x] = this.buffer[y]![x] || ' ';
       }
     }
-    
+
     this.buffer = newBuffer;
   }
 }

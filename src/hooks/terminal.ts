@@ -1,6 +1,6 @@
 /**
  * React Hooks for Terminal State
- * 
+ *
  * Provides React hooks for terminal-specific state management:
  * - Terminal dimensions (reactive to resize)
  * - Focus state
@@ -16,17 +16,17 @@ import type { ConsoleNode } from '../types';
 
 /**
  * Hook for reactive terminal dimensions
- * 
+ *
  * Returns the current terminal dimensions and automatically updates
  * when the terminal is resized. Useful for responsive layouts.
- * 
+ *
  * @returns Current terminal dimensions { columns, rows }
- * 
+ *
  * @example
  * ```tsx
  * function ResponsiveComponent() {
  *   const dims = useTerminalDimensions();
- *   
+ *
  *   return (
  *     <View>
  *       <Text>Terminal size: {dims.columns}x{dims.rows}</Text>
@@ -58,18 +58,18 @@ export function useTerminalDimensions(): TerminalDimensions {
 
 /**
  * Hook for managing component focus state
- * 
+ *
  * Returns the currently focused component and provides utilities
  * to check if a specific component is focused.
- * 
+ *
  * @param componentRef - Optional reference to a specific component to track
  * @returns Object with focused component and helper functions
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const { focusedComponent, isFocused, focus } = useFocus();
- *   
+ *
  *   return (
  *     <Button
  *       focused={isFocused}
@@ -112,9 +112,7 @@ export function useFocus(componentRef?: ConsoleNode | null): {
     };
   }, [focusedComponent]);
 
-  const isFocused = componentRef
-    ? focusedComponent === componentRef
-    : focusedComponent !== null;
+  const isFocused = componentRef ? focusedComponent === componentRef : focusedComponent !== null;
 
   const focus = useCallback(() => {
     if (componentRef) {
@@ -123,10 +121,14 @@ export function useFocus(componentRef?: ConsoleNode | null): {
         const interactiveComponents: ConsoleNode[] = [];
         // Collect interactive components (simplified - in real implementation would get from tree)
         // Cast ConsoleNode to Node since they are compatible
-        focusComponent(componentRef as unknown as import('../nodes/base/Node').Node, interactiveComponents as unknown as import('../nodes/base/Node').Node[], () => {
-          // Trigger re-render
-          setFocusedComponent(terminal.focusedComponent);
-        });
+        focusComponent(
+          componentRef as unknown as import('../nodes/base/Node').Node,
+          interactiveComponents as unknown as import('../nodes/base/Node').Node[],
+          () => {
+            // Trigger re-render
+            setFocusedComponent(terminal.focusedComponent);
+          }
+        );
       });
     }
   }, [componentRef]);
@@ -148,17 +150,17 @@ export function useFocus(componentRef?: ConsoleNode | null): {
 
 /**
  * Hook for terminal configuration and capabilities
- * 
+ *
  * Returns terminal capabilities like color support, mouse support, etc.
  * Useful for conditionally enabling features based on terminal capabilities.
- * 
+ *
  * @returns Terminal configuration object
- * 
+ *
  * @example
  * ```tsx
  * function AdaptiveComponent() {
  *   const config = useTerminalConfig();
- *   
+ *
  *   return (
  *     <View>
  *       {config.supportsColor && <Text color="red">Colored text</Text>}

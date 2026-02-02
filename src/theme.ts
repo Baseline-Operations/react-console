@@ -1,7 +1,7 @@
 /**
  * Theme System
  * Convenient exports for theme functionality
- * 
+ *
  * @example
  * ```tsx
  * import { ThemeProvider, useTheme, defaultTheme } from 'react-console/theme';
@@ -30,8 +30,4 @@ export {
 } from './theme/index';
 
 // Theme context
-export {
-  ThemeProvider,
-  useTheme,
-  useThemeColors,
-} from './context/ThemeContext';
+export { ThemeProvider, useTheme, useThemeColors } from './context/ThemeContext';

@@ -50,10 +50,16 @@ export function isButtonNode(node: ConsoleNode): node is ConsoleNode & { type: '
 /**
  * Type guard: Check if node is a selection component (radio, checkbox, dropdown, list)
  */
-export function isSelectionNode(
-  node: ConsoleNode
-): node is ConsoleNode & { type: 'radio' | 'checkbox' | 'dropdown' | 'list'; options?: SelectOption[] } {
-  return node.type === 'radio' || node.type === 'checkbox' || node.type === 'dropdown' || node.type === 'list';
+export function isSelectionNode(node: ConsoleNode): node is ConsoleNode & {
+  type: 'radio' | 'checkbox' | 'dropdown' | 'list';
+  options?: SelectOption[];
+} {
+  return (
+    node.type === 'radio' ||
+    node.type === 'checkbox' ||
+    node.type === 'dropdown' ||
+    node.type === 'list'
+  );
 }
 
 /**
@@ -69,9 +75,7 @@ export function isMultiSelectNode(node: ConsoleNode): node is ConsoleNode & { mu
 /**
  * Type guard: Check if node is interactive (supports focus and input)
  */
-export function isInteractiveNode(
-  node: ConsoleNode
-): node is ConsoleNode & {
+export function isInteractiveNode(node: ConsoleNode): node is ConsoleNode & {
   type: 'input' | 'button' | 'radio' | 'checkbox' | 'dropdown' | 'list';
   focused?: boolean;
   disabled?: boolean;
@@ -90,7 +94,9 @@ export function isInteractiveNode(
 /**
  * Type guard: Check if node is a layout component
  */
-export function isLayoutNode(node: ConsoleNode): node is ConsoleNode & { type: 'box' | 'scrollable' | 'overlay' } {
+export function isLayoutNode(
+  node: ConsoleNode
+): node is ConsoleNode & { type: 'box' | 'scrollable' | 'overlay' } {
   return node.type === 'box' || node.type === 'scrollable' || node.type === 'overlay';
 }
 
@@ -114,7 +120,8 @@ export function isSelectOption(value: unknown): value is SelectOption {
     'label' in value &&
     'value' in value &&
     typeof (value as SelectOption).label === 'string' &&
-    (typeof (value as SelectOption).value === 'string' || typeof (value as SelectOption).value === 'number')
+    (typeof (value as SelectOption).value === 'string' ||
+      typeof (value as SelectOption).value === 'number')
   );
 }
 
@@ -140,7 +147,9 @@ export function hasOptions(node: ConsoleNode): node is ConsoleNode & { options: 
 /**
  * Type guard: Check if node is a text node
  */
-export function isTextNode(node: ConsoleNode): node is ConsoleNode & { type: 'text'; content?: string } {
+export function isTextNode(
+  node: ConsoleNode
+): node is ConsoleNode & { type: 'text'; content?: string } {
   return node.type === 'text';
 }
 
@@ -185,9 +194,7 @@ export function hasChildren(node: ConsoleNode): node is ConsoleNode & { children
 export function isViewStyle(style: unknown): style is ViewStyle {
   // Check if it has view-specific properties
   return (
-    typeof style === 'object' &&
-    style !== null &&
-    !('textAlign' in style) // TextStyle has textAlign, ViewStyle doesn't
+    typeof style === 'object' && style !== null && !('textAlign' in style) // TextStyle has textAlign, ViewStyle doesn't
   );
 }
 
@@ -215,28 +222,47 @@ export function isConsoleNode(value: unknown): value is ConsoleNode {
  */
 export function isColor(value: unknown): value is string {
   if (typeof value !== 'string') return false;
-  
+
   // Named colors
   const namedColors = [
-    'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white',
-    'gray', 'grey', 'brightBlack', 'brightRed', 'brightGreen', 'brightYellow',
-    'brightBlue', 'brightMagenta', 'brightCyan', 'brightWhite',
+    'black',
+    'red',
+    'green',
+    'yellow',
+    'blue',
+    'magenta',
+    'cyan',
+    'white',
+    'gray',
+    'grey',
+    'brightBlack',
+    'brightRed',
+    'brightGreen',
+    'brightYellow',
+    'brightBlue',
+    'brightMagenta',
+    'brightCyan',
+    'brightWhite',
   ];
   if (namedColors.includes(value.toLowerCase())) return true;
-  
+
   // Hex color (#RRGGBB or #RGB)
   if (/^#[0-9A-Fa-f]{3}$|^#[0-9A-Fa-f]{6}$/.test(value)) return true;
-  
+
   // RGB color (rgb(r, g, b))
   if (/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(value)) return true;
-  
+
   return false;
 }
 
 /**
  * Type assertion helper: Assert value is a specific type
  */
-export function assertIsType<T>(value: unknown, guard: (val: unknown) => val is T, errorMessage?: string): asserts value is T {
+export function assertIsType<T>(
+  value: unknown,
+  guard: (val: unknown) => val is T,
+  errorMessage?: string
+): asserts value is T {
   if (!guard(value)) {
     throw new Error(errorMessage || `Expected value to match type guard, but it doesn't`);
   }
@@ -245,7 +271,10 @@ export function assertIsType<T>(value: unknown, guard: (val: unknown) => val is 
 /**
  * Type assertion helper: Assert value is a ConsoleNode
  */
-export function assertIsConsoleNode(value: unknown, errorMessage?: string): asserts value is ConsoleNode {
+export function assertIsConsoleNode(
+  value: unknown,
+  errorMessage?: string
+): asserts value is ConsoleNode {
   assertIsType(value, isConsoleNode, errorMessage || 'Expected value to be a ConsoleNode');
 }
 

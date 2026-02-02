@@ -18,8 +18,8 @@ export function generateCommandHelpText(
   }
 
   const indent = '  '.repeat(depth);
-  const commands = metadata.children?.filter(c => c.type === 'command') || [];
-  const defaults = metadata.children?.filter(c => c.type === 'default') || [];
+  const commands = metadata.children?.filter((c) => c.type === 'command') || [];
+  const defaults = metadata.children?.filter((c) => c.type === 'default') || [];
   const showNested = depth < (options.maxDepth ?? 10);
   const hasParams = metadata.params && metadata.params.length > 0;
   const hasOptions = metadata.options && Object.keys(metadata.options).length > 0;

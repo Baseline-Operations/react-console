@@ -8,7 +8,7 @@
  * @param date - Date object or timestamp
  * @param format - Format string (default: 'YYYY-MM-DD')
  * @returns Formatted date string
- * 
+ *
  * Format tokens:
  * - YYYY: 4-digit year
  * - YY: 2-digit year
@@ -25,12 +25,9 @@
  * - SSS: 3-digit milliseconds
  * - S: Milliseconds
  */
-export function formatDate(
-  date: Date | number,
-  format: string = 'YYYY-MM-DD'
-): string {
+export function formatDate(date: Date | number, format: string = 'YYYY-MM-DD'): string {
   const d = typeof date === 'number' ? new Date(date) : date;
-  
+
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
   const day = d.getDate();
@@ -82,7 +79,7 @@ export function formatRelativeTime(
   const suffix = isPast ? ' ago' : '';
 
   if (diffSeconds < 60) {
-    return format === 'short' 
+    return format === 'short'
       ? `${prefix}${diffSeconds}s${suffix}`
       : `${prefix}${diffSeconds} second${diffSeconds !== 1 ? 's' : ''}${suffix}`;
   }
@@ -133,22 +130,40 @@ export function formatDateHuman(
   format: 'short' | 'medium' | 'long' | 'full' = 'medium'
 ): string {
   const d = typeof date === 'number' ? new Date(date) : date;
-  
+
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
   const day = d.getDate();
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   const monthNamesShort = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
-  const dayNames = [
-    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-  ];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   const monthName = monthNames[month - 1]!;
   const monthNameShort = monthNamesShort[month - 1]!;
@@ -181,7 +196,7 @@ export function formatTime(
   includeSeconds: boolean = false
 ): string {
   const d = typeof date === 'number' ? new Date(date) : date;
-  
+
   let hours = d.getHours();
   const minutes = d.getMinutes();
   const seconds = d.getSeconds();

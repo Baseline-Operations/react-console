@@ -1,6 +1,6 @@
 /**
  * Type definitions for React Console
- * 
+ *
  * This file re-exports all type definitions from organized subdirectories.
  * Type definitions are organized by category:
  * - core: Fundamental types (Color, Position, InputType, etc.)
@@ -21,13 +21,7 @@ export type {
 } from './core';
 
 // Re-export style types
-export type {
-  StyleProps,
-  LayoutProps,
-  ViewStyle,
-  TextStyle,
-  TerminalStyle,
-} from './styles';
+export type { StyleProps, LayoutProps, ViewStyle, TextStyle, TerminalStyle } from './styles';
 
 // Re-export event types
 export type {
@@ -39,10 +33,7 @@ export type {
 } from './events';
 
 // Re-export component types
-export type {
-  SelectOption,
-  ConsoleNode,
-} from './components';
+export type { SelectOption, ConsoleNode } from './components';
 
 // Re-export handler types for convenience
 export type { ComponentHandler, HandlerRegistry } from './handlers';

@@ -1,7 +1,7 @@
 /**
  * Version flag utilities
  * Handles --version and -v flags to display application version
- * 
+ *
  * Note: Version display is handled by VersionDisplay component (TSX)
  * This file contains only utility functions for checking version flags
  */
@@ -10,7 +10,7 @@ import type { ParsedArgs } from './parser';
 
 /**
  * Check if version flag is requested
- * 
+ *
  * @param parsedArgs - Parsed command-line arguments
  * @returns True if version flag is present
  */
@@ -25,7 +25,7 @@ export function isVersionRequested(parsedArgs: ParsedArgs): boolean {
 
 /**
  * Get application version
- * 
+ *
  * @returns Application version string or undefined
  */
 export function getAppVersion(): string | undefined {

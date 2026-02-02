@@ -14,9 +14,7 @@ export interface DefaultSectionProps {
  * Default section component
  * Displays default component information
  */
-export function DefaultSection({
-  defaultComponent,
-}: DefaultSectionProps): ReactNode {
+export function DefaultSection({ defaultComponent }: DefaultSectionProps): ReactNode {
   if (!defaultComponent?.description) {
     return null;
   }
@@ -24,7 +22,7 @@ export function DefaultSection({
   return (
     <>
       <Text>Default:</Text>
-      <Text>  {defaultComponent.description}</Text>
+      <Text> {defaultComponent.description}</Text>
       <Text></Text>
     </>
   );

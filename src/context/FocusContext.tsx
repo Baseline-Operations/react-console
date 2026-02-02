@@ -1,6 +1,6 @@
 /**
  * Focus Context Provider
- * 
+ *
  * Provides focus management context for components that need to track or manage focus.
  * Useful for components that need to know which component is currently focused.
  */
@@ -19,12 +19,12 @@ const FocusContext = createContext<FocusContextValue | null>(null);
 
 /**
  * Focus Provider
- * 
+ *
  * Provides focus management context to child components.
  * Tracks the currently focused component and provides utilities to check/manage focus.
- * 
+ *
  * @param children - Child components
- * 
+ *
  * @example
  * ```tsx
  * function App() {
@@ -72,27 +72,23 @@ export function FocusProvider({ children }: { children: ReactNode }): React.JSX.
     setFocused,
   };
 
-  return (
-    <FocusContext.Provider value={value}>
-      {children}
-    </FocusContext.Provider>
-  );
+  return <FocusContext.Provider value={value}>{children}</FocusContext.Provider>;
 }
 
 /**
  * Hook to use focus context
- * 
+ *
  * Returns focus management utilities from the nearest FocusProvider.
- * 
+ *
  * @returns Focus context value
  * @throws Error if used outside FocusProvider
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const { focusedComponent, isFocused, setFocused } = useFocusContext();
  *   const [myNode, setMyNode] = useState<ConsoleNode | null>(null);
- *   
+ *
  *   return (
  *     <View>
  *       <Text>Focused: {isFocused(myNode) ? 'Yes' : 'No'}</Text>

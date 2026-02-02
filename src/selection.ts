@@ -1,7 +1,7 @@
 /**
  * Selection Components
  * Convenient exports for selection components (Radio, Checkbox, Dropdown, List)
- * 
+ *
  * @example
  * ```tsx
  * import { Radio, Checkbox, Dropdown, List } from 'react-console/selection';
@@ -23,6 +23,4 @@ export { formatOptionDisplay } from './components/selection/shared';
 export type { SelectOption } from './components/selection/shared';
 
 // Selection hooks
-export {
-  useSelection,
-} from './hooks/selection';
+export { useSelection } from './hooks/selection';

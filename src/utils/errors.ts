@@ -18,7 +18,11 @@ export enum ErrorType {
 /**
  * Error handler function type
  */
-export type ErrorHandler = (error: Error, type: ErrorType, context?: Record<string, unknown>) => void;
+export type ErrorHandler = (
+  error: Error,
+  type: ErrorType,
+  context?: Record<string, unknown>
+) => void;
 
 /**
  * Common error messages for better developer experience
@@ -34,21 +38,25 @@ export const ErrorMessages = {
     `Layout calculation failed.${details ? ` ${details}` : ''} Check your layout styles and constraints.`,
   COMPONENT: (component?: string, details?: string) =>
     `Component error${component ? ` in ${component}` : ''}.${details ? ` ${details}` : ''} Check component props and implementation.`,
-  UNKNOWN: (details?: string) =>
-    `An unexpected error occurred.${details ? ` ${details}` : ''}`,
+  UNKNOWN: (details?: string) => `An unexpected error occurred.${details ? ` ${details}` : ''}`,
 };
 
 /**
  * Helper to create helpful error messages
  */
-function createHelpfulErrorMessage(error: Error, type: ErrorType, context?: Record<string, unknown>): string {
-  const baseMessage = ErrorMessages[type]?.(
-    context?.component as string | undefined,
-    context?.details as string | undefined
-  ) || ErrorMessages.UNKNOWN(context?.details as string | undefined);
-  
+function createHelpfulErrorMessage(
+  error: Error,
+  type: ErrorType,
+  context?: Record<string, unknown>
+): string {
+  const baseMessage =
+    ErrorMessages[type]?.(
+      context?.component as string | undefined,
+      context?.details as string | undefined
+    ) || ErrorMessages.UNKNOWN(context?.details as string | undefined);
+
   const suggestions: string[] = [];
-  
+
   // Add context-specific suggestions
   if (context?.component) {
     suggestions.push(`Component: ${context.component}`);
@@ -59,9 +67,9 @@ function createHelpfulErrorMessage(error: Error, type: ErrorType, context?: Reco
   if (context?.value !== undefined) {
     suggestions.push(`Value: ${JSON.stringify(context.value)}`);
   }
-  
+
   const suggestionText = suggestions.length > 0 ? `\n  ${suggestions.join('\n  ')}` : '';
-  
+
   return `${baseMessage}${suggestionText}\n  Original error: ${error.message}`;
 }
 
@@ -109,21 +117,17 @@ export function reportError(
  */
 const deprecationWarnings = new Set<string>();
 
-export function deprecationWarning(
-  oldAPI: string,
-  newAPI: string,
-  version?: string
-): void {
+export function deprecationWarning(oldAPI: string, newAPI: string, version?: string): void {
   const key = `${oldAPI}->${newAPI}`;
   if (deprecationWarnings.has(key)) {
     return; // Only warn once per deprecation
   }
   deprecationWarnings.add(key);
-  
+
   const versionText = version ? ` (will be removed in v${version})` : '';
   console.warn(
     `[React Console Deprecation Warning] "${oldAPI}" is deprecated${versionText}. ` +
-    `Please use "${newAPI}" instead.`
+      `Please use "${newAPI}" instead.`
   );
 }
 
@@ -185,7 +189,7 @@ export function checkTerminalSupport(): {
     // Import here to avoid circular dependencies
     const { supportsColor } = require('./terminal');
     const { supportsMouse } = require('./mouse');
-    
+
     return {
       supportsColor: supportsColor(),
       supportsMouse: supportsMouse ? supportsMouse() : false,

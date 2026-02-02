@@ -20,17 +20,19 @@ export interface LayoutDebugInfo {
 export function getLayoutDebugInfo(node: ConsoleNode): LayoutDebugInfo {
   // Find bounds by searching all registered bounds
   const allBounds = componentBoundsRegistry.getAll();
-  const bounds = allBounds.find(b => b.component === node);
-  
+  const bounds = allBounds.find((b) => b.component === node);
+
   return {
     node,
     type: node.type,
-    position: bounds ? {
-      x: bounds.x,
-      y: bounds.y,
-      width: bounds.width,
-      height: bounds.height,
-    } : null,
+    position: bounds
+      ? {
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+        }
+      : null,
     style: node.style,
     children: node.children?.map(getLayoutDebugInfo) || [],
   };
@@ -44,15 +46,15 @@ export function formatLayoutDebugInfo(info: LayoutDebugInfo, indent = 0): string
   const posStr = info.position
     ? `@(${info.position.x},${info.position.y}) ${info.position.width}x${info.position.height}`
     : '(not rendered)';
-  
+
   let result = `${indentStr}${info.type} ${posStr}\n`;
-  
+
   if (info.children.length > 0) {
     for (const child of info.children) {
       result += formatLayoutDebugInfo(child, indent + 1);
     }
   }
-  
+
   return result;
 }
 
@@ -75,7 +77,7 @@ export function getAllComponentBounds(): Array<{
   height: number;
   zIndex: number;
 }> {
-  return componentBoundsRegistry.getAll().map(bounds => ({
+  return componentBoundsRegistry.getAll().map((bounds) => ({
     node: bounds.component,
     x: bounds.x,
     y: bounds.y,
@@ -94,8 +96,10 @@ export function getVisualLayoutInspector(
   highlightNode?: ConsoleNode
 ): string {
   const bounds = getAllComponentBounds();
-  const grid: string[][] = Array(height).fill(null).map(() => Array(width).fill(' '));
-  
+  const grid: string[][] = Array(height)
+    .fill(null)
+    .map(() => Array(width).fill(' '));
+
   // Fill grid with component indicators
   for (const bound of bounds) {
     const char = highlightNode && bound.node === highlightNode ? '█' : '░';
@@ -107,30 +111,30 @@ export function getVisualLayoutInspector(
       }
     }
   }
-  
+
   // Add border
-  const lines = grid.map(row => '│' + row.join('') + '│');
+  const lines = grid.map((row) => '│' + row.join('') + '│');
   const topBorder = '┌' + '─'.repeat(width) + '┐';
   const bottomBorder = '└' + '─'.repeat(width) + '┘';
-  
+
   return [topBorder, ...lines, bottomBorder].join('\n');
 }
 
 /**
  * Visual grid overlay - shows grid lines and cells
  */
-export function getVisualGridOverlay(
-  node: ConsoleNode,
-  width: number,
-  height: number
-): string {
-  const style = node.style as { gridTemplateColumns?: unknown; gridTemplateRows?: unknown } | undefined;
+export function getVisualGridOverlay(node: ConsoleNode, width: number, height: number): string {
+  const style = node.style as
+    | { gridTemplateColumns?: unknown; gridTemplateRows?: unknown }
+    | undefined;
   if (!style || (!style.gridTemplateColumns && !style.gridTemplateRows)) {
     return '';
   }
 
-  const grid: string[][] = Array(height).fill(null).map(() => Array(width).fill(' '));
-  
+  const grid: string[][] = Array(height)
+    .fill(null)
+    .map(() => Array(width).fill(' '));
+
   // Draw grid lines (simplified - would need actual grid calculation)
   // For now, show a basic grid pattern
   for (let y = 0; y < height; y++) {
@@ -140,28 +144,26 @@ export function getVisualGridOverlay(
       }
     }
   }
-  
-  const lines = grid.map(row => row.join(''));
+
+  const lines = grid.map((row) => row.join(''));
   return lines.join('\n');
 }
 
 /**
  * Visual flexbox overlay - shows flex container and items
  */
-export function getVisualFlexboxOverlay(
-  node: ConsoleNode,
-  width: number,
-  height: number
-): string {
+export function getVisualFlexboxOverlay(node: ConsoleNode, width: number, height: number): string {
   const style = node.style as { display?: string; flexDirection?: string } | undefined;
   if (!style || style.display !== 'flex') {
     return '';
   }
 
-  const grid: string[][] = Array(height).fill(null).map(() => Array(width).fill(' '));
+  const grid: string[][] = Array(height)
+    .fill(null)
+    .map(() => Array(width).fill(' '));
   const flexDirection = style.flexDirection || 'row';
   const isRow = flexDirection === 'row' || flexDirection === 'row-reverse';
-  
+
   // Draw flex direction indicator
   if (isRow) {
     // Horizontal arrow
@@ -174,15 +176,15 @@ export function getVisualFlexboxOverlay(
       grid[y]![0] = y === 0 ? '▼' : '│';
     }
   }
-  
-  const lines = grid.map(row => row.join(''));
+
+  const lines = grid.map((row) => row.join(''));
   return lines.join('\n');
 }
 
 /**
  * Layout warning types
  */
-export type LayoutWarning = 
+export type LayoutWarning =
   | { type: 'overflow'; node: ConsoleNode; message: string }
   | { type: 'negative-size'; node: ConsoleNode; message: string }
   | { type: 'invalid-grid'; node: ConsoleNode; message: string }
@@ -195,8 +197,8 @@ export type LayoutWarning =
 export function checkLayoutWarnings(node: ConsoleNode): LayoutWarning[] {
   const warnings: LayoutWarning[] = [];
   const bounds = getAllComponentBounds();
-  const nodeBounds = bounds.find(b => b.node === node);
-  
+  const nodeBounds = bounds.find((b) => b.node === node);
+
   if (nodeBounds) {
     // Check for negative or zero sizes
     if (nodeBounds.width <= 0) {
@@ -213,9 +215,10 @@ export function checkLayoutWarnings(node: ConsoleNode): LayoutWarning[] {
         message: `Node has invalid height: ${nodeBounds.height}`,
       });
     }
-    
+
     // Check for overflow (would need terminal dimensions)
-    const { width: termWidth, height: termHeight } = require('../utils/terminal').getTerminalDimensions();
+    const { width: termWidth, height: termHeight } =
+      require('../utils/terminal').getTerminalDimensions();
     if (nodeBounds.x + nodeBounds.width > termWidth) {
       warnings.push({
         type: 'overflow',
@@ -231,9 +234,16 @@ export function checkLayoutWarnings(node: ConsoleNode): LayoutWarning[] {
       });
     }
   }
-  
-  const style = node.style as { display?: string; gridTemplateColumns?: unknown; gridTemplateRows?: unknown; flexDirection?: unknown } | undefined;
-  
+
+  const style = node.style as
+    | {
+        display?: string;
+        gridTemplateColumns?: unknown;
+        gridTemplateRows?: unknown;
+        flexDirection?: unknown;
+      }
+    | undefined;
+
   // Check grid-specific warnings
   if (style?.display === 'grid') {
     if (!style.gridTemplateColumns && !style.gridTemplateRows) {
@@ -244,7 +254,7 @@ export function checkLayoutWarnings(node: ConsoleNode): LayoutWarning[] {
       });
     }
   }
-  
+
   // Check flexbox-specific warnings
   if (style?.display === 'flex') {
     if (!node.children || node.children.length === 0) {
@@ -255,9 +265,14 @@ export function checkLayoutWarnings(node: ConsoleNode): LayoutWarning[] {
       });
     }
   }
-  
+
   // Check for missing size on positioned elements
-  if (style && 'position' in style && style.position !== 'static' && style.position !== 'relative') {
+  if (
+    style &&
+    'position' in style &&
+    style.position !== 'static' &&
+    style.position !== 'relative'
+  ) {
     const hasSize = 'width' in style || 'height' in style;
     if (!hasSize && !node.content) {
       warnings.push({
@@ -267,14 +282,14 @@ export function checkLayoutWarnings(node: ConsoleNode): LayoutWarning[] {
       });
     }
   }
-  
+
   // Recursively check children
   if (node.children) {
     for (const child of node.children) {
       warnings.push(...checkLayoutWarnings(child));
     }
   }
-  
+
   return warnings;
 }
 
@@ -285,8 +300,8 @@ export function formatLayoutWarnings(warnings: LayoutWarning[]): string {
   if (warnings.length === 0) {
     return 'No layout warnings';
   }
-  
-  return warnings.map(w => `[${w.type}] ${w.message}`).join('\n');
+
+  return warnings.map((w) => `[${w.type}] ${w.message}`).join('\n');
 }
 
 /**

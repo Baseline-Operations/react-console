@@ -87,10 +87,10 @@ export const routeGuardRegistry = new RouteGuardRegistry();
 
 /**
  * Register a route guard
- * 
+ *
  * @param path - Route path to guard
  * @param guard - Guard function that returns true to allow, false to block, or a redirect path
- * 
+ *
  * @example
  * ```ts
  * // Block access to admin routes
@@ -108,7 +108,7 @@ export function registerRouteGuard(path: string, guard: RouteGuard): void {
 
 /**
  * Check if navigation to a route is allowed
- * 
+ *
  * @param from - Current route path
  * @param to - Target route path
  * @param parsedArgs - Parsed command-line arguments

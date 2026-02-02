@@ -27,7 +27,7 @@ export interface CLIAppProps extends StyleProps {
 /**
  * CLIApp component
  * Root wrapper for CLI applications that provides metadata and initialization
- * 
+ *
  * @example
  * ```tsx
  * <CLIApp name="my-app" version="1.0.0" description="My CLI app">

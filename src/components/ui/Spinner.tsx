@@ -29,17 +29,17 @@ const DEFAULT_SPEED = 100;
 
 /**
  * Spinner component - Animated loading indicator
- * 
+ *
  * Displays an animated spinner with different styles and optional label.
  * Automatically animates when rendered.
- * 
+ *
  * @param props - Spinner component props
  * @returns React element representing a spinner
- * 
+ *
  * @example
  * ```tsx
  * <Spinner label="Loading..." />
- * 
+ *
  * <Spinner style="dots" color="cyan" speed={80} />
  * ```
  */
@@ -69,7 +69,10 @@ export function Spinner({
   const content = label ? `${currentFrame} ${label}` : currentFrame;
 
   // Merge className with style prop and legacy style props
-  const mergedStyle = mergeClassNameAndStyle(className, cssStyle, { color, ...styleProps }) as TextStyle;
+  const mergedStyle = mergeClassNameAndStyle(className, cssStyle, {
+    color,
+    ...styleProps,
+  }) as TextStyle;
 
   return createConsoleNode('text', {
     content,

@@ -16,7 +16,7 @@ export interface MiddlewareStoppedProps extends StyleProps {
 /**
  * MiddlewareStopped component
  * Displays message when command execution is stopped by middleware
- * 
+ *
  * @example
  * ```tsx
  * <MiddlewareStopped message="Command execution was stopped by middleware" />

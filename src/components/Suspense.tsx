@@ -17,16 +17,16 @@ export interface SuspenseProps {
 
 /**
  * Suspense component - React Suspense boundary for async operations
- * 
+ *
  * Wraps components that use async data fetching or lazy loading.
  * Shows fallback UI while async operations are in progress.
- * 
+ *
  * @example
  * ```tsx
  * <Suspense fallback={<Spinner label="Loading..." />}>
  *   <AsyncComponent />
  * </Suspense>
- * 
+ *
  * <Suspense loadingText="Loading data...">
  *   <LazyComponent />
  * </Suspense>
@@ -45,9 +45,5 @@ export function Suspense({
     </View>
   );
 
-  return (
-    <ReactSuspense fallback={fallback || defaultFallback}>
-      {children}
-    </ReactSuspense>
-  );
+  return <ReactSuspense fallback={fallback || defaultFallback}>{children}</ReactSuspense>;
 }

@@ -1,6 +1,6 @@
 /**
  * Theme context for renderer
- * 
+ *
  * Provides a way for the renderer to access the current theme without React context.
  * This is needed because the renderer operates outside of React's component tree.
  */
@@ -16,7 +16,7 @@ let currentTheme: Theme = defaultTheme;
 
 /**
  * Set the current theme (called by ThemeProvider)
- * 
+ *
  * @internal
  * This is called by ThemeProvider to update the theme for the renderer.
  */
@@ -26,7 +26,7 @@ export function setRendererTheme(theme: Theme): void {
 
 /**
  * Get the current theme (for renderer use)
- * 
+ *
  * @internal
  * Used by the renderer to access the current theme when rendering components.
  */

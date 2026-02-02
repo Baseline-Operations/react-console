@@ -10,7 +10,7 @@ import type { ComponentMetadata } from '../../../utils/cli/matcher';
 /**
  * Find command metadata by path
  * Recursively searches metadata tree to find command matching the given path
- * 
+ *
  * @param metadata - Component metadata array
  * @param path - Command path to match
  * @param index - Current index in path (for recursion)
@@ -22,7 +22,7 @@ export function findCommandMetadata(
   index: number = 0
 ): ComponentMetadata | null {
   if (index >= path.length) return null;
-  
+
   const cmdName = path[index]!;
   for (const item of metadata) {
     if (item.type === 'command' && (item.name === cmdName || item.aliases?.includes(cmdName))) {
@@ -42,7 +42,7 @@ export function findCommandMetadata(
 /**
  * Find route metadata by path
  * Searches metadata array to find route matching the given path
- * 
+ *
  * @param metadata - Component metadata array
  * @param routePath - Route path to match
  * @returns Matching metadata or null
@@ -61,29 +61,34 @@ export function findRouteMetadata(
 
 /**
  * Get matched metadata for current command/route
- * 
+ *
  * @param matchResult - Result from matchComponent
  * @param parsedArgs - Parsed command-line arguments
  * @param metadata - All component metadata
  * @returns Matched metadata or null
  */
 export function getMatchedMetadata(
-  matchResult: { isDefault: boolean; component?: ReactNode; route?: string; routeParams?: Record<string, string> },
+  matchResult: {
+    isDefault: boolean;
+    component?: ReactNode;
+    route?: string;
+    routeParams?: Record<string, string>;
+  },
   parsedArgs: ParsedArgs,
   metadata: ComponentMetadata[]
 ): ComponentMetadata | null {
   if (matchResult.isDefault || !matchResult.component) {
     return null;
   }
-  
+
   // Find the metadata that matches the current command/route
   if (parsedArgs.command.length > 0) {
     return findCommandMetadata(metadata, parsedArgs.command, 0);
   }
-  
+
   if (matchResult.route) {
     return findRouteMetadata(metadata, matchResult.route);
   }
-  
+
   return null;
 }

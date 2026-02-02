@@ -28,14 +28,14 @@ export function HelpWrapper({ help, autoExit = true, exitCode = 0 }: HelpWrapper
       const timer = setTimeout(() => {
         exit(exitCode);
       }, 50); // Small delay to ensure rendering completes
-      
+
       return () => {
         clearTimeout(timer);
       };
     }
     return undefined; // Return undefined if autoExit is false
   }, [autoExit, exitCode]);
-  
+
   // Wrap help in a Box to ensure proper rendering
   return <Box>{help}</Box>;
 }

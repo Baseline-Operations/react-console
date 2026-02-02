@@ -13,17 +13,21 @@ import { BorderStyle as BorderStyleEnum } from '../../nodes/base/types';
 export class BorderStyleMixin implements StyleMixin<Node> {
   name = 'BorderStyle';
   priority = 60;
-  
+
   appliesTo(node: Node): node is Node {
     // Applies to nodes with borders
-    return node.border.show.top || node.border.show.right || 
-           node.border.show.bottom || node.border.show.left;
+    return (
+      node.border.show.top ||
+      node.border.show.right ||
+      node.border.show.bottom ||
+      node.border.show.left
+    );
   }
-  
+
   apply(_node: Node): void {
     // Border-specific setup
   }
-  
+
   getDefaultStyle(): StyleMap {
     return {
       border: false,
@@ -33,7 +37,7 @@ export class BorderStyleMixin implements StyleMixin<Node> {
       borderWidth: 1,
     };
   }
-  
+
   getInheritableProperties(): string[] {
     return ['borderColor', 'borderBackgroundColor'];
   }

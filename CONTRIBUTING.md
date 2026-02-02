@@ -17,22 +17,26 @@ By participating in this project, you agree to maintain a respectful and inclusi
 ### Development Setup
 
 1. **Fork and clone the repository:**
+
    ```bash
    git clone https://github.com/your-username/react-console.git
    cd react-console
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Build the project:**
+
    ```bash
    npm run build
    ```
 
 4. **Run tests:**
+
    ```bash
    npm test
    ```
@@ -66,6 +70,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -75,6 +80,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```
 feat(cli): add support for nested commands
 
@@ -86,6 +92,7 @@ docs: update API documentation for CommandRouter
 ### Pull Request Process
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -97,6 +104,7 @@ docs: update API documentation for CommandRouter
    - Update documentation as needed
 
 3. **Run checks locally:**
+
    ```bash
    npm run lint        # Check code style
    npm run typecheck   # Type check
@@ -105,12 +113,14 @@ docs: update API documentation for CommandRouter
    ```
 
 4. **Commit your changes:**
+
    ```bash
    git add .
    git commit -m "feat: your feature description"
    ```
 
 5. **Push to your fork:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -245,6 +255,7 @@ Releases are handled by maintainers:
 ## Recognition
 
 Contributors will be recognized in:
+
 - README.md contributors section
 - Release notes
 - Project documentation

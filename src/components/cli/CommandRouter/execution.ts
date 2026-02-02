@@ -13,7 +13,7 @@ import { validateCommandParams } from '../../../utils/cli/paramValidator';
 /**
  * Execute middleware chain
  * Runs command-specific middleware first, then global middleware
- * 
+ *
  * @param matchedMetadata - Matched component metadata
  * @param normalizedArgs - Normalized parsed arguments
  * @param isDefault - Whether this is the default component
@@ -53,7 +53,7 @@ export function executeMiddlewareChain(
 
 /**
  * Execute before lifecycle hooks
- * 
+ *
  * @param matchedMetadata - Matched component metadata
  * @param normalizedArgs - Normalized parsed arguments
  * @param middlewareArgs - Arguments after middleware processing
@@ -83,7 +83,7 @@ export async function executeBeforeHooksChain(
 
 /**
  * Execute after lifecycle hooks
- * 
+ *
  * @param matchedMetadata - Matched component metadata
  * @param normalizedArgs - Normalized parsed arguments
  * @param middlewareArgs - Arguments after middleware processing
@@ -113,7 +113,7 @@ export async function executeAfterHooksChain(
 
 /**
  * Validate command parameters
- * 
+ *
  * @param matchedMetadata - Matched component metadata
  * @param middlewareArgs - Arguments after middleware processing
  * @param isDefault - Whether this is the default component
@@ -127,6 +127,6 @@ export function validateCommandParameters(
   if (!matchedMetadata || isDefault) {
     return null;
   }
-  
+
   return validateCommandParams(middlewareArgs, matchedMetadata);
 }

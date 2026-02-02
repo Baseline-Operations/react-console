@@ -55,7 +55,7 @@ export function generateEnhancedCompletions(
 
   // Get base completions
   const baseResult = generateCompletions(context.commandPath, metadata, parsedArgs);
-  
+
   if (baseResult.suggestions.length === 0) {
     return baseResult;
   }
@@ -65,7 +65,7 @@ export function generateEnhancedCompletions(
   // Filter by prefix if enabled
   if (filterByPrefix && context.currentWord) {
     const prefix = context.currentWord.toLowerCase();
-    suggestions = suggestions.filter(s => s.toLowerCase().startsWith(prefix));
+    suggestions = suggestions.filter((s) => s.toLowerCase().startsWith(prefix));
   }
 
   // Apply fuzzy matching if enabled
@@ -88,24 +88,21 @@ export function generateEnhancedCompletions(
 /**
  * Fuzzy match suggestions using simple similarity
  */
-function fuzzyMatchSuggestions(
-  query: string,
-  candidates: string[]
-): string[] {
+function fuzzyMatchSuggestions(query: string, candidates: string[]): string[] {
   const queryLower = query.toLowerCase();
-  const scores = candidates.map(candidate => {
+  const scores = candidates.map((candidate) => {
     const candidateLower = candidate.toLowerCase();
-    
+
     // Exact prefix match gets highest score
     if (candidateLower.startsWith(queryLower)) {
       return { candidate, score: 100 };
     }
-    
+
     // Contains match gets medium score
     if (candidateLower.includes(queryLower)) {
       return { candidate, score: 50 };
     }
-    
+
     // Calculate character overlap
     let overlap = 0;
     for (const char of queryLower) {
@@ -113,7 +110,7 @@ function fuzzyMatchSuggestions(
         overlap++;
       }
     }
-    
+
     const score = (overlap / queryLower.length) * 30;
     return { candidate, score };
   });
@@ -121,9 +118,9 @@ function fuzzyMatchSuggestions(
   // Sort by score and return top matches
   scores.sort((a, b) => b.score - a.score);
   return scores
-    .filter(s => s.score > 0)
+    .filter((s) => s.score > 0)
     .slice(0, 5)
-    .map(s => s.candidate);
+    .map((s) => s.candidate);
 }
 
 /**

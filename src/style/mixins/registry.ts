@@ -14,33 +14,33 @@ import { BorderStyleMixin } from './BorderStyleMixin';
  */
 export class StyleMixinRegistry {
   private static mixins = new Map<string, StyleMixin>();
-  
+
   /**
    * Register a style mixin
    */
   static register<TNode extends Node>(mixin: StyleMixin<TNode>): void {
     this.mixins.set(mixin.name, mixin);
   }
-  
+
   /**
    * Get a style mixin by name
    */
   static get(name: string): StyleMixin | undefined {
     return this.mixins.get(name);
   }
-  
+
   /**
    * Get all style mixins, sorted by priority
    */
   static getAll(): StyleMixin[] {
     return Array.from(this.mixins.values()).sort((a, b) => a.priority - b.priority);
   }
-  
+
   /**
    * Get all style mixins that apply to a given node
    */
   static getApplicableMixins(node: Node): StyleMixin[] {
-    return this.getAll().filter(mixin => mixin.appliesTo(node));
+    return this.getAll().filter((mixin) => mixin.appliesTo(node));
   }
 }
 

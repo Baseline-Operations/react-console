@@ -14,7 +14,7 @@ describe('Node', () => {
     expect(node2.id).toBeDefined();
     expect(node1.id).not.toBe(node2.id);
   });
-  
+
   it('should have box model properties', () => {
     const node = new BoxNode();
     expect(node.width).toBeNull();
@@ -23,24 +23,24 @@ describe('Node', () => {
     expect(node.padding).toBeDefined();
     expect(node.border).toBeDefined();
   });
-  
+
   it('should manage children', () => {
     const parent = new BoxNode();
     const child1 = new TextNode();
     const child2 = new TextNode();
-    
+
     parent.appendChild(child1);
     parent.appendChild(child2);
-    
+
     expect(parent.children).toHaveLength(2);
     expect(child1.parent).toBe(parent);
     expect(child2.parent).toBe(parent);
-    
+
     parent.removeChild(child1);
     expect(parent.children).toHaveLength(1);
     expect(child1.parent).toBeNull();
   });
-  
+
   it('should calculate content area', () => {
     const node = new BoxNode();
     node.width = 10;
@@ -49,7 +49,7 @@ describe('Node', () => {
     node.border.width = { top: 1, right: 1, bottom: 1, left: 1 };
     // Set bounds (required for calculateContentArea)
     node.bounds = { x: 0, y: 0, width: 10, height: 5 };
-    
+
     const contentArea = node.calculateContentArea();
     // Content area = bounds - border - padding
     // Width: 10 - 1 (left border) - 1 (right border) - 1 (left padding) - 1 (right padding) = 6

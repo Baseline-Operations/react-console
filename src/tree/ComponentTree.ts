@@ -11,7 +11,7 @@ import { ComponentInstance } from './ComponentInstance';
 export class ComponentTree {
   private instances: Map<Node, ComponentInstance> = new Map();
   private root: ComponentInstance | null = null;
-  
+
   /**
    * Create or get component instance for a node
    */
@@ -24,50 +24,50 @@ export class ComponentTree {
     }
     return instance;
   }
-  
+
   /**
    * Mount a node to the tree
    */
   mount(node: Node, parent: Node | null): void {
     const instance = this.instances.get(node);
     if (!instance) return;
-    
-    const parentInstance = parent ? this.instances.get(parent) ?? null : null;
+
+    const parentInstance = parent ? (this.instances.get(parent) ?? null) : null;
     instance.mount(parentInstance);
-    
+
     if (!this.root && !parent) {
       this.root = instance;
     }
   }
-  
+
   /**
    * Unmount a node from the tree
    */
   unmount(node: Node): void {
     const instance = this.instances.get(node);
     if (!instance) return;
-    
+
     instance.unmount();
-    
+
     if (this.root === instance) {
       this.root = null;
     }
   }
-  
+
   /**
    * Get instance for a node
    */
   getInstance(node: Node): ComponentInstance | undefined {
     return this.instances.get(node);
   }
-  
+
   /**
    * Get root instance
    */
   getRoot(): ComponentInstance | null {
     return this.root;
   }
-  
+
   /**
    * Clear all instances
    */
@@ -82,11 +82,11 @@ export class ComponentTree {
  */
 class ComponentTreeRegistry {
   private static tree: ComponentTree = new ComponentTree();
-  
+
   static get(): ComponentTree {
     return this.tree;
   }
-  
+
   static reset(): void {
     this.tree = new ComponentTree();
   }

@@ -64,7 +64,7 @@ class ConfigManager {
 
     for (const [key, value] of Object.entries(env)) {
       if (value === undefined) continue;
-      
+
       let configKey = key;
       if (prefixPattern) {
         const match = key.match(prefixPattern);
@@ -82,7 +82,7 @@ class ConfigManager {
       else if (value === 'null' || value === '') typedValue = null;
       else if (/^-?\d+$/.test(value)) typedValue = parseInt(value, 10);
       else if (/^-?\d*\.\d+$/.test(value)) typedValue = parseFloat(value);
-      else if (value.includes(',')) typedValue = value.split(',').map(v => v.trim());
+      else if (value.includes(',')) typedValue = value.split(',').map((v) => v.trim());
 
       this.envConfig[configKey] = typedValue;
     }
@@ -244,7 +244,10 @@ export function getConfig<T extends ConfigValue = ConfigValue>(key: string): T |
 /**
  * Get configuration value with default
  */
-export function getConfigWithDefault<T extends ConfigValue = ConfigValue>(key: string, defaultValue: T): T {
+export function getConfigWithDefault<T extends ConfigValue = ConfigValue>(
+  key: string,
+  defaultValue: T
+): T {
   return configManager.getWithDefault<T>(key, defaultValue);
 }
 

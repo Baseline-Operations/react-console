@@ -12,14 +12,20 @@ export interface ColumnProps extends ComponentEventHandlers, StyleProps {
   className?: string | string[]; // Class names for style libraries
   gap?: number;
   alignItems?: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'baseline';
-  justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly';
+  justifyContent?:
+    | 'flex-start'
+    | 'flex-end'
+    | 'center'
+    | 'space-between'
+    | 'space-around'
+    | 'space-evenly';
 }
 
 /**
  * Column component - Vertical flex container
- * 
+ *
  * Shorthand for `<View style={{ display: 'flex', flexDirection: 'column' }}>`
- * 
+ *
  * @example
  * ```tsx
  * <Column gap={1} alignItems="stretch">
@@ -46,7 +52,7 @@ export function Column({
     justifyContent,
     ...style,
   });
-  
+
   return createConsoleNode('box', {
     children,
     style: mergedStyle,

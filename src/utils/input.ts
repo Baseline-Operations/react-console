@@ -1,9 +1,9 @@
 /**
  * Input utilities for formatting, validation, and type conversion
- * 
+ *
  * Utilities for converting input values to strings, validating input, and formatting
  * display values. Component-specific validation and formatting utilities.
- * 
+ *
  * Note: For generic validation utilities with type safety, see `validation.ts`
  */
 
@@ -11,17 +11,17 @@ import type { ConsoleNode } from '../types';
 
 /**
  * Convert a value to a string for display
- * 
+ *
  * Converts various value types to string representation:
  * - Strings: returned as-is
  * - Numbers: converted to string
  * - Booleans: 'true' or 'false'
  * - Arrays: joined with ', '
  * - undefined/null: empty string
- * 
+ *
  * @param value - Value to convert (string, number, boolean, array, or undefined)
  * @returns String representation of value
- * 
+ *
  * @example
  * ```ts
  * valueToString('hello'); // 'hello'
@@ -31,7 +31,9 @@ import type { ConsoleNode } from '../types';
  * valueToString(undefined); // ''
  * ```
  */
-export function valueToString(value: string | number | boolean | string[] | number[] | undefined): string {
+export function valueToString(
+  value: string | number | boolean | string[] | number[] | undefined
+): string {
   if (value === undefined || value === null) {
     return '';
   }
@@ -52,13 +54,13 @@ export function valueToString(value: string | number | boolean | string[] | numb
 
 /**
  * Get the string length of a value
- * 
+ *
  * Returns the length of the string representation of a value.
  * Convenience function that calls `valueToString` and returns its length.
- * 
+ *
  * @param value - Value to measure (string, number, boolean, array, or undefined)
  * @returns Length of string representation
- * 
+ *
  * @example
  * ```ts
  * getValueLength('hello'); // 5
@@ -66,14 +68,16 @@ export function valueToString(value: string | number | boolean | string[] | numb
  * getValueLength([1, 2, 3]); // 7 ('1, 2, 3'.length)
  * ```
  */
-export function getValueLength(value: string | number | boolean | string[] | number[] | undefined): number {
+export function getValueLength(
+  value: string | number | boolean | string[] | number[] | undefined
+): number {
   return valueToString(value).length;
 }
 
 /**
  * Validate and format number input
  * Uses generic validation utilities internally
- * 
+ *
  * @deprecated Consider using `validateNumber` from './validation' for generic validation
  * This function is kept for backward compatibility and includes display formatting
  */
@@ -82,14 +86,14 @@ export function validateNumberInput(
   node: ConsoleNode
 ): { valid: boolean; value: number | null; displayValue: string } {
   const inputType = node.inputType || 'text';
-  
+
   if (inputType !== 'number') {
     return { valid: true, value: null, displayValue: input };
   }
 
   // Remove non-numeric characters except decimal point and minus
   let cleaned = input.replace(/[^\d.-]/g, '');
-  
+
   // Handle decimal places
   const allowDecimals = node.allowDecimals !== false; // Default to true for number type
   if (!allowDecimals) {
@@ -141,14 +145,14 @@ export function validateNumberInput(
 
 /**
  * Format value by display format type
- * 
+ *
  * Formats a value according to a predefined format type (currency, percentage, number).
  * Supports common display formats for numbers and strings.
- * 
+ *
  * @param value - Value to format (number or string)
  * @param format - Format type: 'currency', 'percentage', 'number'
  * @returns Formatted string
- * 
+ *
  * @example
  * ```ts
  * formatByType(123.45, 'currency'); // '$123.45'
@@ -171,14 +175,14 @@ export function formatByType(value: number | string, format: string): string {
 
 /**
  * Validate input against regex pattern
- * 
+ *
  * Validates input string against a regex pattern (provided as string or RegExp).
  * Returns true if pattern matches or if no pattern provided.
- * 
+ *
  * @param input - Input string to validate
  * @param pattern - Regex pattern (string or RegExp) to match against
  * @returns True if input matches pattern (or no pattern provided), false otherwise
- * 
+ *
  * @example
  * ```ts
  * validatePattern('hello@example.com', /^[^\s@]+@[^\s@]+\.[^\s@]+$/); // true
@@ -190,7 +194,7 @@ export function validatePattern(input: string, pattern?: string | RegExp): boole
   if (!pattern) {
     return true;
   }
-  
+
   const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
   return regex.test(input);
 }

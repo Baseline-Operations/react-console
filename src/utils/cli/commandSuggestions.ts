@@ -29,9 +29,9 @@ export function levenshteinDistance(str1: string, str2: string): number {
         matrix[i]![j] = matrix[i - 1]![j - 1]!;
       } else {
         matrix[i]![j] = Math.min(
-          matrix[i - 1]![j]! + 1,     // deletion
-          matrix[i]![j - 1]! + 1,     // insertion
-          matrix[i - 1]![j - 1]! + 1  // substitution
+          matrix[i - 1]![j]! + 1, // deletion
+          matrix[i]![j - 1]! + 1, // insertion
+          matrix[i - 1]![j - 1]! + 1 // substitution
         );
       }
     }
@@ -45,7 +45,7 @@ export function levenshteinDistance(str1: string, str2: string): number {
  */
 export function getAllCommandNames(metadata: ComponentMetadata[]): string[] {
   const names: string[] = [];
-  
+
   for (const item of metadata) {
     if (item.type === 'command') {
       if (item.name) {
@@ -60,7 +60,7 @@ export function getAllCommandNames(metadata: ComponentMetadata[]): string[] {
       }
     }
   }
-  
+
   return names;
 }
 
@@ -73,36 +73,39 @@ export function findSimilarCommands(
   metadata: ComponentMetadata[]
 ): string[] {
   const allCommands = getAllCommandNames(metadata);
-  
+
   if (allCommands.length === 0) {
     return [];
   }
 
   // Calculate distances and sort
-  const distances = allCommands.map(cmd => ({
+  const distances = allCommands.map((cmd) => ({
     name: cmd,
     distance: levenshteinDistance(unknownCommand.toLowerCase(), cmd.toLowerCase()),
   }));
 
   // Sort by distance and take top 3
   distances.sort((a, b) => a.distance - b.distance);
-  
+
   // Filter to reasonable suggestions (distance <= 3 or prefix match)
   const suggestions = distances
-    .filter(d => {
+    .filter((d) => {
       const cmdLower = d.name.toLowerCase();
       const unknownLower = unknownCommand.toLowerCase();
-      return d.distance <= 3 || cmdLower.startsWith(unknownLower.slice(0, Math.min(3, unknownLower.length)));
+      return (
+        d.distance <= 3 ||
+        cmdLower.startsWith(unknownLower.slice(0, Math.min(3, unknownLower.length)))
+      );
     })
     .slice(0, 3)
-    .map(d => d.name);
+    .map((d) => d.name);
 
   return suggestions;
 }
 
 /**
  * Format unknown command error message
- * 
+ *
  * @deprecated Use UnknownCommandError component instead (TSX)
  * This function is kept for backward compatibility but should not be used in new code
  */
@@ -114,10 +117,10 @@ export function formatUnknownCommandError(
 ): string {
   const fullCommand = commandPath.join(' ');
   const lines: string[] = [];
-  
+
   lines.push(`Unknown command: '${fullCommand}'`);
   lines.push('');
-  
+
   if (suggestions.length > 0) {
     lines.push('Did you mean one of these?');
     for (const suggestion of suggestions) {
@@ -125,8 +128,8 @@ export function formatUnknownCommandError(
     }
     lines.push('');
   }
-  
+
   lines.push(`Use '${appName || 'app'} --help' to see all available commands.`);
-  
+
   return lines.join('\n');
 }

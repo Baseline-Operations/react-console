@@ -16,7 +16,7 @@ export type GuardResult =
 
 /**
  * Check route guards and handle redirects
- * 
+ *
  * @param matchedMetadata - Matched component metadata
  * @param matchResult - Result from matchComponent
  * @param parsedArgs - Parsed command-line arguments

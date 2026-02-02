@@ -22,7 +22,7 @@ export interface UnknownCommandErrorProps extends StyleProps {
 /**
  * UnknownCommandError component
  * Displays unknown command error with suggestions
- * 
+ *
  * @example
  * ```tsx
  * <UnknownCommandError
@@ -47,17 +47,20 @@ export function UnknownCommandError({
       <Text style={{ color: 'red' }}>Error:</Text>
       <Text>Unknown command: &apos;{fullCommand}&apos;</Text>
       <Text></Text>
-      
+
       {suggestions.length > 0 && (
         <>
           <Text>Did you mean one of these?</Text>
           {suggestions.map((suggestion, index) => (
-            <Text key={index}>  {appNameOrApp} {suggestion}</Text>
+            <Text key={index}>
+              {' '}
+              {appNameOrApp} {suggestion}
+            </Text>
           ))}
           <Text></Text>
         </>
       )}
-      
+
       <Text>Use &apos;{appNameOrApp} --help&apos; to see all available commands.</Text>
     </Box>
   );

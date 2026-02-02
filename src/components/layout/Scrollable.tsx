@@ -8,10 +8,10 @@ import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
 
 /**
  * Props for the Scrollable component
- * 
+ *
  * Provides scrollable container functionality for overflow content.
  * Supports vertical and horizontal scrolling with scroll position control.
- * 
+ *
  * @example
  * ```tsx
  * <Scrollable scrollTop={10} maxHeight={20}>
@@ -30,14 +30,14 @@ export interface ScrollableProps extends LayoutProps, StyleProps {
 
 /**
  * Scrollable component - Container with scroll support for overflow content
- * 
+ *
  * Provides scrollable container for content that overflows visible area.
  * Supports vertical and horizontal scrolling with scroll position control.
  * Content beyond maxHeight/maxWidth is accessible via scrolling.
- * 
+ *
  * @param props - Scrollable component props
  * @returns React element representing a scrollable container
- * 
+ *
  * @example
  * ```tsx
  * <Scrollable scrollTop={scrollPosition} maxHeight={20}>
@@ -57,7 +57,7 @@ export function Scrollable({
 }: ScrollableProps) {
   // Merge className with style prop and legacy props
   const mergedStyle = mergeClassNameAndStyle(className, style, props);
-  
+
   return createConsoleNode('scrollable', {
     scrollTop,
     scrollLeft,

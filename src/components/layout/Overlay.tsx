@@ -8,10 +8,10 @@ import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
 
 /**
  * Props for the Overlay component
- * 
+ *
  * Provides modal/popup functionality with layering and backdrop support.
  * Overlays render on top of other content with configurable z-index.
- * 
+ *
  * @example
  * ```tsx
  * <Overlay zIndex={2000} backdrop={true} backdropColor="black">
@@ -29,14 +29,14 @@ export interface OverlayProps extends LayoutProps, StyleProps {
 
 /**
  * Overlay component - Layered rendering for modals and popups
- * 
+ *
  * Provides modal/popup functionality with layering support. Overlays render
  * on top of other content with configurable z-index and optional backdrop.
  * Supports focus trapping (focus remains within overlay when open).
- * 
+ *
  * @param props - Overlay component props
  * @returns React element representing an overlay container
- * 
+ *
  * @example
  * ```tsx
  * <Overlay zIndex={2000} backdrop={true}>
@@ -45,18 +45,18 @@ export interface OverlayProps extends LayoutProps, StyleProps {
  * </Overlay>
  * ```
  */
-export function Overlay({ 
-  children, 
-  zIndex = 1000, 
-  backdrop = false, 
-  backdropColor, 
+export function Overlay({
+  children,
+  zIndex = 1000,
+  backdrop = false,
+  backdropColor,
   className,
   style,
-  ...props 
+  ...props
 }: OverlayProps) {
   // Merge className with style prop and legacy props
   const mergedStyle = mergeClassNameAndStyle(className, style, props);
-  
+
   return createConsoleNode('overlay', {
     zIndex,
     backdrop,

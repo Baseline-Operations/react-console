@@ -3,10 +3,7 @@
  * Re-exports all focus-related utilities
  */
 
-export {
-  collectInteractiveComponents,
-  assignTabIndexes,
-} from './collection';
+export { collectInteractiveComponents, assignTabIndexes } from './collection';
 
 export {
   findAllOverlays,
@@ -16,6 +13,4 @@ export {
   disableComponent,
 } from './management';
 
-export {
-  handleTabNavigation,
-} from './navigation';
+export { handleTabNavigation } from './navigation';

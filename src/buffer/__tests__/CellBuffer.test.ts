@@ -53,7 +53,7 @@ describe('CellBuffer', () => {
     it('should ignore out of bounds coordinates', () => {
       buffer.setCell(-1, 0, { char: 'X' });
       buffer.setCell(100, 0, { char: 'X' });
-      
+
       // Should not throw
       expect(buffer.getCell(-1, 0)).toBeNull();
       expect(buffer.getCell(100, 0)).toBeNull();
@@ -62,7 +62,7 @@ describe('CellBuffer', () => {
     it('should mark cell as dirty when changed', () => {
       buffer.markClean();
       buffer.setCell(0, 0, { char: 'A' });
-      
+
       expect(buffer.isDirty()).toBe(true);
     });
   });
@@ -70,7 +70,7 @@ describe('CellBuffer', () => {
   describe('setChar', () => {
     it('should set character with colors', () => {
       buffer.setChar(0, 0, 'X', 'green', 'yellow');
-      
+
       const cell = buffer.getCell(0, 0);
       expect(cell?.char).toBe('X');
       expect(cell?.foreground).toBe('green');
@@ -82,7 +82,7 @@ describe('CellBuffer', () => {
         bold: true,
         italic: true,
       });
-      
+
       const cell = buffer.getCell(0, 0);
       expect(cell?.bold).toBe(true);
       expect(cell?.italic).toBe(true);
@@ -109,7 +109,7 @@ describe('CellBuffer', () => {
 
     it('should clip to buffer bounds', () => {
       buffer.fillRegion(-5, -5, 100, 100, { char: 'X' });
-      
+
       // Should fill entire buffer
       expect(buffer.getCell(0, 0)?.char).toBe('X');
       expect(buffer.getCell(9, 4)?.char).toBe('X');
@@ -143,9 +143,9 @@ describe('CellBuffer', () => {
     it('should preserve existing content when growing', () => {
       buffer.setCell(0, 0, { char: 'A' });
       buffer.setCell(5, 3, { char: 'B' });
-      
+
       buffer.resize(20, 10);
-      
+
       expect(buffer.width).toBe(20);
       expect(buffer.height).toBe(10);
       expect(buffer.getCell(0, 0)?.char).toBe('A');
@@ -154,9 +154,9 @@ describe('CellBuffer', () => {
 
     it('should truncate when shrinking', () => {
       buffer.setCell(9, 4, { char: 'Z' });
-      
+
       buffer.resize(5, 3);
-      
+
       expect(buffer.width).toBe(5);
       expect(buffer.height).toBe(3);
       expect(buffer.getCell(9, 4)).toBeNull();
@@ -166,7 +166,7 @@ describe('CellBuffer', () => {
   describe('writeString', () => {
     it('should write a horizontal string', () => {
       const written = buffer.writeString(1, 1, 'Hello', 'white', 'black');
-      
+
       expect(written).toBe(5);
       expect(buffer.getCell(1, 1)?.char).toBe('H');
       expect(buffer.getCell(2, 1)?.char).toBe('e');
@@ -177,7 +177,7 @@ describe('CellBuffer', () => {
 
     it('should truncate at buffer edge', () => {
       const written = buffer.writeString(8, 0, 'Hello');
-      
+
       // Should only write 2 characters (positions 8 and 9)
       expect(written).toBe(2);
       expect(buffer.getCell(8, 0)?.char).toBe('H');
@@ -199,7 +199,7 @@ describe('CellBuffer', () => {
       buffer.markClean();
       buffer.setCell(2, 2, { char: 'X' });
       buffer.setCell(5, 3, { char: 'Y' });
-      
+
       const regions = buffer.getDirtyRegions();
       expect(regions.length).toBeGreaterThan(0);
     });
@@ -209,7 +209,7 @@ describe('CellBuffer', () => {
     it('should iterate over all cells', () => {
       let count = 0;
       buffer.forEach(() => count++);
-      
+
       expect(count).toBe(50); // 10 x 5
     });
   });
@@ -217,10 +217,10 @@ describe('CellBuffer', () => {
   describe('clone', () => {
     it('should create an independent copy', () => {
       buffer.setCell(0, 0, { char: 'A' });
-      
+
       const clone = buffer.clone();
       clone.setCell(0, 0, { char: 'B' });
-      
+
       expect(buffer.getCell(0, 0)?.char).toBe('A');
       expect(clone.getCell(0, 0)?.char).toBe('B');
     });
@@ -231,7 +231,7 @@ describe('Cell utilities', () => {
   describe('createEmptyCell', () => {
     it('should create cell with default values', () => {
       const cell = createEmptyCell();
-      
+
       expect(cell.char).toBe('');
       expect(cell.foreground).toBeNull();
       expect(cell.background).toBeNull();
@@ -258,28 +258,28 @@ describe('Cell utilities', () => {
       cell.char = 'X';
       expect(isCellTransparent(cell)).toBe(false);
     });
-    
+
     it('should return false for space with underline', () => {
       const cell = createEmptyCell();
       cell.char = ' ';
       cell.underline = true;
       expect(isCellTransparent(cell)).toBe(false);
     });
-    
+
     it('should return false for space with bold', () => {
       const cell = createEmptyCell();
       cell.char = ' ';
       cell.bold = true;
       expect(isCellTransparent(cell)).toBe(false);
     });
-    
+
     it('should return false for space with explicit foreground color', () => {
       const cell = createEmptyCell();
       cell.char = ' ';
       cell.foreground = 'red';
       expect(isCellTransparent(cell)).toBe(false);
     });
-    
+
     it('should return true for space with inherit foreground', () => {
       const cell = createEmptyCell();
       cell.char = ' ';

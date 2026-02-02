@@ -9,7 +9,7 @@ import type { CommandOption } from '../../components/cli/Command';
 /**
  * Resolve option aliases in parsed arguments
  * Maps aliases to their canonical option names
- * 
+ *
  * @param parsedArgs - Parsed command-line arguments
  * @param allOptions - All available options (with aliases defined)
  * @returns ParsedArgs with aliases resolved to canonical names
@@ -57,7 +57,7 @@ export function resolveOptionAliases(
 
 /**
  * Find option name by alias
- * 
+ *
  * @param alias - Alias to look up (e.g., 'h')
  * @param allOptions - All available options
  * @returns Canonical option name or undefined

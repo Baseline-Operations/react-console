@@ -1,6 +1,6 @@
 /**
  * Text measurement utilities (ANSI-aware)
- * 
+ *
  * Utilities for measuring and manipulating text in terminal, accounting for
  * ANSI escape codes that don't contribute to visible width.
  */
@@ -9,13 +9,13 @@ import { getVisibleLength } from '../renderer/ansi';
 
 /**
  * Measure text width (accounting for ANSI codes)
- * 
+ *
  * Returns the visible width of text in characters, ignoring ANSI escape codes.
  * Useful for layout calculations where ANSI codes shouldn't affect spacing.
- * 
+ *
  * @param text - Text to measure (may contain ANSI escape codes)
  * @returns Visible width in characters (ANSI codes excluded)
- * 
+ *
  * @example
  * ```ts
  * measureText('Hello'); // 5
@@ -161,7 +161,7 @@ export function replaceAtVisibleColumn(line: string, col: number, ch: string): s
   let end = -1;
   let inAnsi = false;
   let firstVisibleIndex = -1; // Track where the first visible character starts
-  
+
   for (let i = 0; i < line.length; i++) {
     const c = line[i]!;
     if (c === '\x1b' && line[i + 1] === '[') inAnsi = true;
@@ -180,27 +180,27 @@ export function replaceAtVisibleColumn(line: string, col: number, ch: string): s
   }
   if (start < 0) return padToVisibleColumn(line, col) + ch;
   if (end < 0) end = line.length;
-  
+
   // If replacing at col 0 and there were leading ANSI codes,
   // don't preserve them - the new content brings its own styling
   if (col === 0 && firstVisibleIndex > 0) {
     return ch + line.slice(end);
   }
-  
+
   return line.slice(0, start) + ch + line.slice(end);
 }
 
 /**
  * Wrap text to fit within a given width
- * 
+ *
  * Wraps text at word boundaries to fit within specified width, preserving
  * ANSI escape codes. Handles multiple lines (separated by `\n`) and wraps
  * each line independently.
- * 
+ *
  * @param text - Text to wrap (may contain ANSI codes and newlines)
  * @param width - Maximum width in characters for each line
  * @returns Array of wrapped lines (each line fits within width)
- * 
+ *
  * @example
  * ```ts
  * wrapText('Hello world', 5); // ['Hello', 'world']
@@ -248,15 +248,15 @@ export function wrapText(text: string, width: number): string[] {
 
 /**
  * Truncate text to fit width with ellipsis
- * 
+ *
  * Truncates text to fit within specified width, appending ellipsis if truncated.
  * Preserves ANSI escape codes and ensures total width (including ellipsis) fits.
- * 
+ *
  * @param text - Text to truncate (may contain ANSI codes)
  * @param width - Maximum width in characters
  * @param ellipsis - Ellipsis string to append when truncated (default: '...')
  * @returns Truncated text with ellipsis if needed
- * 
+ *
  * @example
  * ```ts
  * truncateText('Hello world', 5); // 'He...'
@@ -318,7 +318,7 @@ const HTML_ENTITIES: Record<string, string> = {
   '&#39;': "'",
   '&#x22;': '"',
   '&#x27;': "'",
-  
+
   // Common symbols
   '&amp;': '&',
   '&lt;': '<',
@@ -338,19 +338,19 @@ const HTML_ENTITIES: Record<string, string> = {
   '&hellip;': '\u2026', // …
   '&ndash;': '\u2013', // –
   '&mdash;': '\u2014', // —
-  
+
   // Currency
   '&cent;': '\u00A2', // ¢
   '&pound;': '\u00A3', // £
   '&euro;': '\u20AC', // €
   '&yen;': '\u00A5', // ¥
-  
+
   // Arrows
   '&larr;': '\u2190', // ←
   '&rarr;': '\u2192', // →
   '&uarr;': '\u2191', // ↑
   '&darr;': '\u2193', // ↓
-  
+
   // Math
   '&ne;': '\u2260', // ≠
   '&le;': '\u2264', // ≤
@@ -362,13 +362,13 @@ const HTML_ENTITIES: Record<string, string> = {
 
 /**
  * Decode HTML entities in text
- * 
+ *
  * Converts HTML entities (named and numeric) to their corresponding characters.
  * Supports common named entities and numeric entities (decimal and hex).
- * 
+ *
  * @param text - Text containing HTML entities
  * @returns Text with entities decoded to characters
- * 
+ *
  * @example
  * ```ts
  * decodeHtmlEntities("Hello &amp; World"); // "Hello & World"
@@ -382,24 +382,24 @@ export function decodeHtmlEntities(text: string): string {
   if (!text || !text.includes('&')) {
     return text;
   }
-  
+
   // First replace named entities
   let result = text;
   for (const [entity, char] of Object.entries(HTML_ENTITIES)) {
     result = result.split(entity).join(char);
   }
-  
+
   // Handle numeric entities (decimal): &#NNN;
   result = result.replace(/&#(\d+);/g, (_, num) => {
     const code = parseInt(num, 10);
-    return code > 0 && code < 0x10FFFF ? String.fromCodePoint(code) : _;
+    return code > 0 && code < 0x10ffff ? String.fromCodePoint(code) : _;
   });
-  
+
   // Handle numeric entities (hex): &#xHHH;
   result = result.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
     const code = parseInt(hex, 16);
-    return code > 0 && code < 0x10FFFF ? String.fromCodePoint(code) : _;
+    return code > 0 && code < 0x10ffff ? String.fromCodePoint(code) : _;
   });
-  
+
   return result;
 }

@@ -1,7 +1,7 @@
 /**
  * Animation Components and Utilities
  * Convenient exports for animation functionality
- * 
+ *
  * @example
  * ```tsx
  * import { Animated, useAnimatedValue, easing } from 'react-console/animations';
@@ -21,11 +21,12 @@ export {
   createAnimationConfig,
   calculateAnimationProgress,
 } from './utils/animations';
-export type { EasingFunction, AnimationType, AnimationDirection, AnimationConfig } from './utils/animations';
+export type {
+  EasingFunction,
+  AnimationType,
+  AnimationDirection,
+  AnimationConfig,
+} from './utils/animations';
 
 // Animation hooks
-export {
-  useAnimatedValue,
-  useAnimatedColor,
-  useAnimatedStyle,
-} from './hooks/animations';
+export { useAnimatedValue, useAnimatedColor, useAnimatedStyle } from './hooks/animations';

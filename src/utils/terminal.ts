@@ -30,14 +30,14 @@ export function isStaticMode(): boolean {
 
 /**
  * Get terminal dimensions (columns and rows)
- * 
+ *
  * Returns the current terminal size. Falls back to 80x24 if dimensions
  * are not available (e.g., when not in a TTY).
- * 
+ *
  * For static mode, rows is set to a large value to allow unlimited height.
- * 
+ *
  * @returns Terminal dimensions with columns and rows
- * 
+ *
  * @example
  * ```ts
  * const dims = getTerminalDimensions();
@@ -54,12 +54,12 @@ export function getTerminalDimensions(): TerminalDimensions {
 
 /**
  * Check if terminal supports ANSI colors
- * 
+ *
  * Checks environment variables and terminal type to determine color support.
  * Respects FORCE_COLOR environment variable if set.
- * 
+ *
  * @returns True if terminal supports colors, false otherwise
- * 
+ *
  * @example
  * ```ts
  * if (supportsColor()) {
@@ -90,11 +90,11 @@ export function supportsColor(): boolean {
 
 /**
  * Enter raw mode for terminal input (captures keypresses)
- * 
+ *
  * Enables raw mode on stdin, allowing capture of individual keypresses
  * and special keys (arrows, function keys, etc.) instead of line buffering.
  * Required for interactive applications.
- * 
+ *
  * @example
  * ```ts
  * enterRawMode(); // Now can capture individual keypresses
@@ -112,10 +112,10 @@ export function enterRawMode(): void {
 
 /**
  * Exit raw mode
- * 
+ *
  * Restores normal line-buffered input mode. Should be called when
  * interactive mode is no longer needed to restore normal terminal behavior.
- * 
+ *
  * @example
  * ```ts
  * enterRawMode();
@@ -132,20 +132,20 @@ export function exitRawMode(): void {
 
 /**
  * Listen for terminal resize events
- * 
+ *
  * Registers a callback that will be called whenever the terminal window is resized.
  * Returns a cleanup function to remove the listener.
- * 
+ *
  * @param callback - Function to call on terminal resize
  * @returns Cleanup function to remove the resize listener
- * 
+ *
  * @example
  * ```ts
  * const cleanup = onTerminalResize(() => {
  *   console.log('Terminal resized!');
  *   // Re-render UI with new dimensions
  * });
- * 
+ *
  * // Later, cleanup
  * cleanup();
  * ```
@@ -166,29 +166,26 @@ export function onTerminalResize(callback: () => void): () => void {
 
 /**
  * Listen for terminal resize events with debouncing
- * 
+ *
  * Registers a debounced callback that will be called after terminal resize events.
  * Debounces rapid resize events to prevent excessive reconciliation.
- * 
+ *
  * @param callback - Function to call on terminal resize (debounced)
  * @param delay - Debounce delay in milliseconds (default: 100)
  * @returns Cleanup function to remove the resize listener
- * 
+ *
  * @example
  * ```ts
  * const cleanup = onTerminalResizeDebounced(() => {
  *   console.log('Terminal resized!');
  *   // Re-render UI with new dimensions
  * }, 100);
- * 
+ *
  * // Later, cleanup
  * cleanup();
  * ```
  */
-export function onTerminalResizeDebounced(
-  callback: () => void,
-  delay: number = 100
-): () => void {
+export function onTerminalResizeDebounced(callback: () => void, delay: number = 100): () => void {
   if (!process.stdout.isTTY) {
     return () => {};
   }

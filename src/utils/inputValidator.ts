@@ -103,7 +103,7 @@ export class InputValidator {
    */
   validate(input: string): ValidationResult<string | number> {
     // Check required first
-    const requiredRule = this.rules.find(r => r.rule === 'required');
+    const requiredRule = this.rules.find((r) => r.rule === 'required');
     if (requiredRule) {
       if (!input || input.trim().length === 0) {
         return {
@@ -165,10 +165,7 @@ export class InputValidator {
    * @param ruleConfig - Rule configuration
    * @returns Validation result
    */
-  private applyRule(
-    input: string,
-    ruleConfig: ValidationRuleConfig
-  ): ValidationResult<string> {
+  private applyRule(input: string, ruleConfig: ValidationRuleConfig): ValidationResult<string> {
     const { rule, value, message } = ruleConfig;
 
     switch (rule) {
@@ -390,7 +387,9 @@ export class InputValidator {
    * @param preset - Preset name
    * @returns Configured validator
    */
-  static createPreset(preset: 'email' | 'number' | 'url' | 'phone' | 'ip' | 'uuid'): InputValidator {
+  static createPreset(
+    preset: 'email' | 'number' | 'url' | 'phone' | 'ip' | 'uuid'
+  ): InputValidator {
     const validator = new InputValidator();
 
     switch (preset) {

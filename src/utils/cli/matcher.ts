@@ -20,11 +20,27 @@ export interface ComponentMetadata {
   description?: string;
   help?: ReactNode;
   noHelp?: boolean; // Disable help for this component (or cascades from parent)
-  guard?: (from: string | undefined, to: string | undefined, parsedArgs: import('./parser').ParsedArgs, metadata: ComponentMetadata) => boolean | string; // Route guard function
+  guard?: (
+    from: string | undefined,
+    to: string | undefined,
+    parsedArgs: import('./parser').ParsedArgs,
+    metadata: ComponentMetadata
+  ) => boolean | string; // Route guard function
   redirect?: string; // Redirect path
-  middleware?: Array<(parsedArgs: import('./parser').ParsedArgs, metadata: ComponentMetadata) => import('./parser').ParsedArgs | false | void>; // Command middleware
-  before?: (parsedArgs: import('./parser').ParsedArgs, metadata: ComponentMetadata) => void | Promise<void>; // Before hook (for commands and default)
-  after?: (parsedArgs: import('./parser').ParsedArgs, metadata: ComponentMetadata) => void | Promise<void>; // After hook (for commands and default)
+  middleware?: Array<
+    (
+      parsedArgs: import('./parser').ParsedArgs,
+      metadata: ComponentMetadata
+    ) => import('./parser').ParsedArgs | false | void
+  >; // Command middleware
+  before?: (
+    parsedArgs: import('./parser').ParsedArgs,
+    metadata: ComponentMetadata
+  ) => void | Promise<void>; // Before hook (for commands and default)
+  after?: (
+    parsedArgs: import('./parser').ParsedArgs,
+    metadata: ComponentMetadata
+  ) => void | Promise<void>; // After hook (for commands and default)
   exitAfterExecution?: boolean; // Exit after execution (for commands)
   exitCode?: number; // Command-specific exit code
   params?: Array<{
@@ -33,12 +49,15 @@ export interface ComponentMetadata {
     required?: boolean;
     description?: string;
   }>;
-  options?: Record<string, {
-    type: 'string' | 'number' | 'boolean' | 'string[]';
-    default?: string | number | boolean | string[];
-    description?: string;
-    aliases?: string[];
-  }>;
+  options?: Record<
+    string,
+    {
+      type: 'string' | 'number' | 'boolean' | 'string[]';
+      default?: string | number | boolean | string[];
+      description?: string;
+      aliases?: string[];
+    }
+  >;
 }
 
 /**
@@ -56,7 +75,10 @@ export interface MatchResult {
  * Recursively traverses the component tree to find Command, Route, and Default components
  * @param parentNoHelp - If true, cascades noHelp to all children (from router)
  */
-export function extractComponentMetadata(children: ReactNode, parentNoHelp?: boolean): ComponentMetadata[] {
+export function extractComponentMetadata(
+  children: ReactNode,
+  parentNoHelp?: boolean
+): ComponentMetadata[] {
   const metadata: ComponentMetadata[] = [];
 
   Children.forEach(children, (child) => {
@@ -73,9 +95,11 @@ export function extractComponentMetadata(children: ReactNode, parentNoHelp?: boo
     if (type && typeof type === 'object' && 'displayName' in type) {
       componentName = (type as { displayName?: string }).displayName;
     } else if (type && typeof type === 'function') {
-      componentName = (type as { displayName?: string; name?: string }).displayName || (type as { name?: string }).name;
+      componentName =
+        (type as { displayName?: string; name?: string }).displayName ||
+        (type as { name?: string }).name;
     }
-    
+
     if (componentName === 'Command') {
       const noHelp = parentNoHelp || (typedProps.noHelp as boolean | undefined);
       const commandMetadata: ComponentMetadata = {
@@ -90,11 +114,14 @@ export function extractComponentMetadata(children: ReactNode, parentNoHelp?: boo
         middleware: typedProps.middleware as ComponentMetadata['middleware'],
         before: typedProps.before as ComponentMetadata['before'],
         after: typedProps.after as ComponentMetadata['after'],
-        exitAfterExecution: typedProps.exitAfterExecution as ComponentMetadata['exitAfterExecution'],
+        exitAfterExecution:
+          typedProps.exitAfterExecution as ComponentMetadata['exitAfterExecution'],
         exitCode: typedProps.exitCode as ComponentMetadata['exitCode'],
         params: typedProps.params as ComponentMetadata['params'],
         options: typedProps.options as ComponentMetadata['options'],
-        children: typedProps.children ? extractComponentMetadata(typedProps.children as ReactNode, noHelp) : undefined,
+        children: typedProps.children
+          ? extractComponentMetadata(typedProps.children as ReactNode, noHelp)
+          : undefined,
       };
       metadata.push(commandMetadata);
     }
@@ -110,7 +137,9 @@ export function extractComponentMetadata(children: ReactNode, parentNoHelp?: boo
         noHelp,
         guard: typedProps.guard as ComponentMetadata['guard'],
         redirect: typedProps.redirect as string | undefined,
-        children: typedProps.children ? extractComponentMetadata(typedProps.children as ReactNode, noHelp) : undefined,
+        children: typedProps.children
+          ? extractComponentMetadata(typedProps.children as ReactNode, noHelp)
+          : undefined,
       };
       metadata.push(routeMetadata);
     }
@@ -125,7 +154,9 @@ export function extractComponentMetadata(children: ReactNode, parentNoHelp?: boo
         noHelp,
         before: typedProps.before as ComponentMetadata['before'],
         after: typedProps.after as ComponentMetadata['after'],
-        children: typedProps.children ? extractComponentMetadata(typedProps.children as ReactNode, noHelp) : undefined,
+        children: typedProps.children
+          ? extractComponentMetadata(typedProps.children as ReactNode, noHelp)
+          : undefined,
       };
       metadata.push(defaultMetadata);
     }
@@ -240,10 +271,7 @@ function findDefault(metadata: ComponentMetadata[]): ComponentMetadata | null {
  * Match parsed arguments to component
  * Returns the component that should be rendered based on command/route matching
  */
-export function matchComponent(
-  parsedArgs: ParsedArgs,
-  children: ReactNode
-): MatchResult {
+export function matchComponent(parsedArgs: ParsedArgs, children: ReactNode): MatchResult {
   const metadata = extractComponentMetadata(children);
 
   // If there's a command path, try to match commands
@@ -269,7 +297,8 @@ export function matchComponent(
   }
 
   // Try to match routes (if command path looks like a route path)
-  const pathFromCommand = parsedArgs.command.length > 0 ? '/' + parsedArgs.command.join('/') : undefined;
+  const pathFromCommand =
+    parsedArgs.command.length > 0 ? '/' + parsedArgs.command.join('/') : undefined;
   if (pathFromCommand) {
     const routeMatch = matchRoute(pathFromCommand, metadata);
     if (routeMatch) {

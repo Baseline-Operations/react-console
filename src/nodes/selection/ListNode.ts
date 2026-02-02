@@ -13,11 +13,11 @@ export class ListNode extends SelectionNode {
     super(id);
     this.multiple = true; // Lists typically support multiple selection
   }
-  
+
   getNodeType(): string {
     return 'list';
   }
-  
+
   render(_buffer: OutputBuffer, context: RenderContext): RenderResult {
     // List rendering implementation
     // For now, placeholder

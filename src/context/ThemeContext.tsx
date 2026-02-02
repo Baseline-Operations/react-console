@@ -1,6 +1,6 @@
 /**
  * Theme Context Provider
- * 
+ *
  * Provides theme context for components that need theme-aware styling.
  * Allows components to use theme colors and styles automatically.
  */
@@ -20,13 +20,13 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 /**
  * Theme Provider
- * 
+ *
  * Provides theme context to child components.
  * Allows components to access theme colors and styles.
- * 
+ *
  * @param children - Child components
  * @param initialTheme - Initial theme (defaults to defaultTheme)
- * 
+ *
  * @example
  * ```tsx
  * function App() {
@@ -36,7 +36,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
  *     </ThemeProvider>
  *   );
  * }
- * 
+ *
  * // With custom theme
  * function App() {
  *   return (
@@ -72,26 +72,22 @@ export function ThemeProvider({
     colors: theme.colors,
   };
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 /**
  * Hook to use theme context
- * 
+ *
  * Returns theme context from the nearest ThemeProvider.
- * 
+ *
  * @returns Theme context value
  * @throws Error if used outside ThemeProvider
- * 
+ *
  * @example
  * ```tsx
  * function ThemedComponent() {
  *   const { theme, colors, setTheme } = useTheme();
- *   
+ *
  *   return (
  *     <View>
  *       <Text color={colors.text}>Themed text</Text>
@@ -113,16 +109,16 @@ export function useTheme(): ThemeContextValue {
 
 /**
  * Hook to use theme colors
- * 
+ *
  * Convenience hook that returns just the theme colors.
- * 
+ *
  * @returns Theme colors object
- * 
+ *
  * @example
  * ```tsx
  * function ThemedComponent() {
  *   const colors = useThemeColors();
- *   
+ *
  *   return (
  *     <Text color={colors.text}>Themed text</Text>
  *   );

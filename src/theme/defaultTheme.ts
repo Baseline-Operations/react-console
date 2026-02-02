@@ -1,6 +1,6 @@
 /**
  * Default theme for React Console
- * 
+ *
  * Provides a sensible default theme with good contrast and readability.
  */
 
@@ -8,7 +8,7 @@ import type { Theme } from './types';
 
 /**
  * Default theme - Light terminal theme with good contrast
- * 
+ *
  * Uses standard ANSI colors with good readability.
  * Suitable for most terminal applications.
  */
@@ -23,7 +23,7 @@ export const defaultTheme: Theme = {
     textSuccess: 'green',
     textWarning: 'yellow',
     textInfo: 'cyan',
-    
+
     // Background colors
     background: 'black',
     backgroundSecondary: 'black',
@@ -32,12 +32,12 @@ export const defaultTheme: Theme = {
     backgroundSuccess: 'black',
     backgroundWarning: 'black',
     backgroundInfo: 'black',
-    
+
     // Border colors
     border: 'gray',
     borderFocused: 'cyan',
     borderDisabled: 'gray',
-    
+
     // Action colors
     primary: 'cyan',
     primaryBackground: 'black',
@@ -90,7 +90,7 @@ export const defaultTheme: Theme = {
 
 /**
  * Dark theme variant
- * 
+ *
  * Dark theme optimized for dark terminal backgrounds.
  */
 export const darkTheme: Theme = {
@@ -104,7 +104,7 @@ export const darkTheme: Theme = {
 
 /**
  * Light theme variant
- * 
+ *
  * Light theme optimized for light terminal backgrounds.
  * Note: Most terminals have dark backgrounds, so this may not render well.
  */
@@ -119,7 +119,7 @@ export const lightTheme: Theme = {
     textSuccess: 'green',
     textWarning: 'yellow',
     textInfo: 'blue',
-    
+
     // Background colors
     background: 'white',
     backgroundSecondary: 'white',
@@ -128,12 +128,12 @@ export const lightTheme: Theme = {
     backgroundSuccess: 'white',
     backgroundWarning: 'white',
     backgroundInfo: 'white',
-    
+
     // Border colors
     border: 'gray',
     borderFocused: 'blue',
     borderDisabled: 'gray',
-    
+
     // Action colors
     primary: 'blue',
     primaryBackground: 'white',

@@ -13,25 +13,25 @@ import type { BufferRenderOptions } from '../buffer';
  */
 export class Renderer {
   private bufferRenderer: BufferRenderer;
-  
+
   constructor() {
     this.bufferRenderer = getBufferRenderer();
   }
-  
+
   /**
    * Render root node using multi-buffer system
    */
   render(root: Node, options?: Partial<BufferRenderOptions>): void {
     this.bufferRenderer.render(root, options || {});
   }
-  
+
   /**
    * Force a full redraw on next render
    */
   invalidate(): void {
     this.bufferRenderer.invalidate();
   }
-  
+
   /**
    * Clean up resources
    */

@@ -19,12 +19,15 @@ export interface ParsedArgs {
 /**
  * Parse quoted string
  * Handles single quotes, double quotes, and escaped characters
- * 
+ *
  * @param input - Input string to parse
  * @param startIndex - Starting index in input
  * @returns Parsed value and new index
  */
-function parseQuotedString(input: string, startIndex: number): { value: string; endIndex: number } | null {
+function parseQuotedString(
+  input: string,
+  startIndex: number
+): { value: string; endIndex: number } | null {
   const quote = input[startIndex];
   if (quote !== '"' && quote !== "'") {
     return null;
@@ -71,10 +74,10 @@ function parseQuotedString(input: string, startIndex: number): { value: string; 
  * Parse command-line arguments
  * Converts process.argv array into structured command, options, and params
  * Supports quoted strings, escaped characters, and preserves whitespace in quotes
- * 
+ *
  * @param args - Command-line arguments array (typically process.argv.slice(2))
  * @returns Parsed arguments with command path, options, and params
- * 
+ *
  * @example
  * ```ts
  * // Input: ['build', '--minify', '--output', 'dist', 'prod']
@@ -83,7 +86,7 @@ function parseQuotedString(input: string, startIndex: number): { value: string; 
  * //   options: { minify: true, output: 'dist' },
  * //   params: ['prod']
  * // }
- * 
+ *
  * // Quoted strings:
  * // Input: ['build', '--message', '"Hello World"']
  * // Output: { command: ['build'], options: { message: 'Hello World' }, params: [] }
@@ -120,7 +123,7 @@ export function parseCommandLineArgs(args: string[]): ParsedArgs {
     if (arg.startsWith('--')) {
       collectingCommand = false;
       const optionName = arg.slice(2);
-      
+
       // Handle empty option name (just --)
       if (optionName === '') {
         // Treat as positional argument (common pattern: -- to stop option parsing)
@@ -128,7 +131,7 @@ export function parseCommandLineArgs(args: string[]): ParsedArgs {
         i++;
         continue;
       }
-      
+
       // Handle --option=value syntax (with quoted values)
       if (optionName.includes('=')) {
         const [name, value] = optionName.split('=', 2);
@@ -166,7 +169,7 @@ export function parseCommandLineArgs(args: string[]): ParsedArgs {
       collectingCommand = false;
       // Short option (-f or -f value)
       const optionName = arg.slice(1);
-      
+
       // Handle -abc as multiple boolean flags
       if (optionName.length > 1 && !optionName.includes('=')) {
         for (const char of optionName) {
@@ -212,7 +215,7 @@ export function parseCommandLineArgs(args: string[]): ParsedArgs {
           parsedArg = parsed.value;
         }
       }
-      
+
       if (collectingCommand && !parsedArg.includes('/')) {
         // Treat as command if still collecting and not a path
         result.command.push(parsedArg);
@@ -230,11 +233,11 @@ export function parseCommandLineArgs(args: string[]): ParsedArgs {
 
 /**
  * Extract path parameters from a route path
- * 
+ *
  * @param routePath - Route path pattern (e.g., '/profile/:id')
  * @param actualPath - Actual path to match (e.g., '/profile/123')
  * @returns Object with extracted parameters or null if no match
- * 
+ *
  * @example
  * ```ts
  * extractPathParams('/profile/:id', '/profile/123')
@@ -273,7 +276,7 @@ export function extractPathParams(
 
 /**
  * Match a route path pattern against an actual path
- * 
+ *
  * @param routePath - Route path pattern (supports :param syntax)
  * @param actualPath - Actual path to match
  * @returns True if path matches pattern

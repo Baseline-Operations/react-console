@@ -19,7 +19,7 @@ export interface ValidationErrorProps extends StyleProps {
 /**
  * ValidationError component
  * Displays validation errors with helpful messages
- * 
+ *
  * @example
  * ```tsx
  * <ValidationError errors={validationResult.errors} />

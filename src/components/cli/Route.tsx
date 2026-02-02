@@ -56,13 +56,13 @@ export interface RouteProps extends StyleProps {
 /**
  * Route component
  * Defines a route for path-based navigation
- * 
+ *
  * @example
  * ```tsx
  * <Route path="/settings" description="Settings page">
  *   <SettingsComponent />
  * </Route>
- * 
+ *
  * <Route path="/profile/:id" description="User profile">
  *   <ProfileComponent />
  * </Route>

@@ -3,7 +3,13 @@
  */
 
 import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
-import type { ComponentEventHandlers, SelectOption, ConsoleNode, KeyPress, ViewStyle } from '../../types';
+import type {
+  ComponentEventHandlers,
+  SelectOption,
+  ConsoleNode,
+  KeyPress,
+  ViewStyle,
+} from '../../types';
 import type { StyleProps } from '../../types';
 import { getTerminalDimensions } from '../../utils/terminal';
 import { isArrayValue } from '../../types/guards';
@@ -15,15 +21,15 @@ export type ListOption = SelectOption;
 
 /**
  * Props for the List component
- * 
+ *
  * Provides scrollable list functionality for single or multiple selection.
  * Automatically scrolls to keep focused item visible. Supports keyboard
  * navigation (arrow keys, Page Up/Down, Home/End) and selection (Enter/Space).
- * 
+ *
  * @example
  * ```tsx
  * const [value, setValue] = useState('option1');
- * 
+ *
  * <List
  *   value={value}
  *   onChange={(e) => setValue(e.value)}
@@ -51,15 +57,15 @@ export interface ListProps extends ComponentEventHandlers, StyleProps {
 
 /**
  * List component - Scrollable list with single or multiple selection
- * 
+ *
  * Provides scrollable list functionality for selecting from many options.
  * Automatically handles scrolling to keep focused item visible. Supports
  * keyboard navigation (arrow keys, Page Up/Down, Home/End) and selection
  * (Enter for single, Space to toggle for multiple).
- * 
+ *
  * @param props - List component props
  * @returns React element representing a scrollable list
- * 
+ *
  * @example
  * ```tsx
  * <List
@@ -126,7 +132,7 @@ export function handleListComponent(
   const focusedIndex = component.focusedIndex ?? (scrollTop >= 0 ? scrollTop : 0);
   let newFocusedIndex = focusedIndex;
   let newScrollTop = scrollTop;
-  
+
   // Get terminal dimensions for scroll calculation
   const dims = getTerminalDimensions();
   // Use a more reasonable visible height (account for UI overhead)
@@ -139,20 +145,20 @@ export function handleListComponent(
     } else {
       newFocusedIndex = focusedIndex >= options.length - 1 ? 0 : focusedIndex + 1;
     }
-    
+
     // Improved scroll position tracking: ensure focused item is always visible
     // Scroll up if focused item is above visible area
     if (newFocusedIndex < newScrollTop) {
       newScrollTop = newFocusedIndex;
-    } 
+    }
     // Scroll down if focused item is below visible area
     else if (newFocusedIndex >= newScrollTop + visibleHeight) {
       newScrollTop = Math.max(0, newFocusedIndex - visibleHeight + 1);
     }
-    
+
     // Ensure scrollTop doesn't exceed bounds
     newScrollTop = Math.max(0, Math.min(newScrollTop, Math.max(0, options.length - visibleHeight)));
-    
+
     component.focusedIndex = newFocusedIndex;
     component.scrollTop = newScrollTop;
     scheduleUpdate();
@@ -165,7 +171,7 @@ export function handleListComponent(
       newScrollTop = Math.min(options.length - visibleHeight, scrollTop + visibleHeight);
       newFocusedIndex = Math.min(options.length - 1, newScrollTop + visibleHeight - 1);
     }
-    
+
     component.focusedIndex = newFocusedIndex;
     component.scrollTop = newScrollTop;
     scheduleUpdate();
@@ -178,7 +184,7 @@ export function handleListComponent(
       newFocusedIndex = options.length - 1;
       newScrollTop = Math.max(0, options.length - visibleHeight);
     }
-    
+
     component.focusedIndex = newFocusedIndex;
     component.scrollTop = newScrollTop;
     scheduleUpdate();
@@ -191,9 +197,9 @@ export function handleListComponent(
       ? (() => {
           // Use type guard to safely extract array values
           const current: (string | number)[] = isArrayValue(component.value) ? component.value : [];
-          const isSelected = current.some(v => v === option.value);
+          const isSelected = current.some((v) => v === option.value);
           const result: (string | number)[] = isSelected
-            ? current.filter(v => v !== option.value)
+            ? current.filter((v) => v !== option.value)
             : [...current, option.value];
           return result;
         })()
@@ -202,7 +208,7 @@ export function handleListComponent(
     // Type assertion needed: (string | number)[] is not assignable to string[] | number[]
     // Runtime array may contain mixed types even though type system separates them
     component.value = newValue as string | number | string[] | number[] | undefined;
-    
+
     if (component.onChange) {
       component.onChange({
         value: newValue as string | number | string[] | number[],

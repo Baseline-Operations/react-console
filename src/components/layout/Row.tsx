@@ -12,14 +12,20 @@ export interface RowProps extends ComponentEventHandlers, StyleProps {
   className?: string | string[]; // Class names for style libraries
   gap?: number;
   alignItems?: 'flex-start' | 'flex-end' | 'center' | 'stretch' | 'baseline';
-  justifyContent?: 'flex-start' | 'flex-end' | 'center' | 'space-between' | 'space-around' | 'space-evenly';
+  justifyContent?:
+    | 'flex-start'
+    | 'flex-end'
+    | 'center'
+    | 'space-between'
+    | 'space-around'
+    | 'space-evenly';
 }
 
 /**
  * Row component - Horizontal flex container
- * 
+ *
  * Shorthand for `<View style={{ display: 'flex', flexDirection: 'row' }}>`
- * 
+ *
  * @example
  * ```tsx
  * <Row gap={2} alignItems="center">
@@ -46,7 +52,7 @@ export function Row({
     justifyContent,
     ...style,
   });
-  
+
   return createConsoleNode('box', {
     children,
     style: mergedStyle,

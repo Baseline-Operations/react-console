@@ -35,7 +35,7 @@ export interface DefaultProps extends StyleProps {
 /**
  * Default component
  * Defines the default behavior when no command/route matches
- * 
+ *
  * @example
  * ```tsx
  * <CommandRouter>

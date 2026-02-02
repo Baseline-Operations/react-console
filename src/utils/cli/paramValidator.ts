@@ -36,7 +36,7 @@ export interface ParamValidationResult {
 
 /**
  * Validate command parameters and options
- * 
+ *
  * @param parsedArgs - Parsed command-line arguments
  * @param metadata - Component metadata with parameter/option definitions
  * @returns Validation result with errors and typed values
@@ -75,7 +75,9 @@ export function validateCommandParams(
       if (!typeResult.valid) {
         errors.push({
           name: paramDef.name,
-          message: typeResult.error || `Invalid type for parameter '${paramDef.name}': expected ${paramDef.type}`,
+          message:
+            typeResult.error ||
+            `Invalid type for parameter '${paramDef.name}': expected ${paramDef.type}`,
           type: 'invalid_type',
         });
         continue;
@@ -104,15 +106,13 @@ export function validateCommandParams(
       if (valueToValidate !== undefined) {
         // For string values, convert to appropriate type
         if (typeof valueToValidate === 'string') {
-          const typeResult = validateOptionType(
-            valueToValidate,
-            optionDef.type,
-            optionName
-          );
+          const typeResult = validateOptionType(valueToValidate, optionDef.type, optionName);
           if (!typeResult.valid) {
             errors.push({
               name: optionName,
-              message: typeResult.error || `Invalid type for option '--${optionName}': expected ${optionDef.type}`,
+              message:
+                typeResult.error ||
+                `Invalid type for option '--${optionName}': expected ${optionDef.type}`,
               type: 'invalid_type',
             });
             continue;
@@ -156,7 +156,7 @@ function validateParamType(
   switch (expectedType) {
     case 'string':
       return { valid: true, value };
-    
+
     case 'number': {
       const result = validateNumber(value);
       if (!result.valid) {
@@ -168,7 +168,7 @@ function validateParamType(
       }
       return { valid: true, value: result.value };
     }
-    
+
     case 'boolean': {
       // Accept 'true', 'false', '1', '0', 'yes', 'no'
       const lower = value.toLowerCase();
@@ -184,7 +184,7 @@ function validateParamType(
         error: `Parameter '${paramName}' must be a boolean (true/false, 1/0, yes/no)`,
       };
     }
-    
+
     default:
       return {
         valid: false,
@@ -212,7 +212,7 @@ function validateOptionType(
         value: null,
         error: `Option '--${optionName}' must be a string`,
       };
-    
+
     case 'number': {
       if (typeof value === 'string') {
         const result = validateNumber(value);
@@ -231,7 +231,7 @@ function validateOptionType(
         error: `Option '--${optionName}' must be a number`,
       };
     }
-    
+
     case 'boolean':
       if (typeof value === 'boolean') {
         return { valid: true, value };
@@ -251,7 +251,7 @@ function validateOptionType(
         value: null,
         error: `Option '--${optionName}' must be a boolean`,
       };
-    
+
     case 'string[]':
       if (Array.isArray(value)) {
         return { valid: true, value };
@@ -265,7 +265,7 @@ function validateOptionType(
         value: null,
         error: `Option '--${optionName}' must be an array of strings`,
       };
-    
+
     default:
       return {
         valid: false,
@@ -277,7 +277,7 @@ function validateOptionType(
 
 /**
  * Format validation errors for display
- * 
+ *
  * @deprecated Use ValidationError component instead (TSX)
  * This function is kept for backward compatibility but should not be used in new code
  */

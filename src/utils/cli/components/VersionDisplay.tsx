@@ -17,7 +17,7 @@ export interface VersionDisplayProps extends StyleProps {
 /**
  * VersionDisplay component
  * Displays formatted version string
- * 
+ *
  * @example
  * ```tsx
  * <VersionDisplay appName="my-app" version="1.0.0" />

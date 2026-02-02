@@ -1,6 +1,6 @@
 /**
  * Application Lifecycle Events
- * 
+ *
  * Provides event listeners for application start, exit, and storage deletion events.
  * These can be used outside of React components as regular event listeners.
  */
@@ -50,21 +50,21 @@ class LifecycleEventEmitter {
    * Emit application start event
    */
   emitStart(): void {
-    this.startListeners.forEach(callback => callback());
+    this.startListeners.forEach((callback) => callback());
   }
 
   /**
    * Emit application exit event
    */
   emitExit(): void {
-    this.exitListeners.forEach(callback => callback());
+    this.exitListeners.forEach((callback) => callback());
   }
 
   /**
    * Emit storage deletion event
    */
   emitStorageDelete(key: string): void {
-    this.storageDeleteListeners.forEach(callback => callback(key));
+    this.storageDeleteListeners.forEach((callback) => callback(key));
   }
 }
 
@@ -73,24 +73,24 @@ const lifecycleEvents = new LifecycleEventEmitter();
 
 /**
  * Register a callback to be called when the application starts
- * 
+ *
  * This can be called outside of React components. The callback is called once
  * when the application is first rendered.
- * 
+ *
  * @param callback - Callback function called on application start
  * @returns Unsubscribe function to remove the listener
- * 
+ *
  * @example
  * ```ts
  * // Outside of components
  * import { onAppStart } from 'react-console';
- * 
+ *
  * onAppStart(() => {
  *   console.log('Application started!');
  *   // Load saved preferences, initialize services, etc.
  * });
  * ```
- * 
+ *
  * @example
  * ```tsx
  * // Can also be used in components
@@ -101,7 +101,7 @@ const lifecycleEvents = new LifecycleEventEmitter();
  *     });
  *     return unsubscribe;
  *   }, []);
- *   
+ *
  *   return <View>My App</View>;
  * }
  * ```
@@ -112,24 +112,24 @@ export function onAppStart(callback: () => void): () => void {
 
 /**
  * Register a callback to be called when the application exits
- * 
+ *
  * This can be called outside of React components. The callback is called when
  * exit() is called or the process receives exit signals.
- * 
+ *
  * @param callback - Callback function called on application exit
  * @returns Unsubscribe function to remove the listener
- * 
+ *
  * @example
  * ```ts
  * // Outside of components
  * import { onAppExit } from 'react-console';
- * 
+ *
  * onAppExit(() => {
  *   console.log('Application exiting...');
  *   // Save state, close connections, cleanup resources
  * });
  * ```
- * 
+ *
  * @example
  * ```tsx
  * // Can also be used in components
@@ -140,7 +140,7 @@ export function onAppStart(callback: () => void): () => void {
  *     });
  *     return unsubscribe;
  *   }, []);
- *   
+ *
  *   return <View>My App</View>;
  * }
  * ```
@@ -151,36 +151,33 @@ export function onAppExit(callback: () => void): () => void {
 
 /**
  * Hook called when a storage key is deleted
- * 
+ *
  * This hook is called when a storage item is removed via removeItem() or clear().
- * 
+ *
  * Note: This only detects deletions made through the storage API.
  * External file deletions cannot be detected without file watching,
  * which is not implemented to avoid background processes.
- * 
+ *
  * @param callback - Callback function called when storage is deleted
  * @param key - Optional specific key to listen for (if not provided, listens to all deletions)
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   useStorageDelete((deletedKey) => {
  *     console.log(`Storage key deleted: ${deletedKey}`);
  *   });
- *   
+ *
  *   // Or listen to specific key:
  *   useStorageDelete(() => {
  *     console.log('User preferences deleted');
  *   }, 'userPreferences');
- *   
+ *
  *   return <View>My Component</View>;
  * }
  * ```
  */
-export function useStorageDelete(
-  callback: (key: string) => void,
-  key?: string
-): void {
+export function useStorageDelete(callback: (key: string) => void, key?: string): void {
   useEffect(() => {
     const unsubscribe = lifecycleEvents.onStorageDelete((deletedKey) => {
       if (key === undefined || deletedKey === key) {
@@ -194,7 +191,7 @@ export function useStorageDelete(
 /**
  * Internal function to notify lifecycle hooks of application start
  * Called by render() when application starts
- * 
+ *
  * @internal
  */
 export function notifyAppStart(): void {
@@ -204,7 +201,7 @@ export function notifyAppStart(): void {
 /**
  * Internal function to notify lifecycle hooks of application exit
  * Called by exit() when application exits
- * 
+ *
  * @internal
  */
 export function notifyAppExit(): void {
@@ -214,7 +211,7 @@ export function notifyAppExit(): void {
 /**
  * Internal function to notify lifecycle hooks of storage deletion
  * Called by storage.removeItem() when storage is deleted
- * 
+ *
  * @internal
  */
 export function notifyStorageDelete(key: string): void {

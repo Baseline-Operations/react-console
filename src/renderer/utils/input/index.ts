@@ -3,6 +3,4 @@
  * Re-exports all input-related utilities
  */
 
-export {
-  handleMouseEvent,
-} from './mouse';
+export { handleMouseEvent } from './mouse';

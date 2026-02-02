@@ -1,6 +1,6 @@
 /**
  * Terminal mocking utilities for testing
- * 
+ *
  * Provides utilities to mock terminal dimensions, capabilities, and events
  * for unit and integration testing.
  */
@@ -9,14 +9,14 @@ import { setRenderMode } from '../../utils/terminal';
 
 /**
  * Mock terminal dimensions
- * 
+ *
  * Sets up mock terminal dimensions for testing.
  * Can be used to simulate different terminal sizes.
  * Also sets render mode to 'interactive' so actual dimensions are returned.
- * 
+ *
  * @param columns - Number of columns (default: 80)
  * @param rows - Number of rows (default: 24)
- * 
+ *
  * @example
  * ```ts
  * beforeEach(() => {
@@ -27,7 +27,7 @@ import { setRenderMode } from '../../utils/terminal';
 export function mockTerminalDimensions(columns: number = 80, rows: number = 24): void {
   // Set to interactive mode so getTerminalDimensions returns actual rows
   setRenderMode('interactive');
-  
+
   // Mock process.stdout.columns and rows
   Object.defineProperty(process.stdout, 'columns', {
     value: columns,
@@ -50,11 +50,11 @@ export function mockTerminalDimensions(columns: number = 80, rows: number = 24):
 
 /**
  * Mock terminal color support
- * 
+ *
  * Sets up mock color support for testing.
- * 
+ *
  * @param supportsColor - Whether terminal supports colors (default: true)
- * 
+ *
  * @example
  * ```ts
  * beforeEach(() => {
@@ -72,11 +72,11 @@ export function mockColorSupport(supportsColor: boolean = true): void {
 
 /**
  * Mock terminal mouse support
- * 
+ *
  * Sets up mock mouse support for testing.
- * 
+ *
  * @param supportsMouse - Whether terminal supports mouse (default: true)
- * 
+ *
  * @example
  * ```ts
  * beforeEach(() => {
@@ -94,9 +94,9 @@ export function mockMouseSupport(supportsMouse: boolean = true): void {
 
 /**
  * Reset terminal mocks
- * 
+ *
  * Resets all terminal mocks to default values.
- * 
+ *
  * @example
  * ```ts
  * afterEach(() => {

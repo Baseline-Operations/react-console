@@ -21,9 +21,9 @@ export function padText(
   if (text.length >= width) {
     return text.slice(0, width);
   }
-  
+
   const padding = width - text.length;
-  
+
   switch (align) {
     case 'left':
       return text + fill.repeat(padding);
@@ -49,28 +49,28 @@ export function wrapTextLines(text: string, width: number, indent: number = 0): 
   if (width <= 0) {
     return [text];
   }
-  
+
   const indentStr = ' '.repeat(indent);
   const effectiveWidth = width - indent;
-  
+
   if (text.length <= effectiveWidth) {
     return [text];
   }
-  
+
   const lines: string[] = [];
   const words = text.split(/\s+/);
   let currentLine = '';
-  
+
   for (const word of words) {
     const testLine = currentLine ? `${currentLine} ${word}` : word;
-    
+
     if (testLine.length <= effectiveWidth) {
       currentLine = testLine;
     } else {
       if (currentLine) {
         lines.push(currentLine);
       }
-      
+
       // If word itself is longer than width, break it
       if (word.length > effectiveWidth) {
         let remaining = word;
@@ -84,11 +84,11 @@ export function wrapTextLines(text: string, width: number, indent: number = 0): 
       }
     }
   }
-  
+
   if (currentLine) {
     lines.push(currentLine);
   }
-  
+
   // Add indentation to wrapped lines (except first)
   return lines.map((line, index) => (index === 0 ? line : indentStr + line));
 }
@@ -129,12 +129,12 @@ export function formatDuration(ms: number, format: 'short' | 'long' = 'short'): 
   if (ms < 1000) {
     return format === 'short' ? `${ms}ms` : `${ms} milliseconds`;
   }
-  
+
   const seconds = Math.floor(ms / 1000);
   if (seconds < 60) {
     return format === 'short' ? `${seconds}s` : `${seconds} seconds`;
   }
-  
+
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   if (minutes < 60) {
@@ -145,15 +145,13 @@ export function formatDuration(ms: number, format: 'short' | 'long' = 'short'): 
       ? `${minutes} minutes ${remainingSeconds} seconds`
       : `${minutes} minutes`;
   }
-  
+
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   if (format === 'short') {
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   }
-  return remainingMinutes > 0
-    ? `${hours} hours ${remainingMinutes} minutes`
-    : `${hours} hours`;
+  return remainingMinutes > 0 ? `${hours} hours ${remainingMinutes} minutes` : `${hours} hours`;
 }
 
 /**
@@ -166,16 +164,17 @@ export function formatFileSize(bytes: number, format: 'short' | 'long' = 'short'
   if (bytes === 0) {
     return format === 'short' ? '0 B' : '0 bytes';
   }
-  
+
   const k = 1024;
-  const sizes = format === 'short' 
-    ? ['B', 'KB', 'MB', 'GB', 'TB']
-    : ['bytes', 'kilobytes', 'megabytes', 'gigabytes', 'terabytes'];
-  
+  const sizes =
+    format === 'short'
+      ? ['B', 'KB', 'MB', 'GB', 'TB']
+      : ['bytes', 'kilobytes', 'megabytes', 'gigabytes', 'terabytes'];
+
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const value = bytes / Math.pow(k, i);
   const unit = sizes[i] || sizes[sizes.length - 1];
-  
+
   return `${value.toFixed(2)} ${unit}`;
 }
 
@@ -209,6 +208,6 @@ export function createProgressBar(
   const percentage = Math.min(1, Math.max(0, current / total));
   const filled = Math.round(width * percentage);
   const empty = width - filled;
-  
+
   return filledChar.repeat(filled) + emptyChar.repeat(empty);
 }

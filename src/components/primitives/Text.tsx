@@ -10,18 +10,18 @@ import { createConsoleNode, mergeClassNameAndStyle } from '../utils';
 
 /**
  * Props for the Text component
- * 
+ *
  * Supports all text styling options including colors, background colors,
  * and text decorations (bold, italic, underline, etc.).
- * 
+ *
  * @example
  * ```tsx
  * <Text color="red" bold>Important Text</Text>
- * 
+ *
  * <Text style={{ color: 'cyan', bold: true, underline: true }}>
  *   Styled Text
  * </Text>
- * 
+ *
  * // Nested Text for inline styling
  * <Text>
  *   Normal text <Text bold>bold text</Text> more normal
@@ -46,23 +46,23 @@ export interface TextProps {
 
 /**
  * Text component - Renders styled text to console
- * 
+ *
  * Supports nested Text components for inline styling (React Native pattern).
  * Text naturally wraps based on terminal width and container constraints.
- * 
+ *
  * @param props - Text component props
  * @returns React element representing styled text
- * 
+ *
  * @example
  * ```tsx
  * // Simple styled text
  * <Text color="green" bold>Success!</Text>
- * 
+ *
  * // With style prop
  * <Text style={{ color: 'yellow', italic: true }}>
  *   Italic yellow text
  * </Text>
- * 
+ *
  * // Nested for inline styling
  * <Text>
  *   Welcome, <Text bold color="cyan">username</Text>!

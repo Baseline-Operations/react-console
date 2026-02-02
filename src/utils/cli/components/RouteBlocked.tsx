@@ -18,17 +18,15 @@ export interface RouteBlockedProps extends StyleProps {
 /**
  * RouteBlocked component
  * Displays message when route access is blocked
- * 
+ *
  * @example
  * ```tsx
  * <RouteBlocked route="/admin" message="Access denied" />
  * ```
  */
-export function RouteBlocked({
-  route,
-  message,
-}: RouteBlockedProps): ReactNode {
-  const displayMessage = message || (route ? `Access to route '${route}' is blocked.` : 'Route access is blocked.');
+export function RouteBlocked({ route, message }: RouteBlockedProps): ReactNode {
+  const displayMessage =
+    message || (route ? `Access to route '${route}' is blocked.` : 'Route access is blocked.');
 
   return (
     <Box style={{ padding: 1 }}>

@@ -14,22 +14,22 @@ import { DisplayMode as DisplayModeEnum } from '../../nodes/base/types';
 export class BoxStyleMixin implements StyleMixin<Node> {
   name = 'BoxStyle';
   priority = 80;
-  
+
   appliesTo(node: Node): node is Node {
     // Will check for BoxNode instance once BoxNode is implemented
     return node.getNodeType() === 'box' || node.getNodeType() === 'view';
   }
-  
+
   apply(_node: Node): void {
     // Box-specific setup
   }
-  
+
   getDefaultStyle(): StyleMap {
     return {
       display: DisplayModeEnum.BLOCK,
     };
   }
-  
+
   getInheritableProperties(): string[] {
     return [];
   }

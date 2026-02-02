@@ -12,17 +12,17 @@ import type { StyleMap } from '../../nodes/base/types';
 export class BaseStyleMixin implements StyleMixin<Node> {
   name = 'BaseStyle';
   priority = 100;
-  
+
   appliesTo(node: Node): node is Node {
     // Applies to all nodes - parameter is used for type guard
     void node; // Mark as used for type guard
     return true;
   }
-  
+
   apply(_node: Node): void {
     // BaseStyle is always applied, no additional setup needed
   }
-  
+
   getDefaultStyle(): StyleMap {
     return {
       color: 'inherit',
@@ -35,7 +35,7 @@ export class BaseStyleMixin implements StyleMixin<Node> {
       inverse: false,
     };
   }
-  
+
   getInheritableProperties(): string[] {
     return ['color', 'backgroundColor'];
   }
