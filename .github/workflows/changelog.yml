@@ -1,15 +1,15 @@
 name: Update Changelog
 
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches: [main]
 
 jobs:
   update-changelog:
     name: Update Changelog
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    # Skip if commit is from this workflow or version bump
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !startsWith(github.event.head_commit.message, 'chore: bump version')"
     permissions:
       contents: write
       pull-requests: read
@@ -18,13 +18,38 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
+      - name: Get PR info from merge commit
+        id: pr-info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find PR associated with this merge commit
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha
+            });
+
+            const pr = prs.find(p => p.merged_at);
+            if (!pr) {
+              console.log('No merged PR found for this commit');
+              core.setOutput('found', 'false');
+              return;
+            }
+
+            core.setOutput('found', 'true');
+            core.setOutput('number', pr.number);
+            core.setOutput('title', pr.title);
+            core.setOutput('author', pr.user.login);
+
       - name: Update CHANGELOG.md
+        if: steps.pr-info.outputs.found == 'true'
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-          
+          PR_NUMBER="${{ steps.pr-info.outputs.number }}"
+          PR_TITLE="${{ steps.pr-info.outputs.title }}"
+          PR_AUTHOR="${{ steps.pr-info.outputs.author }}"
+
           # Determine changelog section based on PR title prefix
           if [[ "$PR_TITLE" =~ ^[Ff]eat ]]; then
             SECTION="### Added"
@@ -35,10 +60,10 @@ jobs:
           else
             SECTION="### Changed"
           fi
-          
+
           # Create entry
           ENTRY="- $PR_TITLE ([#$PR_NUMBER](https://github.com/${{ github.repository }}/pull/$PR_NUMBER)) by @$PR_AUTHOR"
-          
+
           # Update CHANGELOG.md
           if [ -f CHANGELOG.md ]; then
             # Create temp file with new entry
@@ -66,7 +91,7 @@ jobs:
             echo "$SECTION" >> CHANGELOG.md
             echo "$ENTRY" >> CHANGELOG.md
           fi
-          
+
           # Commit and push
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
