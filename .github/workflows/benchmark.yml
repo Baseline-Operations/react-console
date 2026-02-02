@@ -1,8 +1,9 @@
 name: Performance Benchmark
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  # Only run manually or on main - too heavy for every PR
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:

@@ -1,8 +1,8 @@
 name: Pre-commit Check
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  # Only run manually - CI already handles lint/format checks
+  workflow_dispatch:
 
 jobs:
   pre-commit:
