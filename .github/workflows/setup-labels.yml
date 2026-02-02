@@ -1,0 +1,52 @@
+name: Setup Labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/setup-labels.yml'
+  workflow_dispatch:
+
+jobs:
+  setup-labels:
+    name: Create Version Labels
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create patch label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'patch', color: '0E8A16', description: 'Patch version bump (bug fixes, minor changes)' },
+              { name: 'minor', color: '1D76DB', description: 'Minor version bump (new features, non-breaking)' },
+              { name: 'major', color: 'D93F0B', description: 'Major version bump (breaking changes)' }
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description
+                });
+                console.log(`Created label: ${label.name}`);
+              } catch (error) {
+                if (error.status === 422) {
+                  // Label exists, update it
+                  await github.rest.issues.updateLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label.name,
+                    color: label.color,
+                    description: label.description
+                  });
+                  console.log(`Updated label: ${label.name}`);
+                } else {
+                  throw error;
+                }
+              }
+            }

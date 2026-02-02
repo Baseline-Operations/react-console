@@ -2,18 +2,29 @@
 
 <!-- Provide a clear and concise description of what this PR does -->
 
+## Version Label (Required)
+
+<!--
+⚠️ IMPORTANT: You MUST add one of the following labels to this PR before it can be merged:
+- `patch` - Bug fixes, minor changes (0.0.X)
+- `minor` - New features, non-breaking changes (0.X.0)
+- `major` - Breaking changes (X.0.0)
+
+The version will be automatically bumped when the PR is merged.
+-->
+
 ## Type of Change
 
 <!-- Mark the relevant option with an "x" -->
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📚 Documentation update
-- [ ] 🔧 Refactoring (no functional changes)
-- [ ] ⚡ Performance improvement
-- [ ] ✅ Test update
-- [ ] 🔨 Build/CI update
+- [ ] 🐛 Bug fix (non-breaking change which fixes an issue) → use `patch` label
+- [ ] ✨ New feature (non-breaking change which adds functionality) → use `minor` label
+- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected) → use `major` label
+- [ ] 📚 Documentation update → use `patch` label
+- [ ] 🔧 Refactoring (no functional changes) → use `patch` label
+- [ ] ⚡ Performance improvement → use `patch` label
+- [ ] ✅ Test update → use `patch` label
+- [ ] 🔨 Build/CI update → use `patch` label
 
 ## Related Issues
 
@@ -25,9 +36,9 @@ Closes #
 
 <!-- Describe the specific changes made in this PR -->
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Testing
 
@@ -39,9 +50,9 @@ Closes #
 
 ### Test Steps
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Checklist
 
