@@ -46,7 +46,7 @@ Defined in: [src/buffer/types.ts:80](https://github.com/Baseline-Operations/reac
 
 ### bounds
 
-> **bounds**: [`BufferBoundingBox`](BufferBoundingBox.md)
+> **bounds**: [`BoundingBox`](BoundingBox.md)
 
 Defined in: [src/buffer/types.ts:81](https://github.com/Baseline-Operations/react-console/blob/main/src/buffer/types.ts#L81)
 

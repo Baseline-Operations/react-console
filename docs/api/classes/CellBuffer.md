@@ -495,7 +495,7 @@ Iterate over a region
 
 ##### region
 
-[`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)
+[`BoundingBox`](../interfaces/BoundingBox.md)
 
 ##### callback
 
@@ -559,7 +559,7 @@ Copy a region from this buffer
 
 ##### region
 
-[`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)
+[`BoundingBox`](../interfaces/BoundingBox.md)
 
 #### Returns
 

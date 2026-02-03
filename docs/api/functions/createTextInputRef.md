@@ -8,7 +8,7 @@
 
 > **createTextInputRef**(`node`): [`TextInputRef`](../interfaces/TextInputRef.md)
 
-Defined in: src/utils/refs.ts:155
+Defined in: [src/utils/refs.ts:155](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/refs.ts#L155)
 
 Create a TextInput ref object
 
@@ -16,28 +16,18 @@ Create a TextInput ref object
 
 ### node
 
-The underlying node/element
+`Partial<TextInputNode>`
 
-#### focus?
+The underlying node/element to wrap as a TextInput ref. This object may optionally provide the following methods and properties:
 
-() => `void`
-
-#### blur?
-
-() => `void`
-
-#### setValue?
-
-(`value`) => `void`
-
-#### getValue?
-
-() => `string`
-
-#### focused?
-
-`boolean`
+- `focus?(): void` - Method to focus the input
+- `blur?(): void` - Method to blur the input
+- `setValue?(value: string): void` - Method to set the input value
+- `getValue?(): string` - Method to get the current value
+- `focused?: boolean` - Whether the input is currently focused
 
 ## Returns
 
 [`TextInputRef`](../interfaces/TextInputRef.md)
+
+A ref object with standardized TextInput methods.

@@ -22,9 +22,9 @@ Size in bytes
 
 ### format
 
-Format style: 'short' or 'long' (default: 'short')
-
 `"short"` | `"long"`
+
+Format style: 'short' or 'long' (default: 'short').
 
 ## Returns
 

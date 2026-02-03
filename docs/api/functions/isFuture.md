@@ -12,16 +12,19 @@ Defined in: [src/utils/dateFormatting.ts:278](https://github.com/Baseline-Operat
 
 Check if a date is in the future
 
+Compares the given date against `Date.now()` using the local timezone.
+Returns `true` if the date is strictly after the current time (equality returns `false`).
+
 ## Parameters
 
 ### date
 
-Date object or timestamp
-
 `number` | `Date`
+
+Date object or timestamp (milliseconds since Unix epoch).
 
 ## Returns
 
 `boolean`
 
-True if date is in the future
+`true` if the date is strictly in the future, `false` if equal to or before current time.

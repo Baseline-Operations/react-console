@@ -17,9 +17,15 @@ Shows fallback UI while async operations are in progress.
 
 ## Parameters
 
-### \_\_namedParameters
+### props
 
 [`SuspenseProps`](../interfaces/SuspenseProps.md)
+
+Key props:
+
+- `fallback?: ReactNode` - Custom fallback UI to show while loading
+- `loadingText?: string` - Simple text to display during loading (uses ActivityIndicator)
+- `children: ReactNode` - The async content to render
 
 ## Returns
 

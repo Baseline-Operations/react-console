@@ -301,9 +301,10 @@ Triggered when input value changes:
 <TextInput
   value={value}
   onChangeText={(text) => {
-    // e.value is the new value
-    setValue(e.value as string);
-
+    // text is the new value
+    setValue(text);
+  }}
+  onKeyDown={(e) => {
     // e.key contains key information
     if (e.key.return) {
       handleSubmit();
@@ -447,16 +448,16 @@ Stop event from continuing to default handling:
 
 ```tsx
 <TextInput
-  onChange={(e) => {
-    setValue(e.value as string);
+  onChangeText={(text) => {
+    setValue(text);
   }}
   onKeyDown={(e) => {
     if (e.key.escape) {
       handleCancel();
     }
   }}
-  onSubmit={(e) => {
-    handleSubmit(e.value);
+  onSubmitEditing={(e) => {
+    handleSubmit(e.nativeEvent.text);
   }}
 />
 ```
@@ -528,13 +529,13 @@ function Form() {
     <View>
       <TextInput
         value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.value as string })}
-        onSubmit={handleSubmit}
+        onChangeText={(text) => setFormData({ ...formData, name: text })}
+        onSubmitEditing={handleSubmit}
       />
       <TextInput
         value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.value as string })}
-        onSubmit={handleSubmit}
+        onChangeText={(text) => setFormData({ ...formData, email: text })}
+        onSubmitEditing={handleSubmit}
       />
       <Button onClick={handleSubmit}>Submit</Button>
     </View>
@@ -636,7 +637,7 @@ function FocusExample() {
 
 ```tsx
 // Good: Handle at component level
-<TextInput onChange={(e) => setValue(e.value)} />
+<TextInput onChangeText={(text) => setValue(text)} />
 
 // Also good: Handle at form level for validation
 <View onKeyDown={(e) => handleFormKeyDown(e)}>

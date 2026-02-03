@@ -40,6 +40,7 @@ React element representing a table
 const data = [
   { id: 1, name: 'John', age: 30 },
   { id: 2, name: 'Jane', age: 25 },
+  { id: 3, name: 'Bob', age: 35 },
 ];
 
 const columns = [
@@ -47,5 +48,15 @@ const columns = [
   { key: 'age', header: 'Age', accessor: (row) => row.age, align: 'right' },
 ];
 
-<Table data={data} columns={columns} border="single" />;
+// Basic table with border
+<Table data={data} columns={columns} border="single" />
+
+// With sorting and zebra striping
+<Table
+  data={data}
+  columns={columns}
+  border="single"
+  sortable
+  zebra
+/>
 ```

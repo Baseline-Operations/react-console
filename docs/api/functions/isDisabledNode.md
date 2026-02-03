@@ -16,8 +16,12 @@ Type guard: Check if node has a disabled property
 
 ### node
 
-[`ConsoleNode`](../interfaces/ConsoleNode.md)
+`unknown`
+
+The value to test for a `ConsoleNode` with a boolean `disabled` property.
 
 ## Returns
 
 `node is ConsoleNode & { disabled: boolean }`
+
+`true` if the node is a `ConsoleNode` with a `disabled` property, enabling type-safe access.

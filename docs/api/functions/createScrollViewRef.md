@@ -8,7 +8,7 @@
 
 > **createScrollViewRef**(`node`): [`ScrollViewRef`](../interfaces/ScrollViewRef.md)
 
-Defined in: src/utils/refs.ts:182
+Defined in: [src/utils/refs.ts:182](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/refs.ts#L182)
 
 Create a ScrollView ref object
 
@@ -16,28 +16,16 @@ Create a ScrollView ref object
 
 ### node
 
-The underlying node/element
-
-#### scrollTo?
-
-(`options`) => `void`
-
-#### scrollTop?
-
-`number`
-
-#### setScrollTop?
-
-(`value`) => `void`
-
-#### contentHeight?
-
-`number`
-
-#### height?
-
-`number`
+The underlying ScrollView node/element that provides scroll functionality.
 
 ## Returns
 
 [`ScrollViewRef`](../interfaces/ScrollViewRef.md)
+
+Returns a ScrollViewRef object with the following methods and properties:
+
+- `scrollTo(options)` - Scroll to a specific position
+- `scrollTop` - Current scroll position (read-only)
+- `setScrollTop(value)` - Set scroll position programmatically
+- `contentHeight` - Total content height
+- `height` - Visible viewport height

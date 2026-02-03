@@ -443,7 +443,7 @@ const [state, setState] = useState(initial);
 - [ ] Replace `useInput` with `onKeyDown` handlers
 - [ ] Replace `useFocus` with `onFocus`/`onBlur` handlers
 - [ ] Update `render()` call with `mode` option
-- [ ] Replace `TextInput` with `Input` component
+- [ ] Replace `Input` with `TextInput` component
 - [ ] Update event handler signatures (use event objects)
 - [ ] Test focus management (tab navigation)
 - [ ] Test input handling (keyboard events)

@@ -12,16 +12,19 @@ Defined in: [src/utils/dateFormatting.ts:268](https://github.com/Baseline-Operat
 
 Check if a date is in the past
 
+Compares the given date against `Date.now()` using the local timezone.
+Returns `true` if the date is strictly before the current time (equality returns `false`).
+
 ## Parameters
 
 ### date
 
-Date object or timestamp
-
 `number` | `Date`
+
+Date object or timestamp (milliseconds since Unix epoch).
 
 ## Returns
 
 `boolean`
 
-True if date is in the past
+`true` if the date is strictly in the past, `false` if equal to or after current time.

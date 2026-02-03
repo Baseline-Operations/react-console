@@ -6,9 +6,11 @@
 
 # Interface: ButtonRef
 
-Defined in: src/utils/refs.ts:144
+Defined in: [src/utils/refs.ts:144](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/refs.ts#L144)
 
-Button ref interface (React Native compatible)
+Button ref interface (React-Native-compatible API for console/terminal components)
+
+Provides focus and blur methods following React Native patterns, adapted for terminal environments where focus management is meaningful for keyboard navigation.
 
 ## Methods
 
@@ -16,7 +18,7 @@ Button ref interface (React Native compatible)
 
 > **focus**(): `void`
 
-Defined in: src/utils/refs.ts:146
+Defined in: [src/utils/refs.ts:146](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/refs.ts#L146)
 
 Focus the button
 
@@ -30,7 +32,7 @@ Focus the button
 
 > **blur**(): `void`
 
-Defined in: src/utils/refs.ts:148
+Defined in: [src/utils/refs.ts:148](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/refs.ts#L148)
 
 Blur the button
 

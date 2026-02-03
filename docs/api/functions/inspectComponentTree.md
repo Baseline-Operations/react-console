@@ -17,17 +17,27 @@ Formats and logs component tree structure
 
 ### node
 
-#### type
+`object`
+
+The node object to inspect.
+
+#### node.type
 
 `string`
 
-#### children?
+The type/name of the component.
+
+#### node.children?
 
 `unknown`[]
+
+Optional array of child nodes.
 
 ### indent
 
 `number` = `0`
+
+Indentation level for formatting (default: 0).
 
 ## Returns
 

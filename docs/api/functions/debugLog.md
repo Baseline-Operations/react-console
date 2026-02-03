@@ -10,6 +10,8 @@
 
 Defined in: [src/utils/debug.ts:136](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/debug.ts#L136)
 
+Log a debug message with optional additional arguments.
+
 ## Parameters
 
 ### message

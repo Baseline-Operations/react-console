@@ -6,9 +6,9 @@
 
 # Interface: ActivityIndicatorProps
 
-Defined in: src/components/ui/ActivityIndicator.tsx:17
+Defined in: [src/components/ui/ActivityIndicator.tsx:17](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ui/ActivityIndicator.tsx#L17)
 
-React Native compatible ActivityIndicator props
+React-Native-compatible ActivityIndicator props
 
 ## Extends
 

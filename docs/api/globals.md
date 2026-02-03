@@ -34,7 +34,7 @@
 - [KeyboardAPIEvent](interfaces/KeyboardAPIEvent.md)
 - [CellRenderContext](interfaces/CellRenderContext.md)
 - [Cell](interfaces/Cell.md)
-- [BufferBoundingBox](interfaces/BufferBoundingBox.md)
+- [BoundingBox](interfaces/BoundingBox.md)
 - [CellDiff](interfaces/CellDiff.md)
 - [LayerInfo](interfaces/LayerInfo.md)
 - [BufferRenderOptions](interfaces/BufferRenderOptions.md)

@@ -8,7 +8,7 @@
 
 > **createFlatListRef**\<`T`\>(`node`, `data`): [`FlatListRef`](../interfaces/FlatListRef.md)\<`T`\>
 
-Defined in: src/utils/refs.ts:217
+Defined in: [src/utils/refs.ts:217](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/refs.ts#L217)
 
 Create a FlatList ref object
 
@@ -22,34 +22,24 @@ Create a FlatList ref object
 
 ### node
 
-The underlying node/element
+`object`
 
-#### scrollTo?
+The underlying node/element with scroll capabilities. Expected shape:
 
-(`options`) => `void`
-
-#### scrollTop?
-
-`number`
-
-#### setScrollTop?
-
-(`value`) => `void`
-
-#### contentHeight?
-
-`number`
-
-#### height?
-
-`number`
+- `scrollTo?(options): void` - Scroll to a specific position
+- `scrollTop?: number` - Current scroll position
+- `setScrollTop?(value): void` - Set scroll position
+- `contentHeight?: number` - Total content height
+- `height?: number` - Visible height
 
 ### data
 
 `T`[]
 
-The list data
+The list data array.
 
 ## Returns
 
 [`FlatListRef`](../interfaces/FlatListRef.md)\<`T`\>
+
+A ref object with FlatList-specific methods like `scrollToIndex`, `scrollToItem`, etc.

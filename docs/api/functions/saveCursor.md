@@ -12,8 +12,22 @@ Defined in: [src/utils/console.ts:105](https://github.com/Baseline-Operations/re
 
 Save cursor position
 
+Generates an ANSI escape sequence that saves the current cursor position. Use with `restoreCursor()` to return to this position later.
+
 ## Returns
 
 `string`
 
-ANSI escape sequence
+ANSI escape sequence string.
+
+## Example
+
+```typescript
+import { saveCursor, restoreCursor } from 'react-console';
+
+// Save cursor position before drawing
+process.stdout.write(saveCursor());
+// ... perform drawing operations ...
+// Restore cursor position
+process.stdout.write(restoreCursor());
+```

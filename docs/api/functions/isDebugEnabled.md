@@ -10,8 +10,10 @@
 
 Defined in: [src/utils/debug.ts:103](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/debug.ts#L103)
 
-Check if debug logging is enabled
+Check if debug logging is enabled.
 
 ## Returns
 
 `boolean`
+
+`true` if debug mode is enabled, `false` otherwise.

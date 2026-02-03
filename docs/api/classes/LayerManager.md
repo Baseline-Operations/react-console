@@ -70,7 +70,7 @@ Create a new layer
 
 ##### bounds
 
-[`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)
+[`BoundingBox`](../interfaces/BoundingBox.md)
 
 ##### nodeId
 

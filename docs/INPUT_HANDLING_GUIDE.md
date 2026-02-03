@@ -734,7 +734,7 @@ function InputWithRef() {
 
 ### Input Not Updating
 
-1. Check that `onChange` is provided
+1. Check that `onChangeText` is provided
 2. Verify value is being set in state
 3. Ensure component is not disabled
 
@@ -742,7 +742,7 @@ function InputWithRef() {
 
 1. Check pattern regex is correct
 2. Verify min/max constraints for numbers
-3. Ensure validation runs in `onChange`
+3. Ensure validation runs in `onChangeText`
 
 ### Formatting Issues
 

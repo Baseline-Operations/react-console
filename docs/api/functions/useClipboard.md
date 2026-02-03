@@ -17,16 +17,36 @@ React hook for clipboard access
 
 \[`string`, (`text`) => `Promise`\<`void`\>\]
 
+Returns a tuple:
+
+- `clipboardText` - The current clipboard text (initially empty string)
+- `setClipboardText` - Async function to copy text to clipboard
+
+**Note:** The hook does NOT auto-populate `clipboardText` on mount. To read the current clipboard content, you must manually fetch it using `Clipboard.getString()`.
+
 ## Example
 
 ```tsx
-const [clipboardText, setClipboardText] = useClipboard();
+import { useClipboard, Clipboard } from 'react-console';
+import { useEffect } from 'react';
 
-// Read clipboard on mount
-useEffect(() => {
-  Clipboard.getString().then(setClipboardText);
-}, []);
+function MyComponent() {
+  const [clipboardText, setClipboardText] = useClipboard();
 
-// Copy to clipboard
-const handleCopy = () => setClipboardText('Copied text!');
+  // Manually read clipboard on mount (hook does not auto-load)
+  useEffect(() => {
+    Clipboard.getString().then((text) => {
+      // Note: setClipboardText copies TO clipboard, not just sets state
+      // Use local state if you just want to display clipboard content
+      console.log('Current clipboard:', text);
+    });
+  }, []);
+
+  // Copy to clipboard
+  const handleCopy = async () => {
+    await setClipboardText('Copied text!');
+  };
+
+  return <Button onPress={handleCopy}>Copy</Button>;
+}
 ```

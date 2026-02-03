@@ -8,11 +8,11 @@
 
 > **ActivityIndicator**(`props`): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `null`
 
-Defined in: src/components/ui/ActivityIndicator.tsx:75
+Defined in: [src/components/ui/ActivityIndicator.tsx:75](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ui/ActivityIndicator.tsx#L75)
 
 ActivityIndicator component - Animated loading indicator
 
-React Native compatible loading indicator. Displays an animated spinner
+React-Native-compatible loading indicator. Displays an animated spinner
 with different styles and optional label. Automatically animates when rendered.
 
 ## Parameters

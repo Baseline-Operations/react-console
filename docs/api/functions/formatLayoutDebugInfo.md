@@ -6,7 +6,7 @@
 
 # Function: formatLayoutDebugInfo()
 
-> **formatLayoutDebugInfo**(`info`, `indent`): `string`
+> **formatLayoutDebugInfo**(`info`, `indent = 0`): `string`
 
 Defined in: [src/utils/layoutDebug.ts:44](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/layoutDebug.ts#L44)
 

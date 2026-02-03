@@ -34,7 +34,7 @@ Defined in: [src/buffer/Layer.ts:23](https://github.com/Baseline-Operations/reac
 
 ##### bounds
 
-[`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)
+[`BoundingBox`](../interfaces/BoundingBox.md)
 
 ##### nodeId
 
@@ -96,7 +96,7 @@ Defined in: [src/buffer/Layer.ts:18](https://github.com/Baseline-Operations/reac
 
 ### bounds
 
-> **bounds**: [`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)
+> **bounds**: [`BoundingBox`](../interfaces/BoundingBox.md)
 
 Defined in: [src/buffer/Layer.ts:19](https://github.com/Baseline-Operations/react-console/blob/main/src/buffer/Layer.ts#L19)
 

@@ -344,7 +344,11 @@ export type { GlobalTerminal } from './utils/globalTerminal';
 // See src/theme.ts for exports
 
 // Focus and component management utilities
-export { focusComponent, enableComponent, disableComponent } from './renderer/utils/navigation';
+export {
+  focusComponent,
+  enableComponent,
+  disableComponent,
+} from './renderer/utils/focus/management';
 
 // Layout debugging utilities
 export {

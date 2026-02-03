@@ -8,7 +8,7 @@
 
 > **useBell**(): `object`
 
-Defined in: src/apis/Bell.ts:185
+Defined in: [src/apis/Bell.ts:185](https://github.com/Baseline-Operations/react-console/blob/main/src/apis/Bell.ts#L185)
 
 Hook: useBell
 React hook for bell functionality
@@ -83,6 +83,10 @@ Bell control functions
 
 > **setEnabled**: (`enabled`) => `void`
 
+Enable or disable bell sounds globally.
+
+**Note:** This controls a global singleton Bell instance. All `useBell()` hooks share the same enabled state across the application.
+
 #### Parameters
 
 ##### enabled
@@ -97,6 +101,10 @@ Bell control functions
 
 > **isEnabled**: () => `boolean`
 
+Check if bell sounds are enabled globally.
+
+**Note:** This returns the global Bell enabled state shared by all `useBell()` hooks.
+
 #### Returns
 
 `boolean`
@@ -106,10 +114,6 @@ Bell control functions
 ```tsx
 function MyComponent() {
   const bell = useBell();
-
-  const handleError = () => {
-    bell.error();
-  };
 
   const handleSuccess = () => {
     bell.success();

@@ -100,7 +100,7 @@ Create a new layer and return its buffer
 
 ##### bounds
 
-[`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)
+[`BoundingBox`](../interfaces/BoundingBox.md)
 
 ##### nodeId
 
@@ -230,7 +230,7 @@ Composite a specific region only (for partial updates)
 
 ##### region
 
-[`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)
+[`BoundingBox`](../interfaces/BoundingBox.md)
 
 #### Returns
 
@@ -316,7 +316,7 @@ Check if compositing produced any dirty cells
 
 ### getDirtyRegions()
 
-> **getDirtyRegions**(): [`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)[]
+> **getDirtyRegions**(): [`BoundingBox`](../interfaces/BoundingBox.md)[]
 
 Defined in: [src/buffer/CompositeBuffer.ts:257](https://github.com/Baseline-Operations/react-console/blob/main/src/buffer/CompositeBuffer.ts#L257)
 
@@ -324,4 +324,4 @@ Get dirty regions from composite result
 
 #### Returns
 
-[`BufferBoundingBox`](../interfaces/BufferBoundingBox.md)[]
+[`BoundingBox`](../interfaces/BoundingBox.md)[]

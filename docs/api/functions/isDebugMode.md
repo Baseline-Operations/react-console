@@ -16,4 +16,4 @@ Defined in: [src/utils/debug.ts:129](https://github.com/Baseline-Operations/reac
 
 ## Deprecated
 
-Use isDebugEnabled() instead
+Use [isDebugEnabled()](./isDebugEnabled.md) instead.

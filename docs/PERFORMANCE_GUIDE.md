@@ -29,8 +29,8 @@ React Console already includes several performance optimizations:
 Use React's optimization features to prevent unnecessary re-renders:
 
 ```tsx
-import { memo } from 'react';
-import { Text, View } from 'react-console';
+import { memo, useState } from 'react';
+import { Text, TextInput, View } from 'react-console';
 
 // Memoize components that don't change often
 const StaticContent = memo(() => (
@@ -197,7 +197,7 @@ Deeply nested layouts can impact performance:
 Debounce input handlers for rapid typing:
 
 ```tsx
-import { useMemo, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 function SearchInput() {
   const [query, setQuery] = useState('');

@@ -30,4 +30,19 @@ Thousands separator (default: ',')
 
 `string`
 
-Formatted number string
+Formatted number string.
+
+## Example
+
+```typescript
+formatNumber(1234567); // '1,234,567'
+formatNumber(1234567, '.'); // '1.234.567'
+formatNumber(-1234567); // '-1,234,567'
+formatNumber(1234.56); // '1,234.56'
+```
+
+## Notes
+
+- Negative numbers retain their sign.
+- Decimal portions are preserved.
+- The separator is applied only to the integer part.

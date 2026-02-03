@@ -36,4 +36,12 @@ Indentation for wrapped lines (default: 0)
 
 `string`[]
 
-Array of wrapped lines
+Array of wrapped lines.
+
+## Example
+
+```ts
+wrapTextLines('Hello world', 5); // ['Hello', 'world']
+wrapTextLines('Long text here', 8, 2); // ['Long', '  text', '  here'] (with indent)
+wrapTextLines('Short', 10); // ['Short']
+```

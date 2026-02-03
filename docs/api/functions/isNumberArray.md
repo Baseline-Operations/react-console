@@ -12,12 +12,33 @@ Defined in: [src/types/guards.ts:18](https://github.com/Baseline-Operations/reac
 
 Type guard: Check if value is a number array
 
+Returns `true` if the value is an array where every element is a number.
+
 ## Parameters
 
 ### value
 
 `unknown`
 
+The value to check.
+
 ## Returns
 
 `value is number[]`
+
+`true` if value is an array of numbers, `false` otherwise.
+
+## Example
+
+```typescript
+const data: unknown = [1, 2, 3];
+if (isNumberArray(data)) {
+  // data is now typed as number[]
+  console.log(data.map((n) => n * 2));
+}
+```
+
+## See Also
+
+- [`isStringArray`](./isStringArray.md)
+- [`isArrayValue`](./isArrayValue.md)

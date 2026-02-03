@@ -18,19 +18,19 @@ Format a percentage value
 
 `number`
 
-Value (0-1 or 0-100)
+The value to format. For `'decimal'` format, expects 0-1 range (e.g., 0.5 = 50%). For `'percent'` format, expects 0-100 range (e.g., 50 = 50%).
 
 ### decimals
 
 `number` = `0`
 
-Number of decimal places (default: 0)
+Number of decimal places (default: 0).
 
 ### format
 
-Format: 'decimal' (0.5) or 'percent' (50%) (default: 'percent')
-
 `"decimal"` | `"percent"`
+
+Output format: `'decimal'` outputs "0.50" style, `'percent'` outputs "50%" style (default: `'percent'`).
 
 ## Returns
 

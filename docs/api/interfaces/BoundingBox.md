@@ -2,9 +2,9 @@
 
 ---
 
-[React Console API](../globals.md) / BufferBoundingBox
+[React Console API](../globals.md) / BoundingBox
 
-# Interface: BufferBoundingBox
+# Interface: BoundingBox
 
 Defined in: [src/buffer/types.ts:56](https://github.com/Baseline-Operations/react-console/blob/main/src/buffer/types.ts#L56)
 

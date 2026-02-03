@@ -42,7 +42,7 @@ Defined in: [src/buffer/types.ts:91](https://github.com/Baseline-Operations/reac
 
 Defined in: [src/buffer/types.ts:93](https://github.com/Baseline-Operations/react-console/blob/main/src/buffer/types.ts#L93)
 
-Final cursor position to set after rendering (combined with flush to avoid artifacts)
+Final cursor position to set after rendering (applied during buffer flush to avoid visual artifacts)
 
 #### x
 

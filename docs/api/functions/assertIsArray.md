@@ -12,11 +12,15 @@ Defined in: [src/types/guards.ts:284](https://github.com/Baseline-Operations/rea
 
 Type assertion helper: Assert value is an array
 
+Throws an error if the value is not an array, otherwise narrows the type to `T[]`.
+
 ## Type Parameters
 
 ### T
 
 `T`
+
+The expected element type of the array.
 
 ## Parameters
 
@@ -24,10 +28,21 @@ Type assertion helper: Assert value is an array
 
 `unknown`
 
+The value to check.
+
 ### errorMessage?
 
 `string`
 
+Optional custom error message to throw if assertion fails.
+
 ## Returns
 
 `asserts value is T[]`
+
+## Example
+
+```typescript
+assertIsArray<string>(input, 'Expected an array of strings');
+// After this line, TypeScript knows `input` is string[]
+```

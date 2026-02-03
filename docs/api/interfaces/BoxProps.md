@@ -46,6 +46,8 @@ Defined in: [src/components/primitives/Box.tsx:26](https://github.com/Baseline-O
 
 Defined in: [src/components/primitives/Box.tsx:27](https://github.com/Baseline-Operations/react-console/blob/main/src/components/primitives/Box.tsx#L27)
 
+CSS-like class names for styling. Can be a single string or an array of class names. When multiple classes are provided, their styles are merged in order. Works with style libraries that support class-based styling.
+
 ---
 
 ### fullscreen?
