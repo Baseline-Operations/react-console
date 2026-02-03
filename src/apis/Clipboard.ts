@@ -8,10 +8,7 @@
  * - Windows: clip / PowerShell Get-Clipboard
  */
 
-import { exec, execSync } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { execSync, spawn } from 'child_process';
 
 /**
  * Clipboard content type
@@ -99,13 +96,35 @@ class ClipboardModule {
       return '';
     }
 
-    try {
-      const { stdout } = await execAsync(this._pasteCmd);
-      return stdout.trim();
-    } catch (error) {
-      console.error('Clipboard: failed to get string', error);
-      return '';
-    }
+    return new Promise((resolve) => {
+      try {
+        const parts = this._pasteCmd.split(' ');
+        const cmd = parts[0];
+        const args = parts.slice(1);
+
+        if (!cmd) {
+          resolve('');
+          return;
+        }
+
+        const proc = spawn(cmd, args, { shell: false });
+        let output = '';
+
+        proc.stdout.on('data', (data: Buffer) => {
+          output += data.toString();
+        });
+
+        proc.on('close', () => {
+          resolve(output.trim());
+        });
+
+        proc.on('error', () => {
+          resolve('');
+        });
+      } catch {
+        resolve('');
+      }
+    });
   }
 
   /**
@@ -140,11 +159,36 @@ class ClipboardModule {
       return;
     }
 
-    try {
-      await execAsync(`echo "${text.replace(/"/g, '\\"')}" | ${this._copyCmd}`);
-    } catch (error) {
-      console.error('Clipboard: failed to set string', error);
-    }
+    return new Promise((resolve) => {
+      try {
+        // Use spawn with stdin to avoid shell injection
+        const parts = this._copyCmd.split(' ');
+        const cmd = parts[0];
+        const args = parts.slice(1);
+
+        if (!cmd) {
+          resolve();
+          return;
+        }
+
+        const proc = spawn(cmd, args, { shell: false, stdio: ['pipe', 'ignore', 'ignore'] });
+
+        proc.stdin?.write(text);
+        proc.stdin?.end();
+
+        proc.on('close', () => {
+          resolve();
+        });
+
+        proc.on('error', (error) => {
+          console.error('Clipboard: failed to set string', error);
+          resolve();
+        });
+      } catch (error) {
+        console.error('Clipboard: failed to set string', error);
+        resolve();
+      }
+    });
   }
 
   /**
@@ -157,7 +201,11 @@ class ClipboardModule {
     }
 
     try {
-      execSync(`echo "${text.replace(/"/g, '\\"')}" | ${this._copyCmd}`);
+      // Use execSync with input option to pipe text via stdin (avoids shell injection)
+      execSync(this._copyCmd, {
+        input: text,
+        stdio: ['pipe', 'ignore', 'ignore'],
+      });
     } catch {
       // Silently fail
     }
