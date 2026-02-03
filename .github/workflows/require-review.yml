@@ -1,0 +1,94 @@
+name: Require Human Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  require-review:
+    name: Require Human Review
+    runs-on: ubuntu-latest
+    # Skip draft PRs
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Check for human approval
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+
+            // Bot accounts to exclude from valid reviewers
+            const botAccounts = [
+              'coderabbitai',
+              'coderabbit[bot]',
+              'dependabot[bot]',
+              'dependabot',
+              'github-actions[bot]',
+              'renovate[bot]',
+              'renovate'
+            ];
+
+            // Check if author has admin/maintain permissions
+            console.log(`Checking permissions for PR author: ${author}`);
+
+            try {
+              const { data: permissionData } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: author
+              });
+
+              const permission = permissionData.permission;
+              console.log(`Author permission level: ${permission}`);
+
+              // Admin and maintain have elevated privileges
+              if (permission === 'admin' || permission === 'maintain') {
+                console.log(`✅ Author "${author}" has ${permission} permission - review not required`);
+                return;
+              }
+            } catch (error) {
+              // If we can't check permissions, continue with review requirement
+              console.log(`Could not check permissions: ${error.message}`);
+            }
+
+            // Get all reviews for this PR
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            console.log(`Found ${reviews.length} total reviews`);
+
+            // Filter to approved reviews from humans (not bots)
+            // Only consider the latest review from each reviewer
+            const latestReviews = new Map();
+            for (const review of reviews) {
+              const reviewer = review.user.login;
+              const existing = latestReviews.get(reviewer);
+              if (!existing || new Date(review.submitted_at) > new Date(existing.submitted_at)) {
+                latestReviews.set(reviewer, review);
+              }
+            }
+
+            const humanApprovals = [];
+            for (const [reviewer, review] of latestReviews) {
+              const isBot = botAccounts.some(bot => 
+                reviewer.toLowerCase() === bot.toLowerCase() || 
+                reviewer.toLowerCase().includes('[bot]')
+              );
+              
+              if (!isBot && review.state === 'APPROVED' && reviewer !== author) {
+                humanApprovals.push(reviewer);
+                console.log(`✓ Human approval from: ${reviewer}`);
+              }
+            }
+
+            if (humanApprovals.length === 0) {
+              core.setFailed(`❌ This PR requires at least one approval from a human reviewer (not a bot like CodeRabbit).`);
+            } else {
+              console.log(`✅ PR has ${humanApprovals.length} human approval(s): ${humanApprovals.join(', ')}`);
+            }
