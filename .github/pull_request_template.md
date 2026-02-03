@@ -2,9 +2,7 @@
 
 <!-- Brief description of what this PR does -->
 
-## Version Label
-
-<!-- Add ONE of these labels to your PR (required): -->
+<!-- Version Labels - Add ONE of these labels to your PR (required): -->
 <!-- - `patch` - Bug fixes, docs, refactoring -->
 <!-- - `minor` - New features -->
 <!-- - `major` - Breaking changes -->

@@ -1,6 +1,9 @@
 {
   "name": "@baseline-operations/react-console",
   "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/baseline-operations/react-console.git"
