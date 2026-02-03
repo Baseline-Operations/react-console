@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / Radio
 
@@ -8,7 +8,7 @@
 
 > **Radio**(`props`): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/selection/Radio.tsx:70
+Defined in: [src/components/selection/Radio.tsx:80](https://github.com/Baseline-Operations/react-console/blob/main/src/components/selection/Radio.tsx#L80)
 
 Radio component - Single selection from options
 

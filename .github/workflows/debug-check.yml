@@ -1,0 +1,35 @@
+name: Debug Flag Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  check-debug-flags:
+    name: Verify Debug Flags Are Disabled
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check FILE_DEBUG_ENABLED is false
+        run: |
+          echo "Checking that debug flags are disabled..."
+
+          # Check FILE_DEBUG_ENABLED in src/utils/debug.ts
+          if grep -q "const FILE_DEBUG_ENABLED = true" src/utils/debug.ts; then
+            echo "❌ ERROR: FILE_DEBUG_ENABLED is set to true in src/utils/debug.ts"
+            echo "Please set FILE_DEBUG_ENABLED to false before merging."
+            exit 1
+          fi
+
+          if grep -q "const FILE_DEBUG_ENABLED = false" src/utils/debug.ts; then
+            echo "✅ FILE_DEBUG_ENABLED is correctly set to false"
+          else
+            echo "❌ ERROR: Could not find FILE_DEBUG_ENABLED declaration in src/utils/debug.ts"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ All debug flags are properly disabled!"

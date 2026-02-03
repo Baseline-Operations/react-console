@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / disableComponent
 
@@ -8,7 +8,7 @@
 
 > **disableComponent**(`component`, `interactiveComponents`, `scheduleUpdate`): `void`
 
-Defined in: src/renderer/utils/navigation.ts:247
+Defined in: [src/renderer/utils/focus/management.ts:157](https://github.com/Baseline-Operations/react-console/blob/main/src/renderer/utils/focus/management.ts#L157)
 
 Programmatically disable a component
 

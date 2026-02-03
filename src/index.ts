@@ -23,14 +23,16 @@ export { LineBreak } from './components/primitives/LineBreak';
 export { Newline } from './components/primitives/Newline';
 
 // Components - Interactive
-export { Input } from './components/interactive/Input';
-export type { InputProps } from './components/interactive/Input';
+export { TextInput, Input } from './components/interactive/TextInput';
+export type { TextInputProps, InputProps } from './components/interactive/TextInput';
 export { Button } from './components/interactive/Button';
 export type { ButtonProps } from './components/interactive/Button';
 export { Pressable } from './components/interactive/Pressable';
 export type { PressableProps } from './components/interactive/Pressable';
 export { Focusable } from './components/interactive/Focusable';
 export type { FocusableProps } from './components/interactive/Focusable';
+export { Switch } from './components/interactive/Switch';
+export type { SwitchProps, SwitchChangeEvent } from './components/interactive/Switch';
 export { Prompt } from './components/interactive/Prompt';
 export type { PromptProps } from './components/interactive/Prompt';
 
@@ -53,10 +55,31 @@ export type { ListProps, ListOption } from './components/selection/List';
 // Components - Data
 export { Table } from './components/data/Table';
 export type { TableProps, TableColumn } from './components/data/Table';
+export { FlatList } from './components/data/FlatList';
+export type {
+  FlatListProps,
+  ListRenderItemInfo,
+  ViewToken,
+  ViewabilityConfig,
+  ScrollEvent,
+} from './components/data/FlatList';
+
+export { SectionList } from './components/data/SectionList';
+export type {
+  SectionListProps,
+  Section,
+  DefaultSectionT,
+  SectionListRenderItemInfo,
+  SectionListRenderSectionInfo,
+} from './components/data/SectionList';
 
 // Components - UI
-export { Spinner } from './components/ui/Spinner';
-export type { SpinnerProps, SpinnerStyle } from './components/ui/Spinner';
+export { ActivityIndicator, Spinner } from './components/ui/ActivityIndicator';
+export type {
+  ActivityIndicatorProps,
+  SpinnerProps,
+  SpinnerStyle,
+} from './components/ui/ActivityIndicator';
 export { ProgressBar } from './components/ui/ProgressBar';
 export type { ProgressBarProps } from './components/ui/ProgressBar';
 
@@ -229,6 +252,27 @@ export {
 // Utilities - Debouncing
 export { debounce, debounceImmediate, throttle } from './utils/debounce';
 
+// Utilities - State-based styling (React Native Pressable-style)
+export {
+  resolveStateStyle,
+  createStatefulStyle,
+  createDefaultInteractionState,
+  isStatefulStyle,
+} from './utils/stateStyles';
+export type { InteractionState, StateStyle, StateStyleProps } from './utils/stateStyles';
+
+// Utilities - Refs (React Native compatible imperative handles)
+export { createTextInputRef, createScrollViewRef, createFlatListRef } from './utils/refs';
+export type {
+  TextInputRef,
+  ScrollViewRef,
+  FlatListRef,
+  SectionListRef,
+  ViewRef,
+  PressableRef,
+  ButtonRef,
+} from './utils/refs';
+
 // Renderer - Batching (for advanced usage)
 export {
   scheduleBatchedUpdate,
@@ -300,7 +344,11 @@ export type { GlobalTerminal } from './utils/globalTerminal';
 // See src/theme.ts for exports
 
 // Focus and component management utilities
-export { focusComponent, enableComponent, disableComponent } from './renderer/utils/navigation';
+export {
+  focusComponent,
+  enableComponent,
+  disableComponent,
+} from './renderer/utils/focus/management';
 
 // Layout debugging utilities
 export {
@@ -330,6 +378,32 @@ export {
   createStyleLibrary,
   classNameRegistry,
 } from './utils/className';
+
+// React Native compatible APIs are available via 'react-console/apis'
+// See src/apis.ts for exports
+// Also re-exported here for convenience:
+export {
+  AppState,
+  Keyboard,
+  BackHandler,
+  Clipboard,
+  Alert,
+  Bell,
+  Dimensions,
+  Platform,
+  useAppState,
+  useBackHandler,
+  useClipboard,
+  useBell,
+  useWindowDimensions,
+} from './apis';
+export type {
+  AppStateStatus,
+  NativeEventSubscription,
+  KeyboardEvent as KeyboardAPIEvent,
+  AlertButton,
+  AlertOptions,
+} from './apis';
 
 // Multi-Buffer Rendering System
 // Advanced cell-based rendering with z-index layering and efficient diff updates

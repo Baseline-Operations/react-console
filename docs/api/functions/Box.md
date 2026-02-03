@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / Box
 
@@ -8,11 +8,12 @@
 
 > **Box**(`props`): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/primitives/Box.tsx:88
+Defined in: [src/components/primitives/Box.tsx:89](https://github.com/Baseline-Operations/react-console/blob/main/src/components/primitives/Box.tsx#L89)
 
 Box component - Container for layout and styling with full layout support
 
 Similar to React Native's View component, provides a block-level container with:
+
 - CSS-like styling (flexbox, grid, borders, padding, margins)
 - Responsive sizing (percentages, viewport units)
 - Scrollbar support (horizontal and vertical)

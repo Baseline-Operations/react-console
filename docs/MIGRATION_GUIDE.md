@@ -18,11 +18,13 @@ React Console is a React renderer for terminal UIs, similar to Ink but with some
 ### 1. Installation
 
 **Ink:**
+
 ```bash
 npm install ink react
 ```
 
 **React Console:**
+
 ```bash
 npm install react-console react
 ```
@@ -30,6 +32,7 @@ npm install react-console react
 ### 2. Basic Setup
 
 **Ink:**
+
 ```tsx
 import React from 'react';
 import { render, Text, Box } from 'ink';
@@ -46,6 +49,7 @@ render(<App />);
 ```
 
 **React Console:**
+
 ```tsx
 import React from 'react';
 import { render, Text, View } from 'react-console';
@@ -62,6 +66,7 @@ render(<App />, { mode: 'interactive' });
 ```
 
 **Key Differences:**
+
 - `Box` → `View` (or `Box` - both work)
 - `render()` requires `mode` option for interactive apps
 - Import from `react-console` instead of `ink`
@@ -69,6 +74,7 @@ render(<App />, { mode: 'interactive' });
 ### 3. Text Rendering
 
 **Ink:**
+
 ```tsx
 import { Text } from 'ink';
 
@@ -79,6 +85,7 @@ import { Text } from 'ink';
 ```
 
 **React Console:**
+
 ```tsx
 import { Text } from 'react-console';
 
@@ -89,6 +96,7 @@ import { Text } from 'react-console';
 ```
 
 **Notes:**
+
 - Text API is very similar
 - Nested Text for inline styling works the same
 - Color names are compatible
@@ -96,26 +104,29 @@ import { Text } from 'react-console';
 ### 4. Layout Components
 
 **Ink:**
+
 ```tsx
 import { Box } from 'ink';
 
 <Box flexDirection="row" justifyContent="space-between">
   <Text>Left</Text>
   <Text>Right</Text>
-</Box>
+</Box>;
 ```
 
 **React Console:**
+
 ```tsx
 import { View } from 'react-console';
 
 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
   <Text>Left</Text>
   <Text>Right</Text>
-</View>
+</View>;
 ```
 
 **Key Differences:**
+
 - Use `style` prop for layout properties (React Native pattern)
 - `Box` is also available (alias for `View`)
 - Flexbox properties work the same
@@ -123,6 +134,7 @@ import { View } from 'react-console';
 ### 5. Input Handling
 
 **Ink:**
+
 ```tsx
 import { useInput } from 'ink';
 
@@ -132,12 +144,13 @@ function App() {
       // Handle Enter
     }
   });
-  
+
   return <Text>Press keys</Text>;
 }
 ```
 
 **React Console:**
+
 ```tsx
 import { View, Text } from 'react-console';
 
@@ -157,6 +170,7 @@ function App() {
 ```
 
 **Key Differences:**
+
 - Use JSX event handlers instead of hooks
 - Event objects are similar but use `e.key` instead of separate `key` parameter
 - Event handlers work on any component
@@ -164,6 +178,7 @@ function App() {
 ### 6. Focus Management
 
 **Ink:**
+
 ```tsx
 import { useFocus } from 'ink';
 
@@ -174,15 +189,13 @@ function Button() {
 ```
 
 **React Console:**
+
 ```tsx
 import { Button } from 'react-console';
 
 function App() {
   return (
-    <Button
-      onFocus={() => console.log('Focused')}
-      onBlur={() => console.log('Blurred')}
-    >
+    <Button onFocus={() => console.log('Focused')} onBlur={() => console.log('Blurred')}>
       Button
     </Button>
   );
@@ -190,6 +203,7 @@ function App() {
 ```
 
 **Key Differences:**
+
 - Built-in focus management (no hooks needed)
 - Components automatically handle focus indicators
 - Use `onFocus`/`onBlur` event handlers
@@ -198,56 +212,48 @@ function App() {
 ### 7. User Input
 
 **Ink:**
+
 ```tsx
 import { TextInput } from 'ink-text-input';
 
 function App() {
   const [value, setValue] = useState('');
-  
-  return (
-    <TextInput
-      value={value}
-      onChange={setValue}
-    />
-  );
+
+  return <TextInput value={value} onChange={setValue} />;
 }
 ```
 
 **React Console:**
+
 ```tsx
-import { Input } from 'react-console';
+import { TextInput } from 'react-console';
 
 function App() {
   const [value, setValue] = useState('');
-  
-  return (
-    <Input
-      value={value}
-      onChange={(e) => setValue(e.value as string)}
-    />
-  );
+
+  return <TextInput value={value} onChangeText={setValue} />;
 }
 ```
 
 **Key Differences:**
-- `Input` component is built-in (no separate package)
-- Event handlers use event objects (`e.value` instead of direct value)
-- Supports validation, formatting, multiline, and more
+
+- `TextInput` component is built-in with React Native-compatible API
+- Uses `onChangeText` for simple string callback (similar to React Native)
+- Also supports `onChange` with event object for more detailed info
+- Supports validation, formatting, multiline (`numberOfLines`), and more
 
 ### 8. Styling
 
 **Ink:**
+
 ```tsx
-<Box
-  borderStyle="single"
-  borderColor="green"
-  padding={1}
->
+<Box borderStyle="single" borderColor="green" padding={1}>
   <Text>Content</Text>
 </Box>
 ```
 
 **React Console:**
+
 ```tsx
 <View
   style={{
@@ -261,6 +267,7 @@ function App() {
 ```
 
 **Key Differences:**
+
 - Use `style` prop (React Native pattern)
 - Style properties are the same
 - Supports CSS-like styling with StyleSheet API
@@ -268,6 +275,7 @@ function App() {
 ### 9. Render Options
 
 **Ink:**
+
 ```tsx
 render(<App />, {
   stdout: process.stdout,
@@ -278,6 +286,7 @@ render(<App />, {
 ```
 
 **React Console:**
+
 ```tsx
 render(<App />, {
   mode: 'interactive', // 'static' | 'interactive' | 'fullscreen'
@@ -287,6 +296,7 @@ render(<App />, {
 ```
 
 **Key Differences:**
+
 - Different options API
 - `mode` controls rendering behavior
 - No `stdout`/`stdin` options (uses process streams automatically)
@@ -295,6 +305,7 @@ render(<App />, {
 ### 10. Hooks
 
 **Ink Hooks:**
+
 - `useInput` - Keyboard input
 - `useFocus` - Focus management
 - `useFocusManager` - Focus control
@@ -303,6 +314,7 @@ render(<App />, {
 - `useStdout` - stdout stream
 
 **React Console Hooks:**
+
 - `useTerminalDimensions` - Terminal size
 - `useFocus` - Focus management
 - `useInputState` - Input value state
@@ -312,6 +324,7 @@ render(<App />, {
 - `useStorage` - Persistent storage
 
 **Migration:**
+
 - Replace `useInput` with `onKeyDown` event handlers
 - Replace `useFocus` with `onFocus`/`onBlur` handlers or `useFocus` hook
 - Use `useTerminalDimensions` instead of `useStdout` for terminal size
@@ -319,18 +332,19 @@ render(<App />, {
 
 ## Component Mapping
 
-| Ink | React Console | Notes |
-|-----|---------------|-------|
-| `<Box>` | `<View>` or `<Box>` | Both work, `View` is preferred |
-| `<Text>` | `<Text>` | Same API |
-| `<TextInput>` | `<Input>` | Built-in, more features |
-| `<Static>` | `<Scrollable>` | Scrollable container |
-| `<Transform>` | Not needed | Use style props directly |
-| `<Newline>` | `<LineBreak>` or `<Newline>` | Both work |
+| Ink           | React Console                | Notes                                 |
+| ------------- | ---------------------------- | ------------------------------------- |
+| `<Box>`       | `<View>` or `<Box>`          | Both work, `View` is preferred        |
+| `<Text>`      | `<Text>`                     | Same API                              |
+| `<TextInput>` | `<TextInput>`                | Built-in, React Native-compatible API |
+| `<Static>`    | `<Scrollable>`               | Scrollable container                  |
+| `<Transform>` | Not needed                   | Use style props directly              |
+| `<Newline>`   | `<LineBreak>` or `<Newline>` | Both work                             |
 
 ## Event Handling Migration
 
 **Ink Pattern:**
+
 ```tsx
 useInput((input, key) => {
   if (key.return) {
@@ -340,6 +354,7 @@ useInput((input, key) => {
 ```
 
 **React Console Pattern:**
+
 ```tsx
 <View
   onKeyDown={(e) => {
@@ -355,19 +370,16 @@ useInput((input, key) => {
 ## Layout Migration
 
 **Ink:**
+
 ```tsx
-<Box
-  flexDirection="column"
-  justifyContent="center"
-  alignItems="center"
-  gap={1}
->
+<Box flexDirection="column" justifyContent="center" alignItems="center" gap={1}>
   <Text>Item 1</Text>
   <Text>Item 2</Text>
 </Box>
 ```
 
 **React Console:**
+
 ```tsx
 <View
   style={{
@@ -387,30 +399,38 @@ useInput((input, key) => {
 ### 1. Conditional Rendering
 
 **Both libraries:**
+
 ```tsx
-{condition && <Text>Visible</Text>}
-{condition ? <Text>True</Text> : <Text>False</Text>}
+{
+  condition && <Text>Visible</Text>;
+}
+{
+  condition ? <Text>True</Text> : <Text>False</Text>;
+}
 ```
 
 ### 2. Lists
 
 **Ink:**
+
 ```tsx
-{items.map(item => (
-  <Text key={item.id}>{item.name}</Text>
-))}
+{
+  items.map((item) => <Text key={item.id}>{item.name}</Text>);
+}
 ```
 
 **React Console:**
+
 ```tsx
-{items.map(item => (
-  <Text key={item.id}>{item.name}</Text>
-))}
+{
+  items.map((item) => <Text key={item.id}>{item.name}</Text>);
+}
 ```
 
 ### 3. State Management
 
 **Both libraries:**
+
 ```tsx
 const [state, setState] = useState(initial);
 ```
@@ -423,7 +443,7 @@ const [state, setState] = useState(initial);
 - [ ] Replace `useInput` with `onKeyDown` handlers
 - [ ] Replace `useFocus` with `onFocus`/`onBlur` handlers
 - [ ] Update `render()` call with `mode` option
-- [ ] Replace `TextInput` with `Input` component
+- [ ] Replace `Input` with `TextInput` component
 - [ ] Update event handler signatures (use event objects)
 - [ ] Test focus management (tab navigation)
 - [ ] Test input handling (keyboard events)
@@ -453,6 +473,7 @@ const [state, setState] = useState(initial);
 ## Examples
 
 See the `examples/` directory for complete examples:
+
 - `examples/basic.tsx` - Basic usage
 - `examples/forms.tsx` - Form handling
 - `examples/input-types.tsx` - Input types

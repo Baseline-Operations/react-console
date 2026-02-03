@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / focusComponent
 
@@ -8,7 +8,7 @@
 
 > **focusComponent**(`component`, `interactiveComponents`, `scheduleUpdate`): `void`
 
-Defined in: src/renderer/utils/navigation.ts:181
+Defined in: [src/renderer/utils/focus/management.ts:85](https://github.com/Baseline-Operations/react-console/blob/main/src/renderer/utils/focus/management.ts#L85)
 
 Programmatically focus a component
 
@@ -20,13 +20,13 @@ Skips disabled components (returns early if component is disabled).
 
 ### component
 
-[`ConsoleNode`](../interfaces/ConsoleNode.md)
+`Node`
 
 Component to focus (must not be disabled)
 
 ### interactiveComponents
 
-[`ConsoleNode`](../interfaces/ConsoleNode.md)[]
+`Node`[]
 
 All interactive components (to blur currently focused one)
 

@@ -2,5 +2,5 @@
  * Interactive node exports
  */
 
-export { InputNode } from './InputNode';
+export { TextInputNode, InputNode } from './TextInputNode';
 export { ButtonNode } from './ButtonNode';

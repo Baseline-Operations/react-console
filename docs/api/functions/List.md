@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / List
 
@@ -8,7 +8,7 @@
 
 > **List**(`props`): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/selection/List.tsx:73
+Defined in: [src/components/selection/List.tsx:80](https://github.com/Baseline-Operations/react-console/blob/main/src/components/selection/List.tsx#L80)
 
 List component - Scrollable list with single or multiple selection
 

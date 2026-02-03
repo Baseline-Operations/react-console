@@ -1,12 +1,12 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / ConsoleErrorHandler
 
 # Class: ConsoleErrorHandler
 
-Defined in: src/utils/errorHandlers.ts:41
+Defined in: [src/utils/errorHandlers.ts:41](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L41)
 
 Console error handler
 Logs errors to console with formatting
@@ -21,7 +21,7 @@ Logs errors to console with formatting
 
 > **new ConsoleErrorHandler**(`options`): `ConsoleErrorHandler`
 
-Defined in: src/utils/errorHandlers.ts:45
+Defined in: [src/utils/errorHandlers.ts:45](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L45)
 
 #### Parameters
 
@@ -49,7 +49,7 @@ Defined in: src/utils/errorHandlers.ts:45
 
 > **setContext**(`context`): `this`
 
-Defined in: src/utils/errorHandlers.ts:23
+Defined in: [src/utils/errorHandlers.ts:23](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L23)
 
 Set handler context
 
@@ -67,13 +67,13 @@ Set handler context
 
 [`BaseErrorHandler`](BaseErrorHandler.md).[`setContext`](BaseErrorHandler.md#setcontext)
 
-***
+---
 
 ### clearContext()
 
 > **clearContext**(): `this`
 
-Defined in: src/utils/errorHandlers.ts:31
+Defined in: [src/utils/errorHandlers.ts:31](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L31)
 
 Clear handler context
 
@@ -85,13 +85,13 @@ Clear handler context
 
 [`BaseErrorHandler`](BaseErrorHandler.md).[`clearContext`](BaseErrorHandler.md#clearcontext)
 
-***
+---
 
 ### handle()
 
 > **handle**(`error`, `type`, `context?`): `void`
 
-Defined in: src/utils/errorHandlers.ts:51
+Defined in: [src/utils/errorHandlers.ts:51](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L51)
 
 Handle an error
 

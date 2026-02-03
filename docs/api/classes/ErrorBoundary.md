@@ -1,12 +1,12 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / ErrorBoundary
 
 # Class: ErrorBoundary
 
-Defined in: src/components/ErrorBoundary.tsx:87
+Defined in: [src/components/ErrorBoundary.tsx:88](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ErrorBoundary.tsx#L88)
 
 ErrorBoundary component - Catches errors in child components
 
@@ -52,7 +52,7 @@ It catches errors during rendering, lifecycle methods, and constructors of child
 
 > **new ErrorBoundary**(`props`): `ErrorBoundary`
 
-Defined in: src/components/ErrorBoundary.tsx:88
+Defined in: [src/components/ErrorBoundary.tsx:89](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ErrorBoundary.tsx#L89)
 
 #### Parameters
 
@@ -74,7 +74,7 @@ Defined in: src/components/ErrorBoundary.tsx:88
 
 > `static` `optional` **contextType**: `Context`\<`any`\>
 
-Defined in: node\_modules/@types/react/index.d.ts:922
+Defined in: node_modules/@types/react/index.d.ts:922
 
 If set, `this.context` will be set at runtime to the current value of the given Context.
 
@@ -101,13 +101,13 @@ class Foo extends React.Component {
 
 `Component.contextType`
 
-***
+---
 
 ### ~~propTypes?~~
 
 > `static` `optional` **propTypes**: `any`
 
-Defined in: node\_modules/@types/react/index.d.ts:928
+Defined in: node_modules/@types/react/index.d.ts:928
 
 Ignored by React.
 
@@ -119,13 +119,13 @@ Only kept in types for backwards compatibility. Will be removed in a future majo
 
 `Component.propTypes`
 
-***
+---
 
 ### context
 
 > **context**: `unknown`
 
-Defined in: node\_modules/@types/react/index.d.ts:946
+Defined in: node_modules/@types/react/index.d.ts:946
 
 If using React Context, re-declare this in your class to be the
 `React.ContextType` of your `static contextType`.
@@ -149,25 +149,25 @@ declare context: React.ContextType<typeof MyContext>
 
 `Component.context`
 
-***
+---
 
 ### props
 
 > `readonly` **props**: `Readonly`\<`P`\>
 
-Defined in: node\_modules/@types/react/index.d.ts:970
+Defined in: node_modules/@types/react/index.d.ts:970
 
 #### Inherited from
 
 `Component.props`
 
-***
+---
 
 ### state
 
 > **state**: `Readonly`\<`S`\>
 
-Defined in: node\_modules/@types/react/index.d.ts:971
+Defined in: node_modules/@types/react/index.d.ts:971
 
 #### Inherited from
 
@@ -179,13 +179,13 @@ Defined in: node\_modules/@types/react/index.d.ts:971
 
 > **setState**\<`K`\>(`state`, `callback?`): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:962
+Defined in: node_modules/@types/react/index.d.ts:962
 
 #### Type Parameters
 
 ##### K
 
-`K` *extends* keyof `ErrorBoundaryState`
+`K` _extends_ keyof `ErrorBoundaryState`
 
 #### Parameters
 
@@ -205,13 +205,13 @@ Defined in: node\_modules/@types/react/index.d.ts:962
 
 `Component.setState`
 
-***
+---
 
 ### forceUpdate()
 
 > **forceUpdate**(`callback?`): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:967
+Defined in: node_modules/@types/react/index.d.ts:967
 
 #### Parameters
 
@@ -227,13 +227,13 @@ Defined in: node\_modules/@types/react/index.d.ts:967
 
 `Component.forceUpdate`
 
-***
+---
 
 ### componentDidMount()?
 
 > `optional` **componentDidMount**(): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1189
+Defined in: node_modules/@types/react/index.d.ts:1189
 
 Called immediately after a component is mounted. Setting state here will trigger re-rendering.
 
@@ -245,13 +245,13 @@ Called immediately after a component is mounted. Setting state here will trigger
 
 `Component.componentDidMount`
 
-***
+---
 
 ### shouldComponentUpdate()?
 
 > `optional` **shouldComponentUpdate**(`nextProps`, `nextState`, `nextContext`): `boolean`
 
-Defined in: node\_modules/@types/react/index.d.ts:1200
+Defined in: node_modules/@types/react/index.d.ts:1200
 
 Called to determine whether the change in props and state should trigger a re-render.
 
@@ -284,13 +284,13 @@ and `componentDidUpdate` will not be called.
 
 `Component.shouldComponentUpdate`
 
-***
+---
 
 ### componentWillUnmount()?
 
 > `optional` **componentWillUnmount**(): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1205
+Defined in: node_modules/@types/react/index.d.ts:1205
 
 Called immediately before a component is destroyed. Perform any necessary cleanup in this method, such as
 cancelled network requests, or cleaning up any DOM elements created in `componentDidMount`.
@@ -303,13 +303,13 @@ cancelled network requests, or cleaning up any DOM elements created in `componen
 
 `Component.componentWillUnmount`
 
-***
+---
 
 ### getSnapshotBeforeUpdate()?
 
 > `optional` **getSnapshotBeforeUpdate**(`prevProps`, `prevState`): `any`
 
-Defined in: node\_modules/@types/react/index.d.ts:1246
+Defined in: node_modules/@types/react/index.d.ts:1246
 
 Runs before React applies the result of Component.render render to the document, and
 returns an object to be given to [componentDidUpdate](#componentdidupdate). Useful for saving
@@ -336,13 +336,13 @@ lifecycle events from running.
 
 `Component.getSnapshotBeforeUpdate`
 
-***
+---
 
 ### ~~componentWillMount()?~~
 
 > `optional` **componentWillMount**(): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1268
+Defined in: node_modules/@types/react/index.d.ts:1268
 
 Called immediately before mounting occurs, and before Component.render.
 Avoid introducing any side-effects or subscriptions in this method.
@@ -361,20 +361,20 @@ this from being invoked.
 
 #### See
 
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state)
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
 
 #### Inherited from
 
 `Component.componentWillMount`
 
-***
+---
 
-### ~~UNSAFE\_componentWillMount()?~~
+### ~~UNSAFE_componentWillMount()?~~
 
-> `optional` **UNSAFE\_componentWillMount**(): `void`
+> `optional` **UNSAFE_componentWillMount**(): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1283
+Defined in: node_modules/@types/react/index.d.ts:1283
 
 Called immediately before mounting occurs, and before Component.render.
 Avoid introducing any side-effects or subscriptions in this method.
@@ -395,20 +395,20 @@ this from being invoked.
 
 #### See
 
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state)
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
 
 #### Inherited from
 
 `Component.UNSAFE_componentWillMount`
 
-***
+---
 
 ### ~~componentWillReceiveProps()?~~
 
 > `optional` **componentWillReceiveProps**(`nextProps`, `nextContext`): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1299
+Defined in: node_modules/@types/react/index.d.ts:1299
 
 Called when the component may be receiving new props.
 React may call this even if props have not changed, so be sure to compare new and existing
@@ -440,20 +440,20 @@ this from being invoked.
 
 #### See
 
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props)
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
 
 #### Inherited from
 
 `Component.componentWillReceiveProps`
 
-***
+---
 
-### ~~UNSAFE\_componentWillReceiveProps()?~~
+### ~~UNSAFE_componentWillReceiveProps()?~~
 
-> `optional` **UNSAFE\_componentWillReceiveProps**(`nextProps`, `nextContext`): `void`
+> `optional` **UNSAFE_componentWillReceiveProps**(`nextProps`, `nextContext`): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1317
+Defined in: node_modules/@types/react/index.d.ts:1317
 
 Called when the component may be receiving new props.
 React may call this even if props have not changed, so be sure to compare new and existing
@@ -487,20 +487,20 @@ this from being invoked.
 
 #### See
 
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props)
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
 
 #### Inherited from
 
 `Component.UNSAFE_componentWillReceiveProps`
 
-***
+---
 
 ### ~~componentWillUpdate()?~~
 
 > `optional` **componentWillUpdate**(`nextProps`, `nextState`, `nextContext`): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1331
+Defined in: node_modules/@types/react/index.d.ts:1331
 
 Called immediately before rendering when new props or state is received. Not called for the initial render.
 
@@ -534,20 +534,20 @@ this from being invoked.
 
 #### See
 
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update)
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
 
 #### Inherited from
 
 `Component.componentWillUpdate`
 
-***
+---
 
-### ~~UNSAFE\_componentWillUpdate()?~~
+### ~~UNSAFE_componentWillUpdate()?~~
 
-> `optional` **UNSAFE\_componentWillUpdate**(`nextProps`, `nextState`, `nextContext`): `void`
+> `optional` **UNSAFE_componentWillUpdate**(`nextProps`, `nextState`, `nextContext`): `void`
 
-Defined in: node\_modules/@types/react/index.d.ts:1347
+Defined in: node_modules/@types/react/index.d.ts:1347
 
 Called immediately before rendering when new props or state is received. Not called for the initial render.
 
@@ -583,20 +583,20 @@ this from being invoked.
 
 #### See
 
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update)
- - [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update)
+- [https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path](https://legacy.reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path)
 
 #### Inherited from
 
 `Component.UNSAFE_componentWillUpdate`
 
-***
+---
 
 ### getDerivedStateFromError()
 
 > `static` **getDerivedStateFromError**(`error`): `Partial`\<`ErrorBoundaryState`\>
 
-Defined in: src/components/ErrorBoundary.tsx:101
+Defined in: [src/components/ErrorBoundary.tsx:102](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ErrorBoundary.tsx#L102)
 
 Update state when an error is caught
 This is called during render phase, so side effects are not allowed
@@ -611,13 +611,13 @@ This is called during render phase, so side effects are not allowed
 
 `Partial`\<`ErrorBoundaryState`\>
 
-***
+---
 
 ### componentDidCatch()
 
 > **componentDidCatch**(`error`, `errorInfo`): `void`
 
-Defined in: src/components/ErrorBoundary.tsx:112
+Defined in: [src/components/ErrorBoundary.tsx:113](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ErrorBoundary.tsx#L113)
 
 Called after an error has been thrown by a descendant component
 This is where we can log error information and perform side effects
@@ -640,13 +640,13 @@ This is where we can log error information and perform side effects
 
 `Component.componentDidCatch`
 
-***
+---
 
 ### componentDidUpdate()
 
 > **componentDidUpdate**(`prevProps`): `void`
 
-Defined in: src/components/ErrorBoundary.tsx:134
+Defined in: [src/components/ErrorBoundary.tsx:135](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ErrorBoundary.tsx#L135)
 
 Reset error state when children change (if resetOnChange is true)
 
@@ -664,13 +664,13 @@ Reset error state when children change (if resetOnChange is true)
 
 `Component.componentDidUpdate`
 
-***
+---
 
 ### render()
 
 > **render**(): `ReactNode`
 
-Defined in: src/components/ErrorBoundary.tsx:149
+Defined in: [src/components/ErrorBoundary.tsx:150](https://github.com/Baseline-Operations/react-console/blob/main/src/components/ErrorBoundary.tsx#L150)
 
 Render fallback UI when error occurs
 

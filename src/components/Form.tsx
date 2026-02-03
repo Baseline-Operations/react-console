@@ -51,8 +51,8 @@ export interface FormProps extends StyleProps {
  *     return { valid: errors.length === 0, errors };
  *   }}
  * >
- *   <Input name="name" placeholder="Name" />
- *   <Input name="email" placeholder="Email" />
+ *   <TextInput name="name" placeholder="Name" />
+ *   <TextInput name="email" placeholder="Email" />
  *   <Button type="submit">Submit</Button>
  * </Form>
  * ```

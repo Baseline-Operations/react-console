@@ -15,7 +15,7 @@ import { Animated, Text } from 'react-console';
 
 <Animated type="fade" duration={1000}>
   <Text>Fading text</Text>
-</Animated>
+</Animated>;
 ```
 
 ### Animation Hooks
@@ -95,11 +95,8 @@ import { useAnimatedStyle } from 'react-console/animations';
 
 function ExpandableBox() {
   const [expanded, setExpanded] = useState(false);
-  const style = useAnimatedStyle(
-    { height: expanded ? 10 : 5 },
-    { duration: 300 }
-  );
-  
+  const style = useAnimatedStyle({ height: expanded ? 10 : 5 }, { duration: 300 });
+
   return (
     <View style={style}>
       <Text>Expandable content</Text>
@@ -110,14 +107,14 @@ function ExpandableBox() {
 
 ### Loading Animations
 
-#### Spinner
+#### ActivityIndicator
 
-Rotating characters:
+Rotating characters (previously called Spinner):
 
 ```tsx
-import { Spinner } from 'react-console';
+import { ActivityIndicator } from 'react-console';
 
-<Spinner />
+<ActivityIndicator />;
 ```
 
 #### Progress Bar
@@ -173,13 +170,13 @@ Wrapper component for animating any component:
 
 ```tsx
 <Animated
-  type="fade"              // Animation type
-  duration={1000}          // Duration in ms
-  delay={0}                // Delay before start
-  iterations={1}           // Number of iterations ('infinite' for loop)
-  easing="ease-in-out"     // Easing function
-  visible={true}           // Visibility (for fade)
-  direction="left"         // Direction (for slide)
+  type="fade" // Animation type
+  duration={1000} // Duration in ms
+  delay={0} // Delay before start
+  iterations={1} // Number of iterations ('infinite' for loop)
+  easing="ease-in-out" // Easing function
+  visible={true} // Visibility (for fade)
+  direction="left" // Direction (for slide)
 >
   <Text>Animated content</Text>
 </Animated>
@@ -210,11 +207,11 @@ function Counter() {
     duration: 1000,
     easing: easing.easeOut,
   });
-  
+
   useEffect(() => {
     start();
   }, [target, start]);
-  
+
   return (
     <View>
       <Text>Count: {Math.round(value)}</Text>
@@ -234,16 +231,12 @@ import { useAnimatedColor } from 'react-console/animations';
 function ColorChanger() {
   const [targetColor, setTargetColor] = useState('red');
   const [color, start] = useAnimatedColor('white', targetColor, { duration: 500 });
-  
+
   useEffect(() => {
     start();
   }, [targetColor, start]);
-  
-  return (
-    <Text color={color}>
-      Color transitions smoothly
-    </Text>
-  );
+
+  return <Text color={color}>Color transitions smoothly</Text>;
 }
 ```
 
@@ -261,11 +254,11 @@ function Expandable() {
     { width: expanded ? 50 : 20, height: expanded ? 10 : 5 },
     { duration: 500 }
   );
-  
+
   useEffect(() => {
     start();
   }, [expanded, start]);
-  
+
   return (
     <View style={style} border>
       <Text>Animated box</Text>
@@ -286,11 +279,7 @@ Available easing functions:
 - `'quad-in'`, `'quad-out'`, `'quad-in-out'`
 
 ```tsx
-<Animated
-  type="fade"
-  duration={1000}
-  easing="ease-in-out"
->
+<Animated type="fade" duration={1000} easing="ease-in-out">
   <Text>Smooth animation</Text>
 </Animated>
 ```
@@ -320,14 +309,14 @@ Animations automatically pause when components are not visible:
 
 ## Examples
 
-### Loading Spinner with Pulse
+### Loading ActivityIndicator with Pulse
 
 ```tsx
 function LoadingScreen() {
   return (
     <View>
       <Animated type="pulse" duration={500} iterations="infinite">
-        <Spinner />
+        <ActivityIndicator />
       </Animated>
       <Text>Loading...</Text>
     </View>
@@ -341,11 +330,11 @@ function LoadingScreen() {
 function AnimatedProgress() {
   const [progress, setProgress] = useState(0);
   const animatedProgress = useAnimatedValue(progress, { duration: 1000 });
-  
+
   useEffect(() => {
     setProgress(100);
   }, []);
-  
+
   return <ProgressBar value={animatedProgress} max={100} />;
 }
 ```
@@ -355,12 +344,7 @@ function AnimatedProgress() {
 ```tsx
 function SlideMenu({ isOpen }: { isOpen: boolean }) {
   return (
-    <Animated
-      type="slide"
-      direction="left"
-      duration={300}
-      visible={isOpen}
-    >
+    <Animated type="slide" direction="left" duration={300} visible={isOpen}>
       <View style={{ width: 30 }}>
         <Text>Menu Content</Text>
       </View>
@@ -378,9 +362,9 @@ function StatusIndicator({ status }: { status: 'ok' | 'warning' | 'error' }) {
     warning: 'yellow',
     error: 'red',
   };
-  
+
   const color = useAnimatedColor(colorMap[status], { duration: 300 });
-  
+
   return <Text color={color}>● Status: {status}</Text>;
 }
 ```

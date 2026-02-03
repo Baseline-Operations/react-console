@@ -5,6 +5,7 @@ This guide covers all aspects of event handling in React Console, including keyb
 ## Overview
 
 React Console provides a comprehensive event system with:
+
 - **Keyboard Events**: Key presses, shortcuts, navigation
 - **Mouse Events**: Clicks, drags, movement
 - **Input Events**: Value changes, form submission
@@ -18,7 +19,7 @@ React Console provides a comprehensive event system with:
 Keyboard events are triggered when keys are pressed:
 
 ```tsx
-import { Button, Input } from 'react-console';
+import { Button, TextInput } from 'react-console';
 
 function KeyboardExample() {
   return (
@@ -71,20 +72,20 @@ function MouseExample() {
 Input events are triggered when input values change:
 
 ```tsx
-import { Input } from 'react-console';
+import { TextInput } from 'react-console';
 
 function InputExample() {
+  const [value, setValue] = useState('');
+
   return (
-    <Input
+    <TextInput
       value={value}
-      onChange={(e) => {
-        console.log('Value changed:', e.value);
-        if (e.key.return) {
-          console.log('Enter pressed in input');
-        }
+      onChangeText={(text) => {
+        console.log('Value changed:', text);
+        setValue(text);
       }}
-      onSubmit={(e) => {
-        console.log('Form submitted with value:', e.value);
+      onSubmitEditing={(e) => {
+        console.log('Form submitted with value:', e.nativeEvent.text);
       }}
     />
   );
@@ -96,12 +97,12 @@ function InputExample() {
 Focus events are triggered when components gain or lose focus:
 
 ```tsx
-import { Input, Button } from 'react-console';
+import { TextInput, Button } from 'react-console';
 
 function FocusExample() {
   return (
     <View>
-      <Input
+      <TextInput
         onFocus={() => {
           console.log('Input focused');
         }}
@@ -122,31 +123,31 @@ The `KeyPress` interface provides information about pressed keys:
 
 ```tsx
 interface KeyPress {
-  name?: string;           // Key name (if available)
-  ctrl: boolean;           // Ctrl key pressed
-  meta: boolean;           // Meta/Command key pressed
-  shift: boolean;          // Shift key pressed
-  return: boolean;         // Enter/Return key
-  escape: boolean;        // Escape key
-  tab: boolean;           // Tab key
-  backspace: boolean;     // Backspace key
-  delete: boolean;        // Delete key
-  upArrow: boolean;       // Up arrow
-  downArrow: boolean;    // Down arrow
-  leftArrow: boolean;    // Left arrow
-  rightArrow: boolean;   // Right arrow
-  pageUp?: boolean;      // Page Up
-  pageDown?: boolean;    // Page Down
-  home?: boolean;         // Home key
-  end?: boolean;         // End key
-  char?: string;         // Character typed or Ctrl+key name
+  name?: string; // Key name (if available)
+  ctrl: boolean; // Ctrl key pressed
+  meta: boolean; // Meta/Command key pressed
+  shift: boolean; // Shift key pressed
+  return: boolean; // Enter/Return key
+  escape: boolean; // Escape key
+  tab: boolean; // Tab key
+  backspace: boolean; // Backspace key
+  delete: boolean; // Delete key
+  upArrow: boolean; // Up arrow
+  downArrow: boolean; // Down arrow
+  leftArrow: boolean; // Left arrow
+  rightArrow: boolean; // Right arrow
+  pageUp?: boolean; // Page Up
+  pageDown?: boolean; // Page Down
+  home?: boolean; // Home key
+  end?: boolean; // End key
+  char?: string; // Character typed or Ctrl+key name
 }
 ```
 
 ### Special Keys
 
 ```tsx
-<Input
+<TextInput
   onKeyDown={(e) => {
     // Arrow keys
     if (e.key.upArrow) {
@@ -154,14 +155,14 @@ interface KeyPress {
     } else if (e.key.downArrow) {
       moveDown();
     }
-    
+
     // Modifier keys
     if (e.key.ctrl && e.key.char === 'c') {
       handleCopy();
     } else if (e.key.ctrl && e.key.char === 'v') {
       handlePaste();
     }
-    
+
     // Navigation keys
     if (e.key.pageUp) {
       scrollUp();
@@ -206,17 +207,17 @@ The `MouseEvent` interface provides mouse information:
 
 ```tsx
 interface MouseEvent {
-  x: number;              // X coordinate (0-based)
-  y: number;              // Y coordinate (0-based)
-  button?: number;         // Button (0=left, 1=middle, 2=right)
-  ctrl?: boolean;         // Ctrl key pressed
-  shift?: boolean;        // Shift key pressed
-  meta?: boolean;         // Meta key pressed
-  isDragging?: boolean;   // True if dragging
-  startX?: number;       // X where drag started
-  startY?: number;       // Y where drag started
-  deltaX?: number;        // X change since drag start
-  deltaY?: number;       // Y change since drag start
+  x: number; // X coordinate (0-based)
+  y: number; // Y coordinate (0-based)
+  button?: number; // Button (0=left, 1=middle, 2=right)
+  ctrl?: boolean; // Ctrl key pressed
+  shift?: boolean; // Shift key pressed
+  meta?: boolean; // Meta key pressed
+  isDragging?: boolean; // True if dragging
+  startX?: number; // X where drag started
+  startY?: number; // Y where drag started
+  deltaX?: number; // X change since drag start
+  deltaY?: number; // Y change since drag start
   eventType?: 'press' | 'drag' | 'release';
 }
 ```
@@ -297,12 +298,13 @@ interface MouseEvent {
 Triggered when input value changes:
 
 ```tsx
-<Input
+<TextInput
   value={value}
-  onChange={(e) => {
-    // e.value is the new value
-    setValue(e.value as string);
-    
+  onChangeText={(text) => {
+    // text is the new value
+    setValue(text);
+  }}
+  onKeyDown={(e) => {
     // e.key contains key information
     if (e.key.return) {
       handleSubmit();
@@ -316,9 +318,9 @@ Triggered when input value changes:
 Triggered when Enter is pressed in input:
 
 ```tsx
-<Input
+<TextInput
   value={value}
-  onSubmit={(e) => {
+  onSubmitEditing={(e) => {
     // e.value is the current value
     handleSubmit(e.value);
   }}
@@ -330,7 +332,7 @@ Triggered when Enter is pressed in input:
 ### Focus Events
 
 ```tsx
-<Input
+<TextInput
   onFocus={() => {
     console.log('Input gained focus');
   }}
@@ -347,10 +349,10 @@ import { focusComponent } from 'react-console';
 
 function FocusExample() {
   const [inputRef, setInputRef] = useState<ConsoleNode | null>(null);
-  
+
   return (
     <View>
-      <Input ref={setInputRef} />
+      <TextInput ref={setInputRef} />
       <Button
         onClick={() => {
           if (inputRef) {
@@ -381,11 +383,11 @@ Tab navigation is handled automatically:
 ```tsx
 // Tab navigation works automatically
 <View>
-  <Input autoFocus />      {/* First focusable */}
-  <Button />               {/* Second focusable */}
-  <Input />                {/* Third focusable */}
-  <Button disabled />      {/* Skipped (disabled) */}
-  <Input />                {/* Fourth focusable */}
+  <TextInput autoFocus /> {/* First focusable */}
+  <Button /> {/* Second focusable */}
+  <TextInput /> {/* Third focusable */}
+  <Button disabled /> {/* Skipped (disabled) */}
+  <TextInput /> {/* Fourth focusable */}
 </View>
 ```
 
@@ -396,7 +398,7 @@ Tab navigation is handled automatically:
 Prevent default behavior:
 
 ```tsx
-<Input
+<TextInput
   onKeyDown={(e) => {
     if (e.key.ctrl && e.key.char === 's') {
       e.preventDefault(); // Prevent default save behavior
@@ -411,7 +413,7 @@ Prevent default behavior:
 Stop event from continuing to default handling:
 
 ```tsx
-<Input
+<TextInput
   onKeyDown={(e) => {
     if (e.key.return) {
       e.stopPropagation(); // Prevent default Enter handling
@@ -445,17 +447,17 @@ Stop event from continuing to default handling:
 ### Input Events
 
 ```tsx
-<Input
-  onChange={(e) => {
-    setValue(e.value as string);
+<TextInput
+  onChangeText={(text) => {
+    setValue(text);
   }}
   onKeyDown={(e) => {
     if (e.key.escape) {
       handleCancel();
     }
   }}
-  onSubmit={(e) => {
-    handleSubmit(e.value);
+  onSubmitEditing={(e) => {
+    handleSubmit(e.nativeEvent.text);
   }}
 />
 ```
@@ -492,15 +494,13 @@ function handleClick(e: MouseEvent) {
   console.log('Clicked at', e.x, e.y);
 }
 
-<Button onClick={handleClick} />
+<Button onClick={handleClick} />;
 ```
 
 ### Conditional Handlers
 
 ```tsx
-<Button
-  onClick={enabled ? handleClick : undefined}
-/>
+<Button onClick={enabled ? handleClick : undefined} />
 ```
 
 ### Handler with State
@@ -508,14 +508,8 @@ function handleClick(e: MouseEvent) {
 ```tsx
 function App() {
   const [count, setCount] = useState(0);
-  
-  return (
-    <Button
-      onClick={() => setCount(count + 1)}
-    >
-      Count: {count}
-    </Button>
-  );
+
+  return <Button onClick={() => setCount(count + 1)}>Count: {count}</Button>;
 }
 ```
 
@@ -526,22 +520,22 @@ function App() {
 ```tsx
 function Form() {
   const [formData, setFormData] = useState({ name: '', email: '' });
-  
+
   const handleSubmit = () => {
     // Submit form
   };
-  
+
   return (
     <View>
-      <Input
+      <TextInput
         value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.value as string })}
-        onSubmit={handleSubmit}
+        onChangeText={(text) => setFormData({ ...formData, name: text })}
+        onSubmitEditing={handleSubmit}
       />
-      <Input
+      <TextInput
         value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.value as string })}
-        onSubmit={handleSubmit}
+        onChangeText={(text) => setFormData({ ...formData, email: text })}
+        onSubmitEditing={handleSubmit}
       />
       <Button onClick={handleSubmit}>Submit</Button>
     </View>
@@ -587,7 +581,7 @@ function App() {
 ```tsx
 function Draggable() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  
+
   return (
     <View
       onMouseDrag={(e) => {
@@ -613,9 +607,9 @@ function Draggable() {
 ```tsx
 function FocusExample() {
   const [focused, setFocused] = useState(false);
-  
+
   return (
-    <Input
+    <TextInput
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       style={{
@@ -643,18 +637,18 @@ function FocusExample() {
 
 ```tsx
 // Good: Handle at component level
-<Input onChange={(e) => setValue(e.value)} />
+<TextInput onChangeText={(text) => setValue(text)} />
 
 // Also good: Handle at form level for validation
 <View onKeyDown={(e) => handleFormKeyDown(e)}>
-  <Input />
+  <TextInput />
 </View>
 ```
 
 ### 3. Use preventDefault for Custom Behavior
 
 ```tsx
-<Input
+<TextInput
   onKeyDown={(e) => {
     if (e.key.ctrl && e.key.char === 's') {
       e.preventDefault(); // Prevent default
@@ -667,7 +661,7 @@ function FocusExample() {
 ### 4. Use stopPropagation to Override Defaults
 
 ```tsx
-<Input
+<TextInput
   onKeyDown={(e) => {
     if (e.key.return) {
       e.stopPropagation(); // Prevent default Enter handling
@@ -681,10 +675,10 @@ function FocusExample() {
 
 ```tsx
 // Good: Use autoFocus for first input
-<Input autoFocus />
+<TextInput autoFocus />
 
 // Good: Handle focus events for UI feedback
-<Input
+<TextInput
   onFocus={() => setFocused(true)}
   onBlur={() => setFocused(false)}
 />

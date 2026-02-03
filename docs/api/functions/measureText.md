@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / measureText
 
@@ -8,7 +8,7 @@
 
 > **measureText**(`text`): `number`
 
-Defined in: src/utils/measure.ts:26
+Defined in: [src/utils/measure.ts:26](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/measure.ts#L26)
 
 Measure text width (accounting for ANSI codes)
 

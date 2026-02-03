@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / ScrollView
 
@@ -8,13 +8,12 @@
 
 > **ScrollView**(`props`): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/layout/ScrollView.tsx:53
+Defined in: [src/components/layout/ScrollView.tsx:133](https://github.com/Baseline-Operations/react-console/blob/main/src/components/layout/ScrollView.tsx#L133)
 
 ScrollView component - React Native-like pattern for terminal
 
-React Native-compatible scrollable container for overflow content.
-Functionally identical to Scrollable but uses React Native naming conventions.
-Supports horizontal and vertical scrolling with scroll position control.
+Extends View with scrolling capability. Content that exceeds maxHeight/maxWidth
+becomes scrollable. Supports both controlled (scrollTop prop) and uncontrolled modes.
 
 ## Parameters
 
@@ -33,11 +32,22 @@ React element representing a scrollable container
 ## Example
 
 ```tsx
-<ScrollView scrollTop={scrollPosition} maxHeight={20}>
-  <Text>Long content that overflows</Text>
+// Simple scrollable list
+<ScrollView maxHeight={10}>
+  {items.map(item => <Text key={item.id}>{item.name}</Text>)}
+</ScrollView>
+
+// With custom scrollbar
+<ScrollView
+  maxHeight={15}
+  showsVerticalScrollIndicator
+  scrollbarStyle={{
+    thumbColor: 'blue',
+    trackColor: 'gray',
+    thumbChar: '●',
+    trackChar: '│'
+  }}
+>
+  <Text>Content here...</Text>
 </ScrollView>
 ```
-
-## See
-
-Scrollable - For component with identical functionality

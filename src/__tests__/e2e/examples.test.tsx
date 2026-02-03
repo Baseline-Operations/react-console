@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Text, View, Input, Button } from '../../index';
+import { Text, View, TextInput, Button } from '../../index';
 
 // Skip render import to avoid module resolution issues in vitest
 // import { render } from '../../index';
@@ -81,7 +81,7 @@ describe.skip('Example Applications E2E', () => {
   describe('Interactive components', () => {
     it('should render input component', () => {
       function App() {
-        return <Input placeholder="Enter text" />;
+        return <TextInput placeholder="Enter text" />;
       }
 
       const output = render(<App />, { mode: 'static' });

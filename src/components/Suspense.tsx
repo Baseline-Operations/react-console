@@ -6,7 +6,7 @@
 import { Suspense as ReactSuspense, type ReactNode } from 'react';
 import type { ViewStyle } from '../types';
 import { View } from './primitives/View';
-import { Spinner } from './ui/Spinner';
+import { ActivityIndicator } from './ui/ActivityIndicator';
 
 export interface SuspenseProps {
   children: ReactNode;
@@ -23,7 +23,7 @@ export interface SuspenseProps {
  *
  * @example
  * ```tsx
- * <Suspense fallback={<Spinner label="Loading..." />}>
+ * <Suspense fallback={<ActivityIndicator label="Loading..." />}>
  *   <AsyncComponent />
  * </Suspense>
  *
@@ -41,7 +41,7 @@ export function Suspense({
   // Default fallback if none provided
   const defaultFallback = (
     <View style={loadingStyle}>
-      <Spinner label={loadingText} />
+      <ActivityIndicator label={loadingText} />
     </View>
   );
 

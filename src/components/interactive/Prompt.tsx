@@ -144,11 +144,12 @@ export function Prompt({
           ...questionStyle,
         },
       }),
-      createConsoleNode('input', {
-        type: type === 'number' ? 'number' : 'text',
+      createConsoleNode('textinput', {
+        inputType: type === 'number' ? 'number' : 'text',
         value,
         placeholder,
-        mask: type === 'password' ? mask || '*' : undefined,
+        mask: type === 'password' ? mask || '•' : undefined,
+        secureTextEntry: type === 'password',
         maxLength,
         invalid: !!error && touched,
         validationError: error && touched ? error : undefined,

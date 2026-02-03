@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / debounce
 
@@ -8,7 +8,7 @@
 
 > **debounce**\<`T`\>(`fn`, `delay`): (...`args`) => `void`
 
-Defined in: src/utils/debounce.ts:27
+Defined in: [src/utils/debounce.ts:27](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/debounce.ts#L27)
 
 Debounce a function call
 Delays execution until after the specified delay has passed since the last invocation
@@ -17,7 +17,7 @@ Delays execution until after the specified delay has passed since the last invoc
 
 ### T
 
-`T` *extends* (...`args`) => `unknown`
+`T` _extends_ (...`args`) => `unknown`
 
 ## Parameters
 

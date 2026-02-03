@@ -5,6 +5,7 @@ This guide covers all aspects of styling in React Console, including the StyleSh
 ## Overview
 
 React Console provides multiple ways to style components:
+
 - **StyleSheet API**: React Native-like stylesheets for reusable styles
 - **Inline styles**: CSS-like style objects
 - **Legacy props**: Direct style props for backward compatibility
@@ -58,7 +59,7 @@ const overrideStyle = { padding: 2 };
 
 const merged = StyleSheet.flatten([baseStyle, conditionalStyle, overrideStyle]);
 
-<View style={merged} />
+<View style={merged} />;
 ```
 
 ### Composing Styles
@@ -74,7 +75,106 @@ const override = { color: 'yellow' };
 
 const composed = StyleSheet.compose(base, variant, override);
 
-<Text style={composed}>Composed text</Text>
+<Text style={composed}>Composed text</Text>;
+```
+
+### StyleSheet Constants
+
+React Console provides React Native-compatible StyleSheet constants:
+
+```tsx
+import { StyleSheet, View } from 'react-console';
+
+// absoluteFill / absoluteFillObject - position absolute with all edges at 0
+<View style={StyleSheet.absoluteFill}>
+  Fills parent completely
+</View>
+
+// hairlineWidth - thinnest possible line (1 in terminal)
+<View style={{ borderWidth: StyleSheet.hairlineWidth }} />
+
+console.log(StyleSheet.hairlineWidth); // 1
+console.log(StyleSheet.absoluteFillObject);
+// { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
+```
+
+## State-Based Styling
+
+React Console supports React Native-style state-based styling for interactive components.
+
+### Individual State Style Props
+
+Apply different styles based on interaction state:
+
+```tsx
+import { Pressable, Text } from 'react-console';
+
+<Pressable
+  style={{ padding: 1, backgroundColor: 'blue' }}
+  hoveredStyle={{ backgroundColor: 'lightblue' }}
+  focusedStyle={{ borderColor: 'yellow', border: 'double' }}
+  pressedStyle={{ backgroundColor: 'darkblue' }}
+  disabledStyle={{ backgroundColor: 'gray', color: 'darkgray' }}
+  onPress={() => console.log('Pressed!')}
+>
+  <Text>Interactive Button</Text>
+</Pressable>;
+```
+
+### Function-Based Styles (React Native Pattern)
+
+Use a function to compute styles based on state:
+
+```tsx
+import { Pressable, Text } from 'react-console';
+
+<Pressable
+  onPress={handlePress}
+  style={({ pressed, focused, hovered, disabled }) => ({
+    padding: 1,
+    backgroundColor: disabled ? 'gray' : pressed ? 'darkblue' : hovered ? 'lightblue' : 'blue',
+    borderColor: focused ? 'yellow' : 'transparent',
+    border: focused ? 'double' : 'single',
+  })}
+>
+  {({ pressed }) => <Text>{pressed ? 'Pressing...' : 'Press me'}</Text>}
+</Pressable>;
+```
+
+### State Style Priority
+
+Styles are applied in this order (highest to lowest priority):
+
+1. **disabled** - When `disabled={true}`
+2. **pressed** - While being pressed
+3. **focused** - When component has focus
+4. **hovered** - When mouse is hovering
+5. **default** - Base style
+
+### Using resolveStateStyle
+
+For custom components, use the `resolveStateStyle` utility:
+
+```tsx
+import { resolveStateStyle } from 'react-console';
+
+function CustomButton({ style, hoveredStyle, focusedStyle, ...props }) {
+  const [state, setState] = useState({
+    pressed: false,
+    focused: false,
+    hovered: false,
+    disabled: false,
+  });
+
+  const resolvedStyle = resolveStateStyle(state, style, {
+    hoveredStyle,
+    focusedStyle,
+    pressedStyle,
+    disabledStyle,
+  });
+
+  return <View style={resolvedStyle} {...props} />;
+}
 ```
 
 ## Inline Styles
@@ -139,7 +239,7 @@ import { View } from 'react-console';
 const baseStyle = { padding: 1, backgroundColor: 'blue' };
 const overrideStyle = { padding: 2 };
 
-<View style={[baseStyle, overrideStyle]} />
+<View style={[baseStyle, overrideStyle]} />;
 // Result: { padding: 2, backgroundColor: 'blue' }
 ```
 
@@ -168,9 +268,16 @@ React Console supports standard terminal colors:
 
 ```tsx
 const colors = [
-  'black', 'red', 'green', 'yellow',
-  'blue', 'magenta', 'cyan', 'white',
-  'gray', 'grey'
+  'black',
+  'red',
+  'green',
+  'yellow',
+  'blue',
+  'magenta',
+  'cyan',
+  'white',
+  'gray',
+  'grey',
 ];
 ```
 
@@ -192,12 +299,8 @@ import { useThemeColors } from 'react-console';
 
 function ThemedComponent() {
   const colors = useThemeColors();
-  
-  return (
-    <Text color={colors.text}>
-      This text uses the theme's text color
-    </Text>
-  );
+
+  return <Text color={colors.text}>This text uses the theme's text color</Text>;
 }
 ```
 
@@ -290,6 +393,7 @@ Or use theme color keys directly:
 ```
 
 Border styles:
+
 - `'single'` - Single line (default)
 - `'double'` - Double line
 - `'thick'` - Thick line
@@ -328,11 +432,7 @@ Border styles:
 import { View } from 'react-console';
 
 function ResponsiveComponent() {
-  return (
-    <View style={{ width: '50%', height: '25%' }}>
-      {/* Adapts to terminal size */}
-    </View>
-  );
+  return <View style={{ width: '50%', height: '25%' }}>{/* Adapts to terminal size */}</View>;
 }
 ```
 
@@ -341,11 +441,13 @@ function ResponsiveComponent() {
 ### Relative Positioning
 
 ```tsx
-<View style={{
-  position: 'relative',
-  left: 5,
-  top: 2,
-}}>
+<View
+  style={{
+    position: 'relative',
+    left: 5,
+    top: 2,
+  }}
+>
   Positioned content
 </View>
 ```
@@ -353,11 +455,13 @@ function ResponsiveComponent() {
 ### Absolute Positioning
 
 ```tsx
-<View style={{
-  position: 'absolute',
-  left: 10,
-  top: 5,
-}}>
+<View
+  style={{
+    position: 'absolute',
+    left: 10,
+    top: 5,
+  }}
+>
   Absolutely positioned
 </View>
 ```
@@ -365,11 +469,13 @@ function ResponsiveComponent() {
 ### Fixed Positioning
 
 ```tsx
-<View style={{
-  position: 'fixed',
-  right: 0,
-  bottom: 0,
-}}>
+<View
+  style={{
+    position: 'fixed',
+    right: 0,
+    bottom: 0,
+  }}
+>
   Fixed to bottom-right
 </View>
 ```
@@ -379,10 +485,12 @@ function ResponsiveComponent() {
 ### Flex Direction
 
 ```tsx
-<View style={{
-  display: 'flex',
-  flexDirection: 'row', // or 'column', 'row-reverse', 'column-reverse'
-}}>
+<View
+  style={{
+    display: 'flex',
+    flexDirection: 'row', // or 'column', 'row-reverse', 'column-reverse'
+  }}
+>
   <Text>Item 1</Text>
   <Text>Item 2</Text>
 </View>
@@ -391,10 +499,12 @@ function ResponsiveComponent() {
 ### Justify Content
 
 ```tsx
-<View style={{
-  display: 'flex',
-  justifyContent: 'center', // 'flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'
-}}>
+<View
+  style={{
+    display: 'flex',
+    justifyContent: 'center', // 'flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'
+  }}
+>
   <Text>Centered</Text>
 </View>
 ```
@@ -402,10 +512,12 @@ function ResponsiveComponent() {
 ### Align Items
 
 ```tsx
-<View style={{
-  display: 'flex',
-  alignItems: 'center', // 'flex-start', 'flex-end', 'center', 'stretch', 'baseline'
-}}>
+<View
+  style={{
+    display: 'flex',
+    alignItems: 'center', // 'flex-start', 'flex-end', 'center', 'stretch', 'baseline'
+  }}
+>
   <Text>Aligned</Text>
 </View>
 ```
@@ -413,13 +525,15 @@ function ResponsiveComponent() {
 ### Flex Properties
 
 ```tsx
-<View style={{
-  display: 'flex',
-  flex: 1, // Grow and shrink
-  flexGrow: 2, // Grow factor
-  flexShrink: 1, // Shrink factor
-  flexBasis: '50%', // Initial size
-}}>
+<View
+  style={{
+    display: 'flex',
+    flex: 1, // Grow and shrink
+    flexGrow: 2, // Grow factor
+    flexShrink: 1, // Shrink factor
+    flexBasis: '50%', // Initial size
+  }}
+>
   Flexible item
 </View>
 ```
@@ -429,12 +543,14 @@ function ResponsiveComponent() {
 ### Grid Template
 
 ```tsx
-<View style={{
-  display: 'grid',
-  gridTemplateColumns: [1, 2, 1], // Fractional units
-  gridTemplateRows: ['auto', '50%'],
-  gap: 1,
-}}>
+<View
+  style={{
+    display: 'grid',
+    gridTemplateColumns: [1, 2, 1], // Fractional units
+    gridTemplateRows: ['auto', '50%'],
+    gap: 1,
+  }}
+>
   <Text>Cell 1</Text>
   <Text>Cell 2</Text>
   <Text>Cell 3</Text>
@@ -444,26 +560,32 @@ function ResponsiveComponent() {
 ### Grid Placement
 
 ```tsx
-<View style={{
-  display: 'grid',
-  gridColumn: '1 / 3', // Span columns
-  gridRow: 1,
-}}>
+<View
+  style={{
+    display: 'grid',
+    gridColumn: '1 / 3', // Span columns
+    gridRow: 1,
+  }}
+>
   Spans 2 columns
 </View>
 ```
 
 ## Component-Specific Styles
 
-### Input Styles
+### TextInput Styles
 
 ```tsx
-<Input
+<TextInput
   style={{
     color: 'white',
     backgroundColor: 'blue',
     bold: true,
+    border: 'single',
+    padding: 1,
   }}
+  placeholder="Enter text..."
+  placeholderTextColor="gray"
 />
 ```
 
@@ -505,7 +627,7 @@ function ThemedComponent() {
     color: 'text',
     backgroundColor: 'background',
   });
-  
+
   return <Text style={style}>Themed text</Text>;
 }
 ```
@@ -519,7 +641,7 @@ function ThemedButton() {
   const style = useComponentTheme('button', {
     bold: true,
   });
-  
+
   return <Button style={style}>Themed Button</Button>;
 }
 ```
@@ -538,11 +660,7 @@ const styles = StyleSheet.create({
 ### 2. Combine Styles with flatten()
 
 ```tsx
-const merged = StyleSheet.flatten([
-  styles.base,
-  condition && styles.conditional,
-  styles.override,
-]);
+const merged = StyleSheet.flatten([styles.base, condition && styles.conditional, styles.override]);
 ```
 
 ### 3. Use Theme Colors for Consistency
@@ -580,9 +698,15 @@ const merged = StyleSheet.flatten([
 ```tsx
 // styles.ts
 export const componentStyles = StyleSheet.create({
-  container: { /* ... */ },
-  header: { /* ... */ },
-  body: { /* ... */ },
+  container: {
+    /* ... */
+  },
+  header: {
+    /* ... */
+  },
+  body: {
+    /* ... */
+  },
 });
 ```
 
@@ -639,12 +763,13 @@ const buttonStyles = StyleSheet.create({
 });
 
 function Button({ variant = 'primary', children, ...props }) {
-  const style = StyleSheet.flatten([
-    buttonStyles.base,
-    buttonStyles[variant],
-  ]);
-  
-  return <Button style={style} {...props}>{children}</Button>;
+  const style = StyleSheet.flatten([buttonStyles.base, buttonStyles[variant]]);
+
+  return (
+    <Button style={style} {...props}>
+      {children}
+    </Button>
+  );
 }
 ```
 

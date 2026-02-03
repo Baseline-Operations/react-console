@@ -16,7 +16,7 @@ import * as fs from 'fs';
  * Master toggle for all debug logging.
  * Set to true to enable file-based debug logging.
  */
-const FILE_DEBUG_ENABLED = true;
+const FILE_DEBUG_ENABLED = false;
 
 const DEBUG_FILE_LOG_PATH = '/tmp/react-debug.log';
 

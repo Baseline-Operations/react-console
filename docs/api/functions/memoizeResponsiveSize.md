@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / memoizeResponsiveSize
 
@@ -8,7 +8,7 @@
 
 > **memoizeResponsiveSize**(`size`, `dimension`, `maxSize?`): `number` \| `undefined`
 
-Defined in: src/utils/memoization.ts:78
+Defined in: [src/utils/memoization.ts:78](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/memoization.ts#L78)
 
 Memoize responsive size resolution
 Caches resolved responsive sizes to avoid recalculating

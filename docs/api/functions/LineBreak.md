@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / LineBreak
 
@@ -8,7 +8,7 @@
 
 > **LineBreak**(): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/primitives/LineBreak.tsx:27
+Defined in: [src/components/primitives/LineBreak.tsx:27](https://github.com/Baseline-Operations/react-console/blob/main/src/components/primitives/LineBreak.tsx#L27)
 
 LineBreak component - Explicit line break for terminal rendering
 

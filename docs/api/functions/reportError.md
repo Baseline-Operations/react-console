@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / reportError
 
@@ -8,7 +8,7 @@
 
 > **reportError**(`error`, `type`, `context?`): `void`
 
-Defined in: src/utils/errors.ts:48
+Defined in: [src/utils/errors.ts:110](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errors.ts#L110)
 
 Report an error
 

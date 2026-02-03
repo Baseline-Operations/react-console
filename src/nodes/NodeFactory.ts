@@ -7,13 +7,13 @@ import type { ReactElement } from 'react';
 import { TextNode } from './primitives/TextNode';
 import { BoxNode } from './primitives/BoxNode';
 import { FragmentNode } from './primitives/FragmentNode';
-import { InputNode } from './interactive/InputNode';
+import { TextInputNode } from './interactive/TextInputNode';
 import { ButtonNode } from './interactive/ButtonNode';
 import { ScrollViewNode } from './layout/ScrollViewNode';
-import { CommandRouterNode } from './cli/CommandRouterNode';
-import { CommandNode } from './cli/CommandNode';
-import { RouteNode } from './cli/RouteNode';
-import { DefaultNode } from './cli/DefaultNode';
+import { CommandRouterNode } from '../cli/nodes/CommandRouterNode';
+import { CommandNode } from '../cli/nodes/CommandNode';
+import { RouteNode } from '../cli/nodes/RouteNode';
+import { DefaultNode } from '../cli/nodes/DefaultNode';
 import type { Node } from './base/Node';
 import type { ViewStyle, TextStyle } from '../types';
 
@@ -150,9 +150,11 @@ export class NodeFactory {
         node.setContent('\n');
         break;
 
+      case 'textinput':
+      case 'TextInput':
       case 'input':
       case 'Input':
-        const inputNode = new InputNode(typeof props.id === 'string' ? props.id : undefined);
+        const inputNode = new TextInputNode(typeof props.id === 'string' ? props.id : undefined);
         if (props.value !== undefined) {
           inputNode.setValue(String(props.value));
         }
@@ -188,6 +190,22 @@ export class NodeFactory {
         // Set event handlers
         if (props.onChange) {
           extInputNode.onChange = props.onChange as (event: unknown) => void;
+        }
+        // React Native compatible: onChangeText
+        if (props.onChangeText) {
+          (extInputNode as unknown as { onChangeText: (text: string) => void }).onChangeText =
+            props.onChangeText as (text: string) => void;
+        }
+        // React Native compatible: onSubmitEditing
+        if (props.onSubmitEditing) {
+          (
+            extInputNode as unknown as { onSubmitEditing: (event: unknown) => void }
+          ).onSubmitEditing = props.onSubmitEditing as (event: unknown) => void;
+        }
+        // React Native compatible: onEndEditing
+        if (props.onEndEditing) {
+          (extInputNode as unknown as { onEndEditing: (event: unknown) => void }).onEndEditing =
+            props.onEndEditing as (event: unknown) => void;
         }
         if (props.onSubmit) {
           extInputNode.onSubmit = props.onSubmit as (event: unknown) => void;
@@ -508,6 +526,43 @@ export class NodeFactory {
         if (props.value !== undefined) {
           extListNode.setValue?.(props.value);
         }
+        break;
+
+      case 'modal':
+      case 'Modal':
+      case 'overlay':
+      case 'Overlay':
+        // Modal/Overlay uses BoxNode with z-index layering
+        const modalNode = new BoxNode() as unknown as Node;
+        // Set z-index for layering
+        if (props.zIndex !== undefined) {
+          (modalNode as unknown as { zIndex: number }).zIndex = props.zIndex as number;
+        }
+        // Set backdrop props
+        if (props.backdrop !== undefined) {
+          (modalNode as unknown as { backdrop: boolean }).backdrop = Boolean(props.backdrop);
+        }
+        if (props.backdropColor) {
+          (modalNode as unknown as { backdropColor: string }).backdropColor =
+            props.backdropColor as string;
+        }
+        // React Native modal props
+        if (props.onRequestClose) {
+          (modalNode as unknown as { onRequestClose: () => void }).onRequestClose =
+            props.onRequestClose as () => void;
+        }
+        if (props.onShow) {
+          (modalNode as unknown as { onShow: () => void }).onShow = props.onShow as () => void;
+        }
+        if (props.onDismiss) {
+          (modalNode as unknown as { onDismiss: () => void }).onDismiss =
+            props.onDismiss as () => void;
+        }
+        // Set style if provided
+        if (props.style) {
+          (modalNode as ExtendedNode).setStyle?.(props.style as ViewStyle | TextStyle);
+        }
+        node = modalNode;
         break;
 
       default:

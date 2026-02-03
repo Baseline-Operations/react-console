@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / truncateText
 
@@ -8,7 +8,7 @@
 
 > **truncateText**(`text`, `width`, `ellipsis`): `string`
 
-Defined in: src/utils/measure.ts:104
+Defined in: [src/utils/measure.ts:267](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/measure.ts#L267)
 
 Truncate text to fit width with ellipsis
 

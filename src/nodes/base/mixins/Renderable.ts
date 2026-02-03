@@ -6,9 +6,9 @@
 import type { Constructor, AbstractConstructor, BoundingBox } from '../types';
 import { Node } from '../Node';
 import type { ComputedStyle } from './Stylable';
-import { RenderingTreeRegistry } from '../../../render/RenderingTree';
-import { StackingContextManager } from '../../../render/StackingContext';
-import { ViewportManager } from '../../../render/Viewport';
+import { RenderingTreeRegistry } from '../../../renderer/RenderingTree';
+import { StackingContextManager } from '../../../renderer/StackingContext';
+import { ViewportManager } from '../../../renderer/Viewport';
 import { getBackgroundColorCode, applyStyles } from '../../../renderer/ansi';
 import {
   padToVisibleColumn,

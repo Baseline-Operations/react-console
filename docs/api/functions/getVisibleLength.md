@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / getVisibleLength
 
@@ -8,7 +8,7 @@
 
 > **getVisibleLength**(`text`): `number`
 
-Defined in: src/renderer/ansi.ts:231
+Defined in: [src/renderer/ansi.ts:336](https://github.com/Baseline-Operations/react-console/blob/main/src/renderer/ansi.ts#L336)
 
 Get visible length of text (without ANSI codes)
 

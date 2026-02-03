@@ -1,12 +1,12 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / CompositeErrorHandler
 
 # Class: CompositeErrorHandler
 
-Defined in: src/utils/errorHandlers.ts:115
+Defined in: [src/utils/errorHandlers.ts:114](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L114)
 
 Composite error handler
 Combines multiple error handlers
@@ -21,7 +21,7 @@ Combines multiple error handlers
 
 > **new CompositeErrorHandler**(`handlers`): `CompositeErrorHandler`
 
-Defined in: src/utils/errorHandlers.ts:118
+Defined in: [src/utils/errorHandlers.ts:117](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L117)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: src/utils/errorHandlers.ts:118
 
 > **setContext**(`context`): `this`
 
-Defined in: src/utils/errorHandlers.ts:23
+Defined in: [src/utils/errorHandlers.ts:23](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L23)
 
 Set handler context
 
@@ -61,13 +61,13 @@ Set handler context
 
 [`BaseErrorHandler`](BaseErrorHandler.md).[`setContext`](BaseErrorHandler.md#setcontext)
 
-***
+---
 
 ### clearContext()
 
 > **clearContext**(): `this`
 
-Defined in: src/utils/errorHandlers.ts:31
+Defined in: [src/utils/errorHandlers.ts:31](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L31)
 
 Clear handler context
 
@@ -79,13 +79,13 @@ Clear handler context
 
 [`BaseErrorHandler`](BaseErrorHandler.md).[`clearContext`](BaseErrorHandler.md#clearcontext)
 
-***
+---
 
 ### handle()
 
 > **handle**(`error`, `type`, `context?`): `void`
 
-Defined in: src/utils/errorHandlers.ts:123
+Defined in: [src/utils/errorHandlers.ts:122](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L122)
 
 Handle an error
 
@@ -111,13 +111,13 @@ Handle an error
 
 [`BaseErrorHandler`](BaseErrorHandler.md).[`handle`](BaseErrorHandler.md#handle)
 
-***
+---
 
 ### addHandler()
 
 > **addHandler**(`handler`): `this`
 
-Defined in: src/utils/errorHandlers.ts:138
+Defined in: [src/utils/errorHandlers.ts:137](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L137)
 
 Add a handler
 
@@ -131,13 +131,13 @@ Add a handler
 
 `this`
 
-***
+---
 
 ### removeHandler()
 
 > **removeHandler**(`handler`): `this`
 
-Defined in: src/utils/errorHandlers.ts:146
+Defined in: [src/utils/errorHandlers.ts:145](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L145)
 
 Remove a handler
 

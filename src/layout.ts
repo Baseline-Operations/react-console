@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { ScrollView, Row, Column, Overlay } from 'react-console/layout';
+ * import { ScrollView, Row, Column, Modal } from 'react-console/layout';
  * ```
  */
 
@@ -13,8 +13,8 @@ export { Scrollable } from './components/layout/Scrollable';
 export type { ScrollableProps } from './components/layout/Scrollable';
 export { ScrollView } from './components/layout/ScrollView';
 export type { ScrollViewProps } from './components/layout/ScrollView';
-export { Overlay } from './components/layout/Overlay';
-export type { OverlayProps } from './components/layout/Overlay';
+export { Modal, Overlay } from './components/layout/Modal';
+export type { ModalProps, OverlayProps } from './components/layout/Modal';
 export { Row } from './components/layout/Row';
 export type { RowProps } from './components/layout/Row';
 export { Column } from './components/layout/Column';
