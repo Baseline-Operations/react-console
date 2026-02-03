@@ -83,7 +83,7 @@ const lifecycleEvents = new LifecycleEventEmitter();
  * @example
  * ```ts
  * // Outside of components
- * import { onAppStart } from 'react-console';
+ * import { onAppStart } from '@baseline-operations/react-console';
  *
  * onAppStart(() => {
  *   console.log('Application started!');
@@ -122,7 +122,7 @@ export function onAppStart(callback: () => void): () => void {
  * @example
  * ```ts
  * // Outside of components
- * import { onAppExit } from 'react-console';
+ * import { onAppExit } from '@baseline-operations/react-console';
  *
  * onAppExit(() => {
  *   console.log('Application exiting...');

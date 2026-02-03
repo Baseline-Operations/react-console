@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { ThemeProvider, useTheme, defaultTheme } from 'react-console/theme';
+ * import { ThemeProvider, useTheme, defaultTheme } from '@baseline-operations/react-console/theme';
  * ```
  */
 

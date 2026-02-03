@@ -831,7 +831,7 @@ export function initializeStorage(appId?: string, options?: StorageOptions): App
  *
  * @example
  * ```ts
- * import { storage } from 'react-console';
+ * import { storage } from '@baseline-operations/react-console';
  *
  * // Use storage (automatically initialized)
  * storage.setItem('username', 'john');
@@ -853,7 +853,7 @@ export function getStorage(): ApplicationStorage {
  *
  * @example
  * ```ts
- * import { storage } from 'react-console';
+ * import { storage } from '@baseline-operations/react-console';
  *
  * // Use storage (automatically initialized)
  * storage.setItem('username', 'john');

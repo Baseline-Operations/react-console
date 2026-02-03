@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { Animated, useAnimatedValue, easing } from 'react-console/animations';
+ * import { Animated, useAnimatedValue, easing } from '@baseline-operations/react-console/animations';
  * ```
  */
 

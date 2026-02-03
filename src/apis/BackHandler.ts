@@ -126,7 +126,7 @@ export const BackHandler = new BackHandlerModule();
  *
  * @example
  * ```tsx
- * import { useBackHandler } from 'react-console/apis';
+ * import { useBackHandler } from '@baseline-operations/react-console/apis';
  *
  * function MyComponent() {
  *   useBackHandler(() => {

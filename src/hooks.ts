@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { useAsync, useOptimisticTerminal, useActionStateTerminal } from 'react-console/hooks';
+ * import { useAsync, useOptimisticTerminal, useActionStateTerminal } from '@baseline-operations/react-console/hooks';
  * ```
  */
 

@@ -162,7 +162,7 @@ export const AppState = new AppStateModule();
  *
  * @example
  * ```tsx
- * import { useAppState } from 'react-console/apis';
+ * import { useAppState } from '@baseline-operations/react-console/apis';
  *
  * function MyComponent() {
  *   const appState = useAppState();
