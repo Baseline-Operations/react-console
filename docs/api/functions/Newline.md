@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / Newline
 
@@ -8,7 +8,7 @@
 
 > **Newline**(): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/primitives/Newline.tsx:26
+Defined in: [src/components/primitives/Newline.tsx:26](https://github.com/Baseline-Operations/react-console/blob/main/src/components/primitives/Newline.tsx#L26)
 
 Newline component - Explicit line break (legacy)
 

@@ -57,20 +57,94 @@ export interface MouseEvent {
 }
 
 /**
+ * Press event (React Native compatible)
+ */
+export interface GestureResponderEvent {
+  nativeEvent: {
+    /** X coordinate relative to component */
+    locationX: number;
+    /** Y coordinate relative to component */
+    locationY: number;
+    /** X coordinate relative to screen/terminal */
+    pageX: number;
+    /** Y coordinate relative to screen/terminal */
+    pageY: number;
+    /** Timestamp of the event */
+    timestamp: number;
+    /** Unique touch identifier */
+    identifier?: number;
+  };
+  /** Target component ID */
+  target?: string | number;
+  /** Current target component ID */
+  currentTarget?: string | number;
+}
+
+/**
+ * Layout event (React Native compatible)
+ */
+export interface LayoutChangeEvent {
+  nativeEvent: {
+    layout: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+  };
+}
+
+/**
+ * Focus event (React Native compatible)
+ */
+export interface NativeSyntheticEvent<T = unknown> {
+  nativeEvent: T;
+  target?: string | number;
+  currentTarget?: string | number;
+}
+
+/**
  * Component event handlers (JSX-style)
  */
 export interface ComponentEventHandlers {
+  // Mouse/Press events
   onClick?: (event: MouseEvent) => void;
-  onPress?: (event: MouseEvent) => void; // React Native pattern (alias for onClick)
+  onPress?: (event: GestureResponderEvent) => void; // React Native pattern
   onMouseDown?: (event: MouseEvent) => void;
   onMouseUp?: (event: MouseEvent) => void;
   onMouseMove?: (event: MouseEvent) => void;
   onMouseDrag?: (event: MouseEvent) => void; // Fired during mouse drag (when mouse moves while button is pressed)
+
+  // React Native gesture events
+  onPressIn?: (event: GestureResponderEvent) => void;
+  onPressOut?: (event: GestureResponderEvent) => void;
+  onLongPress?: (event: GestureResponderEvent) => void;
+
+  // Hover events (terminal-specific, not in React Native)
+  onHoverIn?: (event: GestureResponderEvent) => void;
+  onHoverOut?: (event: GestureResponderEvent) => void;
+
+  // Keyboard events
   onKeyDown?: (event: KeyboardEvent) => void;
   onKeyUp?: (event: KeyboardEvent) => void;
   onKeyPress?: (event: KeyboardEvent) => void;
+
+  // Input events
   onChange?: (event: InputEvent) => void;
   onSubmit?: (event: InputEvent) => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
+
+  // Focus events
+  onFocus?: (event?: NativeSyntheticEvent<{ target: number }>) => void;
+  onBlur?: (event?: NativeSyntheticEvent<{ target: number }>) => void;
+
+  // Layout event (React Native compatible)
+  onLayout?: (event: LayoutChangeEvent) => void;
+
+  // Long press configuration (React Native compatible)
+  delayLongPress?: number; // Delay in ms before onLongPress fires (default: 500)
+  delayPressIn?: number; // Delay in ms before onPressIn fires (default: 0)
+  delayPressOut?: number; // Delay in ms before onPressOut fires (default: 0)
+
+  // Accessibility (React Native compatible)
+  disabled?: boolean;
 }

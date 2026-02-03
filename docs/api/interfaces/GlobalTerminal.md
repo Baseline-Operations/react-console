@@ -1,12 +1,12 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / GlobalTerminal
 
 # Interface: GlobalTerminal
 
-Defined in: src/utils/globalTerminal.ts:28
+Defined in: [src/utils/globalTerminal.ts:28](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L28)
 
 Global terminal object interface
 
@@ -32,20 +32,30 @@ terminal.setFocusedComponent(myComponent);
 
 > **dimensions**: [`TerminalDimensions`](TerminalDimensions.md)
 
-Defined in: src/utils/globalTerminal.ts:33
+Defined in: [src/utils/globalTerminal.ts:33](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L33)
 
 Current terminal dimensions (columns, rows)
 Automatically updated on resize
 
-***
+---
 
 ### focusedComponent
 
 > **focusedComponent**: [`ConsoleNode`](ConsoleNode.md) \| `null`
 
-Defined in: src/utils/globalTerminal.ts:38
+Defined in: [src/utils/globalTerminal.ts:38](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L38)
 
 Currently focused component (if any)
+
+---
+
+### focusedNodeId
+
+> **focusedNodeId**: `string` \| `null`
+
+Defined in: [src/utils/globalTerminal.ts:43](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L43)
+
+ID of the currently focused node (survives across re-renders)
 
 ## Methods
 
@@ -53,7 +63,7 @@ Currently focused component (if any)
 
 > **getDimensions**(): [`TerminalDimensions`](TerminalDimensions.md)
 
-Defined in: src/utils/globalTerminal.ts:44
+Defined in: [src/utils/globalTerminal.ts:49](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L49)
 
 Get current terminal dimensions
 
@@ -63,13 +73,13 @@ Get current terminal dimensions
 
 Terminal dimensions (columns, rows)
 
-***
+---
 
 ### setFocusedComponent()
 
 > **setFocusedComponent**(`component`): `void`
 
-Defined in: src/utils/globalTerminal.ts:50
+Defined in: [src/utils/globalTerminal.ts:55](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L55)
 
 Set the currently focused component
 
@@ -85,13 +95,13 @@ Component to focus (or null to unfocus)
 
 `void`
 
-***
+---
 
 ### getFocusedComponent()
 
 > **getFocusedComponent**(): [`ConsoleNode`](ConsoleNode.md) \| `null`
 
-Defined in: src/utils/globalTerminal.ts:56
+Defined in: [src/utils/globalTerminal.ts:61](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L61)
 
 Get the currently focused component
 

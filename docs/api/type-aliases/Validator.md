@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / Validator
 
@@ -8,7 +8,7 @@
 
 > **Validator**\<`T`\> = (`input`) => [`ValidationResult`](../interfaces/ValidationResult.md)\<`T`\>
 
-Defined in: src/utils/validation.ts:45
+Defined in: [src/utils/validation.ts:45](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/validation.ts#L45)
 
 Validator function type
 

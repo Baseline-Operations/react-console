@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / resolveWidth
 
@@ -8,7 +8,7 @@
 
 > **resolveWidth**(`width`, `maxWidth?`): `number` \| `undefined`
 
-Defined in: src/utils/responsive.ts:105
+Defined in: [src/utils/responsive.ts:109](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/responsive.ts#L109)
 
 Get responsive width value
 

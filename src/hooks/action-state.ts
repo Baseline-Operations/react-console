@@ -41,7 +41,7 @@ import { useActionState } from 'react';
  *     <View>
  *       <Text>{state.message}</Text>
  *       {isPending && <Text>Saving...</Text>}
- *       <Input name="name" />
+ *       <TextInput name="name" />
  *       <Button onClick={() => formAction(new FormData())}>
  *         Submit
  *       </Button>

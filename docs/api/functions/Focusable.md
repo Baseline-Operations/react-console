@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / Focusable
 
@@ -8,7 +8,7 @@
 
 > **Focusable**(`props`): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/interactive/Focusable.tsx:52
+Defined in: [src/components/interactive/Focusable.tsx:53](https://github.com/Baseline-Operations/react-console/blob/main/src/components/interactive/Focusable.tsx#L53)
 
 Focusable component - React Native-like pattern for terminal
 
@@ -34,10 +34,7 @@ React element representing a focusable container
 ## Example
 
 ```tsx
-<Focusable
-  onFocus={() => console.log('Focused!')}
-  onBlur={() => console.log('Blurred!')}
->
+<Focusable onFocus={() => console.log('Focused!')} onBlur={() => console.log('Blurred!')}>
   <Box style={{ border: 'single' }}>
     <Text>Focusable Content</Text>
   </Box>

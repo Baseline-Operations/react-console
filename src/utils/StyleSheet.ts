@@ -96,4 +96,45 @@ export const StyleSheet = {
   ): T | null {
     return StyleSheet.flatten(styles);
   },
+
+  /**
+   * Absolute fill style object (React Native compatible)
+   * Positions element to fill its parent absolutely
+   *
+   * @example
+   * ```tsx
+   * <View style={StyleSheet.absoluteFillObject}>
+   *   <Text>Fills parent</Text>
+   * </View>
+   * ```
+   */
+  absoluteFillObject: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  } as ViewStyle,
+
+  /**
+   * Absolute fill style (React Native compatible)
+   * Same as absoluteFillObject - positions element to fill parent
+   */
+  get absoluteFill(): ViewStyle {
+    return StyleSheet.absoluteFillObject;
+  },
+
+  /**
+   * Hairline width - thinnest possible line (React Native compatible)
+   * In terminal context, this is 1 character width
+   */
+  hairlineWidth: 1,
+
+  /**
+   * Set hairline width (for high-DPI terminal simulation)
+   * Typically not needed for terminal but provided for API compatibility
+   */
+  setHairlineWidth(width: number): void {
+    (StyleSheet as { hairlineWidth: number }).hairlineWidth = width;
+  },
 };

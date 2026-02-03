@@ -134,6 +134,14 @@ function App() {
           <Text>NEW</Text>
         </View>
       </View>
+
+      <View style={{ margin: { top: 2 } }}>
+        <Text style={{ color: 'green', bold: true }}>StyleSheet Constants:</Text>
+      </View>
+      <View style={{ padding: 1, backgroundColor: 'gray' }}>
+        <Text>hairlineWidth: {StyleSheet.hairlineWidth}</Text>
+        <Text>absoluteFill: {JSON.stringify(StyleSheet.absoluteFill)}</Text>
+      </View>
     </View>
   );
 }

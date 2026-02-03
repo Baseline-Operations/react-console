@@ -8,7 +8,7 @@ import {
   render,
   Text,
   View,
-  Input,
+  TextInput,
   Button,
   Radio,
   Checkbox,
@@ -53,9 +53,9 @@ function App() {
           1. Keyboard Events
         </Text>
         <Text>Press keys in the input below to see keyboard events:</Text>
-        <Input
+        <TextInput
           value={inputValue}
-          onChange={(e) => setInputValue(e.value as string)}
+          onChangeText={setInputValue}
           onFocus={() => setActiveLog('keyboard')}
           onKeyDown={(e) => {
             setActiveLog('keyboard');
@@ -123,7 +123,7 @@ function App() {
           3. Focus Management
         </Text>
         <Text>Tab between inputs to see focus events:</Text>
-        <Input
+        <TextInput
           placeholder="Input 1"
           onFocus={() => {
             setActiveLog('focus');
@@ -131,7 +131,7 @@ function App() {
           }}
           onBlur={() => setFocusEvents((prev) => ['Input 1 blurred', ...prev].slice(0, 5))}
         />
-        <Input
+        <TextInput
           placeholder="Input 2"
           onFocus={() => {
             setActiveLog('focus');
@@ -189,7 +189,7 @@ function App() {
           5. Event Propagation
         </Text>
         <Text>Press Escape in input to prevent default behavior:</Text>
-        <Input
+        <TextInput
           placeholder="Press Escape"
           onKeyDown={(e) => {
             if (e.key.escape) {
@@ -212,10 +212,10 @@ function App() {
           disabled
           onClick={() => setMouseEvents((prev) => ['This should not fire', ...prev])}
         />
-        <Input
+        <TextInput
           disabled
           placeholder="Disabled input"
-          onChange={() => setKeyEvents((prev) => ['This should not fire', ...prev])}
+          onChangeText={() => setKeyEvents((prev) => ['This should not fire', ...prev])}
         />
         <LineBreak />
 

@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / stripAnsiCodes
 
@@ -8,7 +8,7 @@
 
 > **stripAnsiCodes**(`text`): `string`
 
-Defined in: src/renderer/ansi.ts:211
+Defined in: [src/renderer/ansi.ts:317](https://github.com/Baseline-Operations/react-console/blob/main/src/renderer/ansi.ts#L317)
 
 Remove ANSI codes from text
 

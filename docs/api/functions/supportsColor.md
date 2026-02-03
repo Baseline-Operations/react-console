@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / supportsColor
 
@@ -8,7 +8,7 @@
 
 > **supportsColor**(): `boolean`
 
-Defined in: src/utils/terminal.ts:42
+Defined in: [src/utils/terminal.ts:71](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/terminal.ts#L71)
 
 Check if terminal supports ANSI colors
 

@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / composeValidators
 
@@ -8,7 +8,7 @@
 
 > **composeValidators**\<`T`\>(...`validators`): [`Validator`](../type-aliases/Validator.md)\<`T`\>
 
-Defined in: src/utils/validation.ts:243
+Defined in: [src/utils/validation.ts:244](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/validation.ts#L244)
 
 Compose multiple validators
 
@@ -43,7 +43,7 @@ Composed validator function
 ```ts
 const validator = composeValidators<number>(
   (input) => validateNumber(input, { min: 0 }),
-  (input) => validateNumber(input, { max: 100 }),
+  (input) => validateNumber(input, { max: 100 })
 );
 
 const result = validator('50');

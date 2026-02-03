@@ -6,8 +6,8 @@
 import type { Constructor, AbstractConstructor, DisplayMode, BoundingBox } from '../types';
 import { DisplayMode as DisplayModeEnum } from '../types';
 import { Node } from '../Node';
-import { StackingContext, StackingContextManager } from '../../../render/StackingContext';
-import { ViewportManager } from '../../../render/Viewport';
+import { StackingContext, StackingContextManager } from '../../../renderer/StackingContext';
+import { ViewportManager } from '../../../renderer/Viewport';
 import type { ComputedStyle } from './Stylable';
 
 /**

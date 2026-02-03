@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / enterRawMode
 
@@ -8,7 +8,7 @@
 
 > **enterRawMode**(): `void`
 
-Defined in: src/utils/terminal.ts:77
+Defined in: [src/utils/terminal.ts:106](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/terminal.ts#L106)
 
 Enter raw mode for terminal input (captures keypresses)
 

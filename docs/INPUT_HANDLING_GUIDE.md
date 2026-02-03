@@ -5,53 +5,47 @@ This guide covers all aspects of input handling in React Console, including inpu
 ## Overview
 
 React Console provides a comprehensive input system with:
-- **Multiple input types**: Text, number, multiline
+
+- **React Native-compatible API**: `TextInput` component with familiar props
+- **Multiple input types**: Text, number, multiline via `keyboardType`
 - **Validation**: Pattern matching, number constraints, custom validators
 - **Formatting**: Display formatting, value formatting, currency/percentage
-- **Event handling**: onChange, onKeyDown, onSubmit, and more
+- **Event handling**: `onChangeText`, `onSubmitEditing`, keyboard events
 - **Accessibility**: Focus management, keyboard navigation, disabled state
 
-## Input Types
+## TextInput Component
 
-### Text Input
-
-Basic text input for strings:
+### Basic Text Input
 
 ```tsx
-import { Input } from 'react-console';
+import { TextInput } from 'react-console';
 import { useState } from 'react';
 
-function TextInput() {
+function BasicInput() {
   const [value, setValue] = useState('');
-  
+
   return (
-    <Input
-      type="text"
-      value={value}
-      onChange={(e) => setValue(e.value as string)}
-      placeholder="Enter text..."
-      maxLength={50}
-    />
+    <TextInput value={value} onChangeText={setValue} placeholder="Enter text..." maxLength={50} />
   );
 }
 ```
 
 ### Number Input
 
-Number input with validation and constraints:
+Number input using `keyboardType`:
 
 ```tsx
-import { Input } from 'react-console';
+import { TextInput } from 'react-console';
 import { useState } from 'react';
 
 function NumberInput() {
-  const [value, setValue] = useState<number | string>('');
-  
+  const [value, setValue] = useState('');
+
   return (
-    <Input
-      type="number"
+    <TextInput
       value={value}
-      onChange={(e) => setValue(e.value)}
+      onChangeText={setValue}
+      keyboardType="numeric"
       placeholder="0"
       min={0}
       max={100}
@@ -67,21 +61,42 @@ function NumberInput() {
 Multiline text input for longer content:
 
 ```tsx
-import { Input } from 'react-console';
+import { TextInput } from 'react-console';
 import { useState } from 'react';
 
 function MultilineInput() {
   const [value, setValue] = useState('');
-  
+
   return (
-    <Input
-      type="text"
+    <TextInput
       value={value}
-      onChange={(e) => setValue(e.value as string)}
+      onChangeText={setValue}
       multiline
-      maxLines={5}
+      numberOfLines={5}
       maxWidth={50}
       placeholder="Enter multiple lines..."
+    />
+  );
+}
+```
+
+### Password Input
+
+Secure text entry for passwords:
+
+```tsx
+import { TextInput } from 'react-console';
+import { useState } from 'react';
+
+function PasswordInput() {
+  const [password, setPassword] = useState('');
+
+  return (
+    <TextInput
+      value={password}
+      onChangeText={setPassword}
+      secureTextEntry
+      placeholder="Enter password"
     />
   );
 }
@@ -94,10 +109,9 @@ function MultilineInput() {
 Validate input against a regex pattern:
 
 ```tsx
-<Input
-  type="text"
+<TextInput
   value={email}
-  onChange={(e) => setEmail(e.value as string)}
+  onChangeText={setEmail}
   pattern={/^[^\s@]+@[^\s@]+\.[^\s@]+$/}
   placeholder="user@example.com"
 />
@@ -106,10 +120,10 @@ Validate input against a regex pattern:
 ### Number Constraints
 
 ```tsx
-<Input
-  type="number"
+<TextInput
   value={age}
-  onChange={(e) => setAge(e.value)}
+  onChangeText={setAge}
+  keyboardType="numeric"
   min={18}
   max={120}
   step={1}
@@ -119,23 +133,22 @@ Validate input against a regex pattern:
 
 ### Custom Validation
 
-Use `onChange` to implement custom validation:
+Use `onChangeText` to implement custom validation:
 
 ```tsx
 function CustomValidation() {
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
-  
+
   return (
     <View>
-      <Input
+      <TextInput
         value={value}
-        onChange={(e) => {
-          const newValue = e.value as string;
-          setValue(newValue);
-          
+        onChangeText={(text) => {
+          setValue(text);
+
           // Custom validation
-          if (newValue.length < 3) {
+          if (text.length < 3) {
             setError('Must be at least 3 characters');
           } else {
             setError('');
@@ -150,13 +163,13 @@ function CustomValidation() {
 
 ### Validation Feedback
 
-Input component provides built-in validation feedback:
+TextInput component provides built-in validation feedback:
 
 ```tsx
-<Input
-  type="number"
+<TextInput
   value={value}
-  onChange={(e) => setValue(e.value)}
+  onChangeText={setValue}
+  keyboardType="numeric"
   min={0}
   max={100}
   // Invalid input shows red color and error message when focused
@@ -164,6 +177,7 @@ Input component provides built-in validation feedback:
 ```
 
 The input automatically:
+
 - Shows red color for invalid input
 - Displays error message below input when focused
 - Clears error on valid input
@@ -175,11 +189,13 @@ The input automatically:
 Format how the value is displayed (doesn't change actual value):
 
 ```tsx
-<Input
-  type="number"
+<TextInput
   value={price}
-  onChange={(e) => setPrice(e.value)}
-  formatDisplay={(v) => `$${typeof v === 'number' ? v.toFixed(2) : parseFloat(String(v)).toFixed(2)}`}
+  onChangeText={setPrice}
+  keyboardType="decimal-pad"
+  formatDisplay={(v) =>
+    `$${typeof v === 'number' ? v.toFixed(2) : parseFloat(String(v)).toFixed(2)}`
+  }
 />
 ```
 
@@ -188,12 +204,7 @@ Format how the value is displayed (doesn't change actual value):
 Format the actual value:
 
 ```tsx
-<Input
-  type="text"
-  value={value}
-  onChange={(e) => setValue(e.value as string)}
-  formatValue={(v) => String(v).toUpperCase()}
-/>
+<TextInput value={value} onChangeText={setValue} formatValue={(v) => String(v).toUpperCase()} />
 ```
 
 ### Display Format Strings
@@ -202,26 +213,26 @@ Use predefined format strings:
 
 ```tsx
 // Currency
-<Input
-  type="number"
+<TextInput
   value={price}
-  onChange={(e) => setPrice(e.value)}
+  onChangeText={setPrice}
+  keyboardType="decimal-pad"
   displayFormat="currency"
 />
 
 // Percentage
-<Input
-  type="number"
+<TextInput
   value={rate}
-  onChange={(e) => setRate(e.value)}
+  onChangeText={setRate}
+  keyboardType="decimal-pad"
   displayFormat="percentage"
 />
 
 // Number with locale formatting
-<Input
-  type="number"
+<TextInput
   value={count}
-  onChange={(e) => setCount(e.value)}
+  onChangeText={setCount}
+  keyboardType="numeric"
   displayFormat="number"
 />
 ```
@@ -229,35 +240,61 @@ Use predefined format strings:
 ### Number Formatting Options
 
 ```tsx
-<Input
-  type="number"
+<TextInput
   value={value}
-  onChange={(e) => setValue(e.value)}
-  allowDecimals={true}      // Allow decimal numbers
-  decimalPlaces={2}         // Enforce 2 decimal places
-  step={0.01}                // Step value for increment/decrement
-  min={0}                    // Minimum value
-  max={9999.99}             // Maximum value
+  onChangeText={setValue}
+  keyboardType="decimal-pad"
+  allowDecimals={true} // Allow decimal numbers
+  decimalPlaces={2} // Enforce 2 decimal places
+  step={0.01} // Step value for increment/decrement
+  min={0} // Minimum value
+  max={9999.99} // Maximum value
 />
 ```
 
 ## Event Handling
 
-### onChange Event
+### onChangeText Event (React Native-compatible)
 
-Handle value changes:
+Handle value changes with simple string callback:
 
 ```tsx
-<Input
+<TextInput
   value={value}
-  onChange={(e) => {
-    // e.value is the new value (string or number)
-    setValue(e.value);
-    
-    // e.key contains key press information
-    if (e.key.return) {
-      handleSubmit();
-    }
+  onChangeText={(text) => {
+    // text is the new string value
+    setValue(text);
+  }}
+/>
+```
+
+### onSubmitEditing Event (React Native-compatible)
+
+Handle submission (Enter key):
+
+```tsx
+<TextInput
+  value={value}
+  onChangeText={setValue}
+  onSubmitEditing={(event) => {
+    // Triggered on Enter key
+    console.log('Submitted:', event.nativeEvent.text);
+    handleSubmit(event.nativeEvent.text);
+  }}
+  returnKeyType="done"
+/>
+```
+
+### onEndEditing Event
+
+Handle when editing ends (blur):
+
+```tsx
+<TextInput
+  value={value}
+  onChangeText={setValue}
+  onEndEditing={(event) => {
+    console.log('Editing ended:', event.nativeEvent.text);
   }}
 />
 ```
@@ -267,8 +304,9 @@ Handle value changes:
 Handle keyboard events:
 
 ```tsx
-<Input
+<TextInput
   value={value}
+  onChangeText={setValue}
   onKeyDown={(e) => {
     // e.key contains key information
     if (e.key.escape) {
@@ -281,27 +319,14 @@ Handle keyboard events:
 />
 ```
 
-### onSubmit Event
-
-Handle form submission:
-
-```tsx
-<Input
-  value={value}
-  onSubmit={(e) => {
-    // Triggered on Enter key
-    handleSubmit(e.value);
-  }}
-/>
-```
-
 ### onFocus / onBlur Events
 
 Handle focus changes:
 
 ```tsx
-<Input
+<TextInput
   value={value}
+  onChangeText={setValue}
   onFocus={() => {
     console.log('Input focused');
   }}
@@ -311,43 +336,57 @@ Handle focus changes:
 />
 ```
 
-## Input Properties
+## TextInput Properties
 
 ### Basic Properties
 
 ```tsx
-<Input
-  value={value}              // Controlled value
-  defaultValue="default"    // Uncontrolled default value
-  placeholder="Hint text"   // Placeholder when empty
-  disabled={false}           // Disable input
-  autoFocus                  // Auto-focus on mount
-  tabIndex={0}              // Tab order
+<TextInput
+  value={value} // Controlled value
+  defaultValue="default" // Uncontrolled default value
+  placeholder="Hint text" // Placeholder when empty
+  placeholderTextColor="gray" // Placeholder text color
+  editable={true} // Enable/disable editing
+  disabled={false} // Disable input (alias for !editable)
+  autoFocus // Auto-focus on mount
+  tabIndex={0} // Tab order
 />
 ```
 
 ### Size Constraints
 
 ```tsx
-<Input
+<TextInput
   value={value}
-  maxLength={50}            // Maximum character length
-  maxWidth={40}             // Maximum input width
-  multiline                 // Allow multiline
-  maxLines={5}              // Maximum lines for multiline
+  onChangeText={setValue}
+  maxLength={50} // Maximum character length
+  maxWidth={40} // Maximum input width
+  multiline // Allow multiline
+  numberOfLines={5} // Maximum lines for multiline (RN-compatible)
 />
 ```
 
-### Masking
+### Secure Entry (Password)
 
-Mask input for passwords or sensitive data:
+Mask input for passwords:
 
 ```tsx
-<Input
-  type="text"
+<TextInput
   value={password}
-  onChange={(e) => setPassword(e.value as string)}
-  mask="*"                  // Show '*' instead of actual characters
+  onChangeText={setPassword}
+  secureTextEntry // Hide characters with mask
+/>
+```
+
+### Keyboard Types
+
+Specify input type for validation:
+
+```tsx
+<TextInput
+  value={value}
+  onChangeText={setValue}
+  keyboardType="default" // 'default' | 'numeric' | 'decimal-pad' | 'number-pad'
 />
 ```
 
@@ -358,35 +397,35 @@ Mask input for passwords or sensitive data:
 Control increment/decrement step:
 
 ```tsx
-<Input
-  type="number"
+<TextInput
   value={value}
-  onChange={(e) => setValue(e.value)}
-  step={0.1}                // Step by 0.1
+  onChangeText={setValue}
+  keyboardType="decimal-pad"
+  step={0.1} // Step by 0.1
 />
 ```
 
 ### Min/Max Constraints
 
 ```tsx
-<Input
-  type="number"
+<TextInput
   value={value}
-  onChange={(e) => setValue(e.value)}
-  min={0}                   // Minimum value
-  max={100}                 // Maximum value
+  onChangeText={setValue}
+  keyboardType="numeric"
+  min={0} // Minimum value
+  max={100} // Maximum value
 />
 ```
 
 ### Decimal Handling
 
 ```tsx
-<Input
-  type="number"
+<TextInput
   value={value}
-  onChange={(e) => setValue(e.value)}
-  allowDecimals={true}      // Allow decimals
-  decimalPlaces={2}         // Enforce decimal places
+  onChangeText={setValue}
+  keyboardType="decimal-pad"
+  allowDecimals={true} // Allow decimals
+  decimalPlaces={2} // Enforce decimal places
 />
 ```
 
@@ -395,24 +434,18 @@ Control increment/decrement step:
 ### Basic Multiline
 
 ```tsx
-<Input
-  type="text"
-  value={value}
-  onChange={(e) => setValue(e.value as string)}
-  multiline
-/>
+<TextInput value={value} onChangeText={setValue} multiline />
 ```
 
 ### Multiline with Constraints
 
 ```tsx
-<Input
-  type="text"
+<TextInput
   value={value}
-  onChange={(e) => setValue(e.value as string)}
+  onChangeText={setValue}
   multiline
-  maxLines={10}             // Maximum number of lines
-  maxWidth={60}             // Maximum width per line
+  numberOfLines={10} // Maximum number of lines
+  maxWidth={60} // Maximum width per line
 />
 ```
 
@@ -423,13 +456,8 @@ Control increment/decrement step:
 ```tsx
 function ControlledInput() {
   const [value, setValue] = useState('');
-  
-  return (
-    <Input
-      value={value}
-      onChange={(e) => setValue(e.value as string)}
-    />
-  );
+
+  return <TextInput value={value} onChangeText={setValue} />;
 }
 ```
 
@@ -438,11 +466,11 @@ function ControlledInput() {
 ```tsx
 function UncontrolledInput() {
   return (
-    <Input
+    <TextInput
       defaultValue="initial"
-      onChange={(e) => {
+      onChangeText={(text) => {
         // Handle change but don't control value
-        console.log('Changed to:', e.value);
+        console.log('Changed to:', text);
       }}
     />
   );
@@ -458,42 +486,42 @@ function Form() {
     email: '',
     age: '',
   });
-  const [errors, setErrors] = useState({});
-  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name) {
       newErrors.name = 'Name is required';
     }
-    
+
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   return (
     <View>
-      <Input
+      <TextInput
         value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.value as string })}
+        onChangeText={(text) => setFormData({ ...formData, name: text })}
         placeholder="Name"
       />
       {errors.name && <Text color="red">{errors.name}</Text>}
-      
-      <Input
+
+      <TextInput
         value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.value as string })}
+        onChangeText={(text) => setFormData({ ...formData, email: text })}
         placeholder="Email"
         pattern={/^[^\s@]+@[^\s@]+\.[^\s@]+$/}
       />
       {errors.email && <Text color="red">{errors.email}</Text>}
-      
+
       <Button onClick={validate}>Submit</Button>
     </View>
   );
@@ -504,9 +532,9 @@ function Form() {
 
 ### Special Keys
 
-Input component handles special keys:
+TextInput component handles special keys:
 
-- **Enter**: Triggers `onSubmit` event
+- **Enter**: Triggers `onSubmitEditing` event
 - **Escape**: Can be handled via `onKeyDown`
 - **Tab**: Navigates to next component (handled by renderer)
 - **Arrow Keys**: Move cursor (in multiline) or can be handled via `onKeyDown`
@@ -516,8 +544,9 @@ Input component handles special keys:
 ### Custom Keyboard Handling
 
 ```tsx
-<Input
+<TextInput
   value={value}
+  onChangeText={setValue}
   onKeyDown={(e) => {
     // Handle custom keyboard shortcuts
     if (e.key.ctrl && e.key.char === 'a') {
@@ -533,19 +562,19 @@ Input component handles special keys:
 ### 1. Use Controlled Inputs for Forms
 
 ```tsx
-// Good: Controlled
+// Good: Controlled with onChangeText
 const [value, setValue] = useState('');
-<Input value={value} onChange={(e) => setValue(e.value as string)} />
+<TextInput value={value} onChangeText={setValue} />;
 ```
 
 ### 2. Validate on Change
 
 ```tsx
-<Input
+<TextInput
   value={value}
-  onChange={(e) => {
-    setValue(e.value as string);
-    validate(e.value as string);
+  onChangeText={(text) => {
+    setValue(text);
+    validate(text);
   }}
 />
 ```
@@ -554,42 +583,39 @@ const [value, setValue] = useState('');
 
 ```tsx
 // Good: Use pattern prop for regex validation
-<Input pattern={/^[a-z]+$/i} />
+<TextInput pattern={/^[a-z]+$/i} />
 
-// Also works: Custom validation in onChange
-<Input onChange={(e) => validate(e.value)} />
+// Also works: Custom validation in onChangeText
+<TextInput onChangeText={(text) => validate(text)} />
 ```
 
 ### 4. Format Display, Not Value
 
 ```tsx
 // Good: Format display, keep raw value
-<Input
-  formatDisplay={(v) => `$${v.toFixed(2)}`}
-  onChange={(e) => setRawValue(e.value)}
-/>
+<TextInput formatDisplay={(v) => `$${parseFloat(v).toFixed(2)}`} onChangeText={setRawValue} />
 
 // Avoid: Formatting value directly (loses precision)
 ```
 
-### 5. Use Appropriate Input Types
+### 5. Use Appropriate Keyboard Types
 
 ```tsx
-// Good: Use number type for numeric input
-<Input type="number" min={0} max={100} />
+// Good: Use keyboardType for numeric input
+<TextInput keyboardType="numeric" min={0} max={100} />
 
-// Avoid: Using text type and parsing manually
-<Input type="text" onChange={(e) => parseFloat(e.value)} />
+// Avoid: Using default type and parsing manually
+<TextInput onChangeText={(text) => parseFloat(text)} />
 ```
 
 ### 6. Handle Multiline Appropriately
 
 ```tsx
-// Good: Set maxLines for multiline
-<Input multiline maxLines={10} />
+// Good: Set numberOfLines for multiline
+<TextInput multiline numberOfLines={10} />
 
 // Avoid: Unlimited multiline (can cause issues)
-<Input multiline />
+<TextInput multiline />
 ```
 
 ## Common Patterns
@@ -598,18 +624,18 @@ const [value, setValue] = useState('');
 
 ```tsx
 function CurrencyInput() {
-  const [price, setPrice] = useState<number | string>('');
-  
+  const [price, setPrice] = useState('');
+
   return (
-    <Input
-      type="number"
+    <TextInput
       value={price}
-      onChange={(e) => setPrice(e.value)}
+      onChangeText={setPrice}
+      keyboardType="decimal-pad"
       min={0}
       allowDecimals
       decimalPlaces={2}
       formatDisplay={(v) => {
-        const num = typeof v === 'number' ? v : parseFloat(String(v));
+        const num = parseFloat(String(v));
         return isNaN(num) ? '' : `$${num.toFixed(2)}`;
       }}
       placeholder="$0.00"
@@ -624,23 +650,19 @@ function CurrencyInput() {
 function EmailInput() {
   const [email, setEmail] = useState('');
   const [isValid, setIsValid] = useState(true);
-  
+
   return (
     <View>
-      <Input
-        type="text"
+      <TextInput
         value={email}
-        onChange={(e) => {
-          const newEmail = e.value as string;
-          setEmail(newEmail);
-          setIsValid(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail));
+        onChangeText={(text) => {
+          setEmail(text);
+          setIsValid(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text));
         }}
         placeholder="user@example.com"
         pattern={/^[^\s@]+@[^\s@]+\.[^\s@]+$/}
       />
-      {!isValid && email && (
-        <Text color="red">Invalid email format</Text>
-      )}
+      {!isValid && email && <Text color="red">Invalid email format</Text>}
     </View>
   );
 }
@@ -648,32 +670,22 @@ function EmailInput() {
 
 ### Search Input with Debouncing
 
+Using the `useDebounce` hook:
+
 ```tsx
+import { TextInput, useDebounce } from 'react-console';
+
 function SearchInput() {
   const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(query);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [query]);
-  
+  const debouncedQuery = useDebounce(query, 300);
+
   useEffect(() => {
     if (debouncedQuery) {
       performSearch(debouncedQuery);
     }
   }, [debouncedQuery]);
-  
-  return (
-    <Input
-      value={query}
-      onChange={(e) => setQuery(e.value as string)}
-      placeholder="Search..."
-    />
-  );
+
+  return <TextInput value={query} onChangeText={setQuery} placeholder="Search..." />;
 }
 ```
 
@@ -682,15 +694,38 @@ function SearchInput() {
 ```tsx
 function PasswordInput() {
   const [password, setPassword] = useState('');
-  
+
   return (
-    <Input
-      type="text"
+    <TextInput
       value={password}
-      onChange={(e) => setPassword(e.value as string)}
-      mask="*"
+      onChangeText={setPassword}
+      secureTextEntry
       placeholder="Enter password"
     />
+  );
+}
+```
+
+### TextInput with Ref
+
+Control input programmatically using refs:
+
+```tsx
+import { TextInput, useRef } from 'react-console';
+import type { TextInputRef } from 'react-console';
+
+function InputWithRef() {
+  const inputRef = useRef<TextInputRef>(null);
+
+  const focusInput = () => inputRef.current?.focus();
+  const clearInput = () => inputRef.current?.clear();
+
+  return (
+    <View>
+      <TextInput ref={inputRef} placeholder="Type here..." />
+      <Button onPress={focusInput}>Focus</Button>
+      <Button onPress={clearInput}>Clear</Button>
+    </View>
   );
 }
 ```

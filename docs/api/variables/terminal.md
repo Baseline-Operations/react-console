@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / terminal
 
@@ -8,7 +8,7 @@
 
 > `const` **terminal**: [`GlobalTerminal`](../interfaces/GlobalTerminal.md)
 
-Defined in: src/utils/globalTerminal.ts:113
+Defined in: [src/utils/globalTerminal.ts:129](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/globalTerminal.ts#L129)
 
 Global terminal object instance (singleton)
 

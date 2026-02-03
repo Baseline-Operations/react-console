@@ -15,32 +15,13 @@ import type {
 } from './types';
 import { Position as PositionEnum, BorderStyle } from './types';
 import { decodeHtmlEntities } from '../../utils/measure';
-import { debug } from '../../utils/debug';
 import type { ViewStyle, TextStyle } from '../../types';
 
 // Create require function for ESM compatibility (needed for lazy loading to avoid circular deps)
 const require = createRequire(import.meta.url);
 
-// Use globalThis to store state that survives ESM/CJS dual loading
-// When tsx loads modules, ESM and CJS create separate module instances
-// globalThis is the only way to share state between them
-const GLOBAL_KEY = '__react_console_node_state__';
-interface GlobalNodeState {
-  isInteractive: boolean;
-  wasInteractiveMode: boolean;
-  unmountInProgress: boolean;
-}
-
-// Initialize global state if not exists
-if (!(globalThis as Record<string, unknown>)[GLOBAL_KEY]) {
-  (globalThis as Record<string, unknown>)[GLOBAL_KEY] = {
-    isInteractive: false,
-    wasInteractiveMode: false,
-    unmountInProgress: false,
-  };
-}
-
-const globalState = (globalThis as Record<string, unknown>)[GLOBAL_KEY] as GlobalNodeState;
+// Note: Global state is now managed in RenderState.ts
+// The globalThis pattern for ESM/CJS dual loading is handled there
 
 // Types for dynamic node capabilities (exported for mixin type inference)
 export interface RenderingInfo {
@@ -86,16 +67,7 @@ interface RenderableNode {
   hoveredStyle?: ViewStyle | TextStyle;
 }
 
-// Interface for interactive/focusable nodes
-interface FocusableNode extends Node {
-  focused?: boolean;
-  disabled?: boolean;
-  tabIndex?: number;
-  autoFocus?: boolean;
-  onFocus?: (event?: unknown) => void;
-  onBlur?: () => void;
-  onKeyDown?: (event: unknown) => void;
-}
+// Note: FocusableNode interface is now defined in RenderEntry.ts
 
 /**
  * Generate unique ID for nodes
@@ -697,18 +669,90 @@ export abstract class Node {
     };
   }
 
-  // Static callback for post-commit rendering
-  static _onCommitCallback: (() => void) | null = null;
+  // ============================================================
+  // Static render state - delegated to RenderState.ts
+  // These properties are kept for backwards compatibility
+  // ============================================================
 
-  // Static render state (persists across render calls for unmount access)
-  private static _rootFiber: import('react-reconciler').FiberRoot | null = null;
-  private static _rootContainer: Node | null = null;
-  private static _currentElement: import('react').ReactElement | null = null;
-  private static _isInteractive: boolean = false;
-  private static _resizeCleanup: (() => void) | null = null;
-  private static _renderCallback: (() => void) | null = null;
-  // Kept for backward compat but globalState.wasInteractiveMode is now used
-  private static _wasInteractiveMode: boolean = false;
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _onCommitCallback(): (() => void) | null {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.onCommitCallback;
+  }
+  static set _onCommitCallback(callback: (() => void) | null) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.onCommitCallback = callback;
+  }
+
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _rootFiber(): import('react-reconciler').FiberRoot | null {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.rootFiber;
+  }
+  static set _rootFiber(fiber: import('react-reconciler').FiberRoot | null) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.rootFiber = fiber;
+  }
+
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _rootContainer(): Node | null {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.rootContainer;
+  }
+  static set _rootContainer(container: Node | null) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.rootContainer = container;
+  }
+
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _currentElement(): import('react').ReactElement | null {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.currentElement;
+  }
+  static set _currentElement(element: import('react').ReactElement | null) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.currentElement = element;
+  }
+
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _isInteractive(): boolean {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.isInteractive;
+  }
+  static set _isInteractive(value: boolean) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.isInteractive = value;
+  }
+
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _resizeCleanup(): (() => void) | null {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.resizeCleanup;
+  }
+  static set _resizeCleanup(cleanup: (() => void) | null) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.resizeCleanup = cleanup;
+  }
+
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _renderCallback(): (() => void) | null {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.renderCallback;
+  }
+  static set _renderCallback(callback: (() => void) | null) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.renderCallback = callback;
+  }
+
+  /** @deprecated Use renderState from RenderState.ts */
+  static get _wasInteractiveMode(): boolean {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.wasInteractiveMode;
+  }
+  static set _wasInteractiveMode(value: boolean) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.wasInteractiveMode = value;
+  }
 
   // Getter to satisfy TypeScript's "never read" check
   static get wasInteractiveModeFlag(): boolean {
@@ -717,486 +761,54 @@ export abstract class Node {
 
   /**
    * Register a callback to be called after React commits changes
-   * This is used to trigger screen rendering after state updates
+   * @deprecated Use setOnCommitCallback from RenderState.ts
    */
   static setOnCommitCallback(callback: (() => void) | null): void {
-    Node._onCommitCallback = callback;
+    const { setOnCommitCallback } = require('../../renderer/RenderState');
+    setOnCommitCallback(callback);
   }
 
   /**
-   * Create React Reconciler host config
-   * This is the interface between React and the Node system
-   * Returns the host config object required by react-reconciler
+   * @deprecated Use createHostConfig() from src/renderer/HostConfig.ts instead
    */
-  // Return type uses 'any' to allow additional properties required by react-reconciler 0.31+
-  // that aren't in the @types/react-reconciler type definitions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static createHostConfig(): any {
-    const { NodeFactory } = require('../NodeFactory');
-
-    const getPublicInstance = (instance: Node): Node => instance;
-
-    const getRootHostContext = (): { x: number; y: number; width: number } => {
-      return {
-        x: 0,
-        y: 0,
-        width: process.stdout.columns ?? 80,
-      };
-    };
-
-    const getChildHostContext = (
-      parentHostContext: object,
-      _type: string,
-      _rootContainer: Node
-    ): object => {
-      return parentHostContext;
-    };
-
-    const prepareForCommit = (_containerInfo: Node): Record<string, unknown> | null => {
-      debug('[hostConfig] prepareForCommit');
-      return null;
-    };
-    const resetAfterCommit = (): void => {
-      debug('[hostConfig] resetAfterCommit');
-      // Call the registered callback to trigger screen rendering
-      // This ensures state updates result in visible screen changes
-      // We access Node dynamically to get the current callback value
-      const NodeClass = require('./Node').Node;
-      if (NodeClass._onCommitCallback) {
-        NodeClass._onCommitCallback();
-      }
-    };
-
-    const createInstance = (
-      type: string | ((...args: unknown[]) => unknown),
-      props: Record<string, unknown>,
-      _rootContainerInstance: unknown,
-      _hostContext: { x: number; y: number; width: number },
-      _internalInstanceHandle: unknown
-    ): Node => {
-      // Handle different type formats
-      let typeString: string;
-
-      // Type for function components with optional displayName
-      interface FunctionComponent {
-        (...args: unknown[]): unknown;
-        name?: string;
-        displayName?: string;
-      }
-      // Type for React elements with type property
-      interface ReactElementLike {
-        type?: unknown;
-        $$typeof?: symbol;
-      }
-
-      if (typeof type === 'string') {
-        typeString = type;
-      } else if (typeof type === 'function') {
-        // Function component - try to get name, or default to Box
-        const fn = type as FunctionComponent;
-        typeString = fn.name || fn.displayName || 'Box';
-      } else if (type && typeof type === 'object') {
-        // Object type - could be React element or other object
-        const elem = type as ReactElementLike;
-        if ('type' in type) {
-          // Has type property - could be React element
-          const innerType = elem.type;
-          if (typeof innerType === 'string') {
-            typeString = innerType;
-          } else if (typeof innerType === 'function') {
-            const innerFn = innerType as FunctionComponent;
-            typeString = innerFn.name || innerFn.displayName || 'Box';
-          } else {
-            typeString = 'Box';
-          }
-        } else if ('$$typeof' in type) {
-          // React element with $$typeof - extract type
-          const elementType = elem.type;
-          if (typeof elementType === 'string') {
-            typeString = elementType;
-          } else if (typeof elementType === 'function') {
-            const elemFn = elementType as FunctionComponent;
-            typeString = elemFn.name || elemFn.displayName || 'Box';
-          } else {
-            typeString = 'Box';
-          }
-        } else {
-          // Unknown object - default to Box
-          typeString = 'Box';
-        }
-      } else {
-        typeString = 'Box';
-      }
-
-      const element = {
-        type: typeString,
-        props: props as Record<string, unknown>,
-      } as unknown as import('react').ReactElement;
-
-      const node = NodeFactory.createNode(element);
-      debug('[hostConfig] createInstance', {
-        type: typeString,
-        id: props.id,
-        disabled: props.disabled,
-      });
-      return node;
-    };
-
-    // Text instance type - mutable so we can update text content
-    interface TextInstance {
-      text: string;
-      parentNode: Node | null;
-    }
-
-    const createTextInstance = (
-      text: string,
-      _rootContainerInstance: Node,
-      _hostContext: object,
-      _internalInstanceHandle: unknown
-    ): Node => {
-      // Create a text instance that satisfies the Node interface requirement
-      // but is handled specially in appendInitialChild
-      const textInstance: TextInstance = { text, parentNode: null };
-      return textInstance as unknown as Node;
-    };
-
-    const appendInitialChild = (
-      parentInstance: Node,
-      child: Node | string | TextInstance
-    ): void => {
-      // Handle TextInstance objects
-      if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
-        const textInstance = child as TextInstance;
-        textInstance.parentNode = parentInstance;
-
-        // If parent is a TextNode, set its content
-        if (parentInstance.type === 'text') {
-          parentInstance.setContent(textInstance.text);
-        } else {
-          // Otherwise create a TextNode child
-          const textElement = {
-            type: 'Text',
-            props: { children: textInstance.text },
-          } as import('react').ReactElement;
-          const textNode = NodeFactory.createNode(textElement, parentInstance);
-          parentInstance.appendChild(textNode);
-        }
-        return;
-      }
-
-      if (typeof child === 'string') {
-        // Legacy string handling (shouldn't happen with new TextInstance)
-        if (parentInstance.type === 'text') {
-          return;
-        }
-        const textElement = {
-          type: 'Text',
-          props: { children: child },
-        } as import('react').ReactElement;
-        const textNode = NodeFactory.createNode(textElement, parentInstance);
-        parentInstance.appendChild(textNode);
-      } else {
-        // child is a Node at this point (TextInstance was handled above)
-        const nodeChild = child as Node;
-        nodeChild.parent = parentInstance;
-        parentInstance.appendChild(nodeChild);
-      }
-    };
-
-    const finalizeInitialChildren = (): boolean => false;
-
-    const prepareUpdate = (
-      _instance: Node,
-      _type: string,
-      _oldProps: Record<string, unknown>,
-      _newProps: Record<string, unknown>,
-      _rootContainerInstance: Node,
-      _hostContext: object
-    ): unknown[] | null => {
-      // Log significant prop changes (disabled, label, etc.)
-      if (_oldProps.disabled !== _newProps.disabled) {
-        debug('[hostConfig] prepareUpdate: disabled changed', {
-          type: _type,
-          oldDisabled: _oldProps.disabled,
-          newDisabled: _newProps.disabled,
-        });
-      }
-      // Return update payload as array - react-reconciler expects unknown[]
-      return [_oldProps, _newProps];
-    };
-
-    const shouldSetTextContent = (_type: string, _props: Record<string, unknown>): boolean => {
-      return false;
-    };
-
-    const getCurrentEventPriority = (): number => DefaultEventPriority;
-
-    // Priority tracking for react-reconciler
-    const DefaultEventPriority = 32;
-    let currentUpdatePriority = DefaultEventPriority;
-
-    const getCurrentUpdatePriority = (): number => currentUpdatePriority;
-
-    const setCurrentUpdatePriority = (priority: number): void => {
-      currentUpdatePriority = priority;
-    };
-
-    const resolveUpdatePriority = (): number => {
-      if (currentUpdatePriority !== DefaultEventPriority) {
-        return currentUpdatePriority;
-      }
-      return DefaultEventPriority;
-    };
-
-    const appendChild = (parentInstance: Node, child: Node | string): void => {
-      appendInitialChild(parentInstance, child);
-    };
-
-    const appendChildToContainer = (container: Node, child: Node | string): void => {
-      appendInitialChild(container, child);
-    };
-
-    const insertBefore = (
-      parentInstance: Node,
-      child: Node | string,
-      beforeChild: Node | string
-    ): void => {
-      if (typeof child === 'string') {
-        const textElement = {
-          type: 'Text',
-          props: { children: child },
-        } as import('react').ReactElement;
-        const textNode = NodeFactory.createNode(textElement, parentInstance);
-        const beforeIndex = parentInstance.children.indexOf(beforeChild as Node);
-        if (beforeIndex >= 0) {
-          parentInstance.children.splice(beforeIndex, 0, textNode);
-        } else {
-          parentInstance.appendChild(textNode);
-        }
-      } else {
-        const beforeIndex = parentInstance.children.indexOf(beforeChild as Node);
-        if (beforeIndex >= 0) {
-          child.parent = parentInstance;
-          parentInstance.children.splice(beforeIndex, 0, child);
-        } else {
-          appendInitialChild(parentInstance, child);
-        }
-      }
-    };
-
-    const insertInContainerBefore = (
-      container: Node,
-      child: Node | string,
-      beforeChild: Node | string
-    ): void => {
-      insertBefore(container, child, beforeChild);
-    };
-
-    const removeChild = (parentInstance: Node, child: Node | string): void => {
-      if (typeof child === 'string') {
-        const index = parentInstance.children.findIndex((c) => c.content === child);
-        if (index >= 0) {
-          parentInstance.children.splice(index, 1);
-        }
-      } else {
-        const index = parentInstance.children.indexOf(child);
-        if (index >= 0) {
-          parentInstance.children.splice(index, 1);
-          child.parent = null;
-        }
-      }
-    };
-
-    const removeChildFromContainer = (container: Node, child: Node | string): void => {
-      removeChild(container, child);
-    };
-
-    const commitTextUpdate = (textInstance: Node, _oldText: string, newText: string): void => {
-      // Cast to TextInstance for internal use
-      const textInst = textInstance as unknown as TextInstance;
-      // Update the text instance
-      textInst.text = newText;
-
-      // Update the parent node's content if it's a TextNode
-      if (textInst.parentNode && textInst.parentNode.type === 'text') {
-        textInst.parentNode.setContent(newText);
-      }
-    };
-
-    const commitUpdate = (
-      instance: Node,
-      updatePayload: unknown[],
-      _type: string,
-      _oldProps: Record<string, unknown>,
-      newProps: Record<string, unknown>,
-      _internalHandle: unknown
-    ): void => {
-      // react-reconciler 0.31 passes: instance, updatePayload, type, oldProps, newProps, internalHandle
-      // updatePayload comes from prepareUpdate
-
-      const extInstance = instance as unknown as RenderableNode;
-      debug('[hostConfig] commitUpdate', {
-        type: instance.type,
-        id: extInstance.componentId,
-        disabled: newProps.disabled,
-        oldDisabled: _oldProps.disabled,
-        updatePayload,
-      });
-
-      if (newProps.style && extInstance.setStyle) {
-        extInstance.setStyle(newProps.style as ViewStyle | TextStyle);
-      }
-
-      // Update event handlers
-      if ('onClick' in newProps) {
-        extInstance.onClick = newProps.onClick as ((event: unknown) => void) | undefined;
-      }
-      if ('onPress' in newProps) {
-        extInstance.onPress = newProps.onPress as ((event: unknown) => void) | undefined;
-      }
-      if ('onKeyDown' in newProps) {
-        extInstance.onKeyDown = newProps.onKeyDown as ((event: unknown) => void) | undefined;
-      }
-      if ('onChange' in newProps) {
-        extInstance.onChange = newProps.onChange as ((event: unknown) => void) | undefined;
-      }
-      if ('onFocus' in newProps) {
-        extInstance.onFocus = newProps.onFocus as (() => void) | undefined;
-      }
-      if ('onBlur' in newProps) {
-        extInstance.onBlur = newProps.onBlur as (() => void) | undefined;
-      }
-      if ('onSubmit' in newProps) {
-        extInstance.onSubmit = newProps.onSubmit as ((event: unknown) => void) | undefined;
-      }
-
-      // Update interactive properties (disabled, tabIndex, autoFocus)
-      if ('disabled' in newProps) {
-        extInstance.disabled = Boolean(newProps.disabled);
-      }
-      if ('tabIndex' in newProps) {
-        extInstance.tabIndex = newProps.tabIndex as number | undefined;
-      }
-      if ('autoFocus' in newProps) {
-        extInstance.autoFocus = Boolean(newProps.autoFocus);
-      }
-
-      // Update content for text nodes
-      if (newProps.children !== undefined && extInstance.setContent) {
-        // Handle array children (e.g., <Text>Hello, {name}!</Text> becomes ["Hello, ", name, "!"])
-        if (Array.isArray(newProps.children)) {
-          const textParts = (newProps.children as unknown[])
-            .filter((child: unknown) => typeof child === 'string' || typeof child === 'number')
-            .map((child: unknown) => String(child));
-          extInstance.setContent(textParts.join(''));
-        } else {
-          extInstance.setContent(String(newProps.children));
-        }
-      }
-
-      // Update input value
-      if (newProps.value !== undefined && extInstance.setValue) {
-        extInstance.setValue(newProps.value);
-      }
-
-      // Update label for buttons
-      if ('label' in newProps && extInstance.setLabel) {
-        extInstance.setLabel(newProps.label as string);
-      }
-
-      // Update state-specific styles for buttons
-      if ('disabledStyle' in newProps) {
-        extInstance.disabledStyle = newProps.disabledStyle as ViewStyle | TextStyle | undefined;
-      }
-      if ('focusedStyle' in newProps) {
-        extInstance.focusedStyle = newProps.focusedStyle as ViewStyle | TextStyle | undefined;
-      }
-      if ('pressedStyle' in newProps) {
-        extInstance.pressedStyle = newProps.pressedStyle as ViewStyle | TextStyle | undefined;
-      }
-      if ('hoveredStyle' in newProps) {
-        extInstance.hoveredStyle = newProps.hoveredStyle as ViewStyle | TextStyle | undefined;
-      }
-    };
-
-    const hideInstance = (): void => {};
-    const hideTextInstance = (): void => {};
-    const unhideInstance = (): void => {};
-    const unhideTextInstance = (): void => {};
-
-    const clearContainer = (container: Node): void => {
-      container.children = [];
-    };
-
-    return {
-      // Note: 'now' is not part of react-reconciler HostConfig, removed
-      getPublicInstance,
-      getRootHostContext,
-      getChildHostContext,
-      prepareForCommit,
-      resetAfterCommit,
-      createInstance,
-      createTextInstance,
-      appendInitialChild,
-      finalizeInitialChildren,
-      prepareUpdate,
-      shouldSetTextContent,
-      getCurrentEventPriority,
-      getCurrentUpdatePriority,
-      setCurrentUpdatePriority,
-      resolveUpdatePriority,
-      // Wrap setTimeout/clearTimeout to handle Node.js Timeout type
-      scheduleTimeout: (fn: (...args: unknown[]) => unknown, delay?: number) =>
-        setTimeout(fn, delay) as unknown as number,
-      cancelTimeout: (id: number) => clearTimeout(id as unknown as NodeJS.Timeout),
-      noTimeout: -1,
-      appendChild,
-      appendChildToContainer,
-      insertBefore,
-      insertInContainerBefore,
-      removeChild,
-      removeChildFromContainer,
-      commitTextUpdate,
-      commitUpdate,
-      hideInstance,
-      hideTextInstance,
-      unhideInstance,
-      unhideTextInstance,
-      clearContainer,
-      supportsMutation: true,
-      supportsPersistence: false,
-      supportsHydration: false,
-      isPrimaryRenderer: true,
-      // Required additional properties
-      preparePortalMount: () => {},
-      getInstanceFromNode: () => null,
-      beforeActiveInstanceBlur: () => {},
-      afterActiveInstanceBlur: () => {},
-      prepareScopeUpdate: () => {},
-      getInstanceFromScope: () => null,
-      detachDeletedInstance: () => {},
-      // React 19 / reconciler 0.31+ required methods
-      maySuspendCommit: () => false,
-      preloadInstance: () => true,
-      startSuspendingCommit: () => {},
-      suspendInstance: () => {},
-      waitForCommitToBeReady: () => null,
-      NotPendingTransition: null,
-    };
+    const { createHostConfig } = require('../../renderer/HostConfig');
+    return createHostConfig();
   }
 
   /**
    * Navigation options for interactive mode
+   * @deprecated Use renderState.navigationOptions from RenderState.ts
    */
-  static navigationOptions: {
+  static get navigationOptions(): {
     arrowKeyNavigation?: boolean;
     verticalArrowNavigation?: boolean;
     horizontalArrowNavigation?: boolean;
-  } = {};
+  } {
+    const { renderState } = require('../../renderer/RenderState');
+    return renderState.navigationOptions;
+  }
+  static set navigationOptions(opts: {
+    arrowKeyNavigation?: boolean;
+    verticalArrowNavigation?: boolean;
+    horizontalArrowNavigation?: boolean;
+  }) {
+    const { renderState } = require('../../renderer/RenderState');
+    renderState.navigationOptions = opts;
+  }
+
+  // ============================================================
+  // Render entry points - delegated to RenderEntry.ts
+  // ============================================================
 
   /**
    * Main render entry point - renders React elements to console
    * This is the primary API for users
+   *
+   * @param element - The React element to render
+   * @param options - Render options (mode, fullscreen, navigation, etc.)
+   * @returns In static mode, returns the rendered output string; otherwise void
    */
   static render(
     element: import('react').ReactElement,
@@ -1212,915 +824,27 @@ export abstract class Node {
       };
     }
   ): string | void {
-    // Store navigation options
-    Node.navigationOptions = options?.navigation || {};
-    // Lazy imports to avoid circular dependency with reconciler
-    // Note: reconciler.ts imports Node, creating a circular dependency.
-    // We use require() here which handles circular deps at runtime.
-
-    // Get reconciler with fallback path resolution for test environments
-    interface ReconcilerModule {
-      reconciler: import('react-reconciler').Reconciler<Node, Node, Node, Node, Node>;
-    }
-    let reconciler: ReconcilerModule['reconciler'];
-    try {
-      reconciler = (require('../../renderer/reconciler') as ReconcilerModule).reconciler;
-    } catch (err: unknown) {
-      // In test environments (Vitest), relative paths might not resolve correctly
-      // Try using path from project root
-      try {
-        const path = require('path');
-        const rootPath = path.resolve(process.cwd(), 'src/renderer/reconciler');
-        reconciler = require(rootPath).reconciler;
-      } catch {
-        // If that fails, the module system might be ESM - but we can't use async import here
-        // Re-throw original error with helpful message
-        const errMessage = err instanceof Error ? err.message : String(err);
-        throw new Error(
-          `Failed to load reconciler from '../../renderer/reconciler'. ` +
-            `Original error: ${errMessage}. ` +
-            `This may be a module resolution issue in the test environment.`
-        );
-      }
-    }
-
-    const { getBufferRenderer, resetBufferRenderer } = require('../../buffer');
-    const { showCursor } = require('../../renderer/ansi');
-    const { startInputListener } = require('../../renderer/input');
-    const {
-      getTerminalDimensions,
-      onTerminalResizeDebounced,
-      setRenderMode,
-    } = require('../../utils/terminal');
-    const { reportError, ErrorType } = require('../../utils/errors');
-    const { initializeStorage } = require('../../utils/storage');
-    const { scheduleBatchedUpdate, flushBatchedUpdatesSync } = require('../../renderer/batching');
-    const { BoxNode } = require('../primitives/BoxNode');
-    const {
-      collectInteractiveComponents,
-      assignTabIndexes,
-      handleTabNavigation,
-      handleMouseEvent,
-      focusComponent,
-      findAllOverlays,
-    } = require('../../renderer/utils/navigation');
-    const { componentBoundsRegistry } = require('../../renderer/utils/componentBounds');
-    const { terminal, updateTerminalDimensions } = require('../../utils/globalTerminal');
-
-    const mode = options?.mode || 'static';
-    const fullscreen = options?.fullscreen || false;
-    Node._renderCallback = options?.onUpdate || null;
-
-    // Set render mode early so terminal dimensions are correct
-    setRenderMode(mode === 'static' ? 'static' : 'interactive');
-    resetBufferRenderer(); // Reset buffer renderer with new dimensions
-
-    // Set interactive mode flags EARLY - before any SIGINT handlers are registered
-    // This ensures cleanup knows we're in interactive mode even if Ctrl+C is pressed immediately
-    // Use globalThis state to survive ESM/CJS dual loading
-    const isInteractiveMode = mode === 'interactive' || mode === 'fullscreen';
-    globalState.isInteractive = isInteractiveMode;
-    globalState.wasInteractiveMode = isInteractiveMode;
-    globalState.unmountInProgress = false; // Reset unmount flag for new render
-    Node._isInteractive = isInteractiveMode;
-    Node._wasInteractiveMode = isInteractiveMode;
-    Node._currentElement = element;
-
-    // Register SIGINT handler for proper cleanup (cursor positioning, mouse tracking)
-    // This is critical for interactive mode to ensure clean exit
-    if (mode !== 'static') {
-      // Remove any existing SIGINT handlers first to avoid duplicates
-      process.removeAllListeners('SIGINT');
-      process.on('SIGINT', () => {
-        Node.exit(0);
-      });
-    }
-
-    initializeStorage(options?.appId);
-
-    let previousFocusedComponent: Node | null = null;
-    let overlayStack: Node[] = [];
-
-    if (!Node._rootFiber) {
-      try {
-        // Dynamic import for optional lifecycle hooks
-        import('../../hooks/lifecycle')
-          .then((lifecycle) => {
-            if (lifecycle?.notifyAppStart) {
-              lifecycle.notifyAppStart();
-            }
-          })
-          .catch(() => {
-            // Hooks module may not be loaded yet
-          });
-      } catch {
-        // Ignore
-      }
-    }
-
-    // Create root container using new Node system
-    if (!Node._rootContainer) {
-      Node._rootContainer = new BoxNode() as unknown as Node;
-      if (fullscreen || mode === 'fullscreen') {
-        interface StylableRoot {
-          setStyle?(style: Record<string, unknown>): void;
-        }
-        const stylableRoot = Node._rootContainer as unknown as StylableRoot;
-        if (stylableRoot.setStyle) {
-          stylableRoot.setStyle({ width: '100%', height: '100%' });
-        }
-      }
-    }
-
-    // Create reconciler container
-    if (!Node._rootFiber) {
-      // Use LegacyRoot (0) for all modes - ConcurrentRoot has scheduling issues
-      const rootTag = 0;
-
-      Node._rootFiber = reconciler.createContainer(
-        Node._rootContainer,
-        rootTag,
-        null,
-        false,
-        false,
-        '',
-        (error: Error) => {
-          reportError(error, ErrorType.RENDER);
-        },
-        null
-      );
-    }
-
-    // Track if this is first render
-    let isFirstRender = true;
-
-    // Note: focusedNodeId is now stored in terminal.focusedNodeId
-    // This allows focus set via mouse clicks in handleMouseEvent to survive re-renders
-
-    // Get fresh interactive components from root
-    const getInteractiveComponents = (rootNode: Node): Node[] => {
-      const components: Node[] = [];
-      collectInteractiveComponents(rootNode, components);
-      assignTabIndexes(components);
-      return components;
-    };
-
-    // Apply stored focus state to components after re-render
-    const applyFocusState = (components: Node[]): void => {
-      // First, clear focus from ALL components to ensure clean state
-      for (const comp of components) {
-        const focusableComp = comp as Node & { focused?: boolean };
-        if ('focused' in focusableComp) {
-          focusableComp.focused = false;
-        }
-      }
-
-      if (terminal.focusedNodeId) {
-        for (const comp of components) {
-          if (comp.id === terminal.focusedNodeId) {
-            const focusableComp = comp as Node & { focused?: boolean };
-            focusableComp.focused = true;
-            terminal.setFocusedComponent(comp as unknown as import('../../types').ConsoleNode);
-            return;
-          }
-        }
-        // ID not found, clear it
-        terminal.focusedNodeId = null;
-      }
-    };
-
-    // Update through React reconciliation
-    const performRender = (): string | void => {
-      if (Node._rootContainer) {
-        try {
-          // componentBoundsRegistry is cleared in BufferRenderer.render()
-
-          const dims = getTerminalDimensions();
-          terminal.dimensions = dims;
-
-          const currentOverlays = findAllOverlays(Node._rootContainer);
-          const previousOverlayCount = overlayStack.length;
-          const currentOverlayCount = currentOverlays.length;
-
-          if (currentOverlayCount > previousOverlayCount && previousFocusedComponent === null) {
-            previousFocusedComponent = terminal.focusedComponent as Node | null;
-          }
-
-          if (currentOverlayCount < previousOverlayCount && previousFocusedComponent) {
-            const interactiveComponents: Node[] = [];
-            collectInteractiveComponents(Node._rootContainer, interactiveComponents);
-            if (
-              previousFocusedComponent &&
-              interactiveComponents.includes(previousFocusedComponent)
-            ) {
-              focusComponent(previousFocusedComponent, interactiveComponents, scheduleUpdate);
-            }
-            previousFocusedComponent = null;
-          }
-
-          overlayStack = currentOverlays;
-
-          // Build component tree, layouts, stacking contexts, and viewports
-          const container = Node._rootContainer as Node;
-          if (container.buildComponentTree) {
-            container.buildComponentTree();
-          }
-          if (container.calculateLayouts) {
-            container.calculateLayouts();
-          }
-          if (container.buildStackingContexts) {
-            container.buildStackingContexts();
-          }
-          if (container.buildViewports) {
-            container.buildViewports();
-          }
-
-          // Apply focus state to components after React updates
-          if (terminal.focusedNodeId) {
-            const components = getInteractiveComponents(Node._rootContainer);
-            applyFocusState(components);
-          }
-
-          // Use the multi-buffer renderer
-          // Always do fullRedraw in interactive mode to ensure focus changes render correctly
-          // The diff-based rendering has issues with focus indicator characters
-          const bufferRenderer = getBufferRenderer();
-          bufferRenderer.render(Node._rootContainer, {
-            mode: Node._isInteractive ? 'interactive' : 'static',
-            fullRedraw: Node._isInteractive || isFirstRender,
-            clearScreen: Node._isInteractive && isFirstRender,
-          });
-
-          // Compute cursor position AFTER render so componentBoundsRegistry has correct data
-          // (componentBoundsRegistry.endRender() is called inside BufferRenderer.render())
-          // Then position cursor separately
-          if (terminal.focusedNodeId && Node._isInteractive) {
-            const components = getInteractiveComponents(Node._rootContainer);
-            const focusedComponent = components.find((c) => c.id === terminal.focusedNodeId);
-            if (focusedComponent) {
-              // Use componentBoundsRegistry for visible bounds (handles scroll offsets correctly)
-              // Fall back to node.bounds if not in registry
-              const registryBounds = componentBoundsRegistry.get(
-                focusedComponent as unknown as import('../../types').ConsoleNode
-              );
-
-              // If not in registry, component is outside visible scroll area - don't position cursor
-              if (!registryBounds) {
-                // Component not visible in scrollview, skip cursor positioning
-                debug('[performRender] focused component not in registry (not visible)', {
-                  type: focusedComponent.type,
-                  id: focusedComponent.id,
-                });
-              }
-
-              let focusedBounds = registryBounds
-                ? {
-                    x: registryBounds.x,
-                    y: registryBounds.y,
-                    width: registryBounds.width,
-                    height: registryBounds.height,
-                  }
-                : null; // Don't use node.bounds - it has wrong coordinates for scrolled content
-
-              if (focusedBounds) {
-                let cursorX: number;
-                let cursorY: number = focusedBounds.y;
-
-                if (focusedComponent.type === 'input') {
-                  interface InputNodeState {
-                    _cursorPos?: number;
-                    _scrollOffset?: number;
-                    _visibleWidth?: number;
-                    _multiline?: boolean;
-                    _cursorLine?: number;
-                    _cursorCol?: number;
-                    _scrollTop?: number;
-                    _maxLines?: number;
-                  }
-                  const inputNode = focusedComponent as Node & InputNodeState;
-                  const cursorPos = inputNode._cursorPos ?? 0;
-                  const scrollOffset = inputNode._scrollOffset ?? 0;
-                  const visibleWidth = inputNode._visibleWidth ?? 20;
-
-                  if (inputNode._multiline) {
-                    // Multiline: use cursor line and column
-                    const cursorLine = inputNode._cursorLine ?? 0;
-                    const cursorCol = inputNode._cursorCol ?? 0;
-                    const scrollTop = inputNode._scrollTop ?? 0;
-
-                    // Only show terminal cursor if cursor line is visible
-                    const visibleLine = cursorLine - scrollTop;
-                    if (visibleLine >= 0 && visibleLine < (inputNode._maxLines || 3)) {
-                      cursorX = focusedBounds.x + 2 + Math.min(cursorCol, visibleWidth);
-                      cursorY = focusedBounds.y + visibleLine;
-                    } else {
-                      // Cursor line not visible, hide terminal cursor
-                      cursorX = -1;
-                    }
-                  } else {
-                    // Single-line: position at actual cursor position (accounting for scroll)
-                    const visibleCursorPos = cursorPos - scrollOffset;
-                    if (visibleCursorPos >= 0 && visibleCursorPos <= visibleWidth) {
-                      cursorX = focusedBounds.x + 2 + visibleCursorPos;
-                    } else {
-                      // Cursor not in visible area
-                      cursorX = -1;
-                    }
-                  }
-                } else if (focusedComponent.type === 'button') {
-                  // Position cursor at button: x = bounds.x + prefix(2), y = bounds.y
-                  cursorX = focusedBounds.x + 2; // +2 for "> " prefix
-                } else {
-                  // Default: position at start of component
-                  cursorX = focusedBounds.x;
-                }
-
-                // Only set cursor position if valid
-                if (cursorX >= 0) {
-                  debug('[performRender] computed cursor position', { x: cursorX, y: cursorY });
-                  // Position cursor after render
-                  process.stdout.write(`\x1b[${cursorY + 1};${cursorX + 1}H`);
-                }
-              }
-            }
-          }
-
-          isFirstRender = false;
-
-          // Cursor positioning and showing is now handled inside flush() as part of the same write
-
-          if (Node._renderCallback) {
-            Node._renderCallback();
-          }
-        } catch (error) {
-          try {
-            process.stdout.write('\n[Render Error: ' + String(error) + ']\n');
-            process.stdout.write(showCursor());
-          } catch {
-            console.error('Render error:', error);
-          }
-          reportError(error, ErrorType.RENDER, {
-            nodeType: Node._rootContainer.type,
-          });
-        }
-      }
-    };
-
-    // Register the render callback for interactive mode
-    // This ensures state updates trigger screen rendering
-    if (Node._isInteractive) {
-      Node.setOnCommitCallback(performRender);
-    }
-
-    let outputResult: string | void = undefined;
-
-    try {
-      // Use synchronous updates for both static and interactive modes
-      // This ensures the render callback fires immediately
-      interface ReconcilerExt {
-        updateContainerSync?: (
-          element: unknown,
-          container: unknown,
-          parent: unknown,
-          callback: () => void
-        ) => void;
-        flushSyncWork?: () => void;
-      }
-      const extReconciler = reconciler as typeof reconciler & ReconcilerExt;
-      if (typeof extReconciler.updateContainerSync === 'function') {
-        extReconciler.updateContainerSync(element, Node._rootFiber, null, () => {
-          outputResult = performRender();
-        });
-        if (typeof extReconciler.flushSyncWork === 'function') {
-          extReconciler.flushSyncWork();
-        }
-      } else {
-        // Fallback for older react-reconciler versions
-        reconciler.updateContainer(element, Node._rootFiber, null, () => {
-          outputResult = performRender();
-        });
-      }
-    } catch (error) {
-      reportError(error, ErrorType.RENDER);
-      throw error;
-    }
-
-    // For static mode, return immediately
-    if (mode === 'static' && !Node._isInteractive) {
-      return outputResult;
-    }
-
-    // Set up terminal resize listener for interactive mode
-    if (Node._resizeCleanup) {
-      Node._resizeCleanup();
-      Node._resizeCleanup = null;
-    }
-    Node._resizeCleanup = onTerminalResizeDebounced(() => {
-      updateTerminalDimensions();
-
-      if (Node._currentElement && Node._rootFiber) {
-        reconciler.updateContainer(Node._currentElement, Node._rootFiber, null, () => {
-          performRender();
-        });
-      }
-    }, 100);
-
-    // Schedule update function (defined before setupInputHandling so it can be used there)
-    const scheduleUpdate = (): void => {
-      debug('scheduleUpdate called');
-
-      scheduleBatchedUpdate(() => {
-        debug('scheduleBatchedUpdate callback - calling performRender');
-        performRender();
-      });
-    };
-
-    // Flush all pending React updates synchronously
-    // This ensures the component tree is up-to-date before navigation
-    const flushSyncReactUpdates = (): void => {
-      // First flush our batched updates
-      flushBatchedUpdatesSync();
-
-      // Then force React to process any pending work synchronously
-      if (Node._currentElement && Node._rootFiber) {
-        interface ReconcilerExt {
-          updateContainerSync?: (
-            element: unknown,
-            container: unknown,
-            parent: unknown,
-            callback: () => void
-          ) => void;
-          flushSyncWork?: () => void;
-        }
-        const extReconciler = reconciler as typeof reconciler & ReconcilerExt;
-        if (typeof extReconciler.updateContainerSync === 'function') {
-          extReconciler.updateContainerSync(Node._currentElement, Node._rootFiber, null, () => {});
-          if (typeof extReconciler.flushSyncWork === 'function') {
-            extReconciler.flushSyncWork();
-          }
-        } else {
-          // Fallback: use regular updateContainer
-          reconciler.updateContainer(Node._currentElement, Node._rootFiber, null, () => {});
-        }
-
-        // Perform a render to update node properties from React props
-        performRender();
-      }
-    };
-
-    // Setup input handling for interactive components
-    const setupInputHandling = (root: Node): void => {
-      const interactiveComponents = getInteractiveComponents(root);
-
-      // Find first autoFocus component that is not disabled
-      const firstAutoFocusComponent = interactiveComponents.find((comp) => {
-        const focusable = comp as FocusableNode;
-        return focusable.autoFocus && !focusable.disabled;
-      });
-
-      let needsRerender = false;
-
-      if (firstAutoFocusComponent) {
-        const focusable = firstAutoFocusComponent as FocusableNode;
-        focusable.focused = true;
-        terminal.setFocusedComponent(
-          firstAutoFocusComponent as unknown as import('../../types').ConsoleNode
-        );
-        if (focusable.onFocus) {
-          focusable.onFocus();
-        }
-        needsRerender = true;
-      } else if (interactiveComponents.length > 0) {
-        // If no autoFocus, focus the first focusable component
-        const focusableComponents = interactiveComponents.filter((comp) => {
-          const focusable = comp as FocusableNode;
-          return (
-            !focusable.disabled && (focusable.tabIndex === undefined || focusable.tabIndex >= 0)
-          );
-        });
-        if (focusableComponents.length > 0) {
-          // Only sort if any component has explicit tabIndex
-          // Otherwise use document order (first in array)
-          const anyHasTabIndex = focusableComponents.some(
-            (comp) => (comp as FocusableNode).tabIndex !== undefined
-          );
-
-          let first: Node;
-          if (anyHasTabIndex) {
-            const sorted = [...focusableComponents].sort((a, b) => {
-              const aTab = (a as FocusableNode).tabIndex ?? Infinity;
-              const bTab = (b as FocusableNode).tabIndex ?? Infinity;
-              return aTab - bTab;
-            });
-            first = sorted[0]!;
-          } else {
-            // No explicit tabIndexes - use document order
-            first = focusableComponents[0]!;
-          }
-
-          const focusableFirst = first as FocusableNode;
-          focusableFirst.focused = true;
-          terminal.setFocusedComponent(first as unknown as import('../../types').ConsoleNode);
-          if (focusableFirst.onFocus) {
-            const focusEvent = { target: first, nativeEvent: { target: first } };
-            focusableFirst.onFocus(focusEvent);
-          }
-          needsRerender = true;
-        }
-      }
-
-      // Schedule a re-render to show focus state
-      if (needsRerender) {
-        scheduleUpdate();
-      }
-
-      interface KeyEvent {
-        tab?: boolean;
-        shift?: boolean;
-        upArrow?: boolean;
-        downArrow?: boolean;
-        leftArrow?: boolean;
-        rightArrow?: boolean;
-        return?: boolean;
-        space?: boolean;
-        escape?: boolean;
-        name?: string;
-      }
-      interface MouseEventData {
-        x: number;
-        y: number;
-        button: number;
-      }
-      startInputListener((_chunk: string, key: KeyEvent | null, mouse: MouseEventData | null) => {
-        try {
-          // Re-collect components to get current instances after any React updates
-          // Always use Node._rootContainer to get the latest tree structure
-          const currentRoot = Node._rootContainer || root;
-          const currentComponents = getInteractiveComponents(currentRoot);
-          applyFocusState(currentComponents);
-
-          if (mouse) {
-            handleMouseEvent(mouse, currentComponents, scheduleUpdate, performRender, currentRoot);
-            return;
-          }
-
-          if (key) {
-            if (key.tab) {
-              debug('[input] Tab key received', { shift: key.shift });
-              // Flush all pending React updates to ensure component states are current
-              flushSyncReactUpdates();
-
-              // Re-collect components after flush to get updated states
-              // Use Node._rootContainer to get the latest tree structure
-              const freshRoot = Node._rootContainer || root;
-              const freshComponents = getInteractiveComponents(freshRoot);
-              applyFocusState(freshComponents);
-
-              handleTabNavigation(freshComponents, key.shift, scheduleUpdate, freshRoot);
-              // Update focusedNodeId after tab navigation
-              const newFocused = freshComponents.find((comp) => (comp as FocusableNode).focused);
-              terminal.focusedNodeId = newFocused?.id || null;
-              debug('[input] Tab handled, new focused:', { id: terminal.focusedNodeId });
-              return;
-            }
-
-            // Arrow key navigation (if enabled)
-            // Skip arrow navigation if an input field is focused (arrow keys should control cursor)
-            const focusedForArrowCheck = currentComponents.find(
-              (comp) => (comp as FocusableNode).focused
-            );
-            const inputHasFocus = focusedForArrowCheck?.type === 'input';
-
-            const navOpts = Node.navigationOptions;
-            const arrowNav = navOpts.arrowKeyNavigation;
-            const verticalNav = navOpts.verticalArrowNavigation ?? arrowNav;
-            const horizontalNav = navOpts.horizontalArrowNavigation ?? arrowNav;
-
-            // Don't use arrow keys for navigation when input is focused
-            if (!inputHasFocus) {
-              if (
-                (key.upArrow || key.leftArrow) &&
-                ((verticalNav && key.upArrow) || (horizontalNav && key.leftArrow))
-              ) {
-                // Flush all pending React updates to ensure component states are current
-                flushSyncReactUpdates();
-                const freshRoot = Node._rootContainer || root;
-                const freshComponents = getInteractiveComponents(freshRoot);
-                applyFocusState(freshComponents);
-
-                // Navigate backwards (like Shift+Tab)
-                handleTabNavigation(freshComponents, true, scheduleUpdate, freshRoot);
-                const newFocused = freshComponents.find((comp) => (comp as FocusableNode).focused);
-                terminal.focusedNodeId = newFocused?.id || null;
-                return;
-              }
-
-              if (
-                (key.downArrow || key.rightArrow) &&
-                ((verticalNav && key.downArrow) || (horizontalNav && key.rightArrow))
-              ) {
-                // Flush all pending React updates to ensure component states are current
-                flushSyncReactUpdates();
-                const freshRoot = Node._rootContainer || root;
-                const freshComponents = getInteractiveComponents(freshRoot);
-                applyFocusState(freshComponents);
-
-                // Navigate forwards (like Tab)
-                handleTabNavigation(freshComponents, false, scheduleUpdate, freshRoot);
-                const newFocused = freshComponents.find((comp) => (comp as FocusableNode).focused);
-                terminal.focusedNodeId = newFocused?.id || null;
-                return;
-              }
-            }
-
-            if (key.escape) {
-              for (const comp of currentComponents) {
-                interface DropdownLikeNode {
-                  isOpen?: boolean;
-                }
-                const dropdownComp = comp as unknown as DropdownLikeNode;
-                if (comp.type === 'dropdown' && dropdownComp.isOpen) {
-                  dropdownComp.isOpen = false;
-                  scheduleUpdate();
-                  return;
-                }
-              }
-            }
-
-            const focused = currentComponents.find((comp) => (comp as FocusableNode).focused);
-
-            if (focused) {
-              const focusedNode = focused as FocusableNode;
-              if (!focusedNode.disabled) {
-                interface KeyboardEventObj {
-                  key: KeyEvent;
-                  _propagationStopped: boolean;
-                  stopPropagation: () => void;
-                  preventDefault: () => void;
-                }
-                const keyboardEvent: KeyboardEventObj = {
-                  key,
-                  _propagationStopped: false,
-                  stopPropagation: () => {
-                    keyboardEvent._propagationStopped = true;
-                  },
-                  preventDefault: () => {},
-                };
-
-                if (focusedNode.onKeyDown) {
-                  (focusedNode.onKeyDown as (event: KeyboardEventObj) => void)(keyboardEvent);
-                }
-
-                interface InteractiveNode extends FocusableNode {
-                  handleKeyboardEvent?: (event: KeyboardEventObj) => void;
-                  isOpen?: boolean;
-                  submitButtonId?: string;
-                  onClick?: (event: { target: unknown }) => void;
-                }
-                const interactiveNode = focused as unknown as InteractiveNode;
-
-                if (!keyboardEvent._propagationStopped) {
-                  if (interactiveNode.handleKeyboardEvent) {
-                    // Track dropdown state before handling
-                    const wasDropdownOpen = focused.type === 'dropdown' && interactiveNode.isOpen;
-
-                    // Wrap the event handler in flushSyncFromReconciler so that
-                    // any state updates (via onChange -> setState) are processed synchronously
-                    interface ReconcilerExt {
-                      flushSyncFromReconciler?: (fn: () => void) => void;
-                    }
-                    const extReconciler = reconciler as typeof reconciler & ReconcilerExt;
-                    if (typeof extReconciler.flushSyncFromReconciler === 'function') {
-                      extReconciler.flushSyncFromReconciler(() => {
-                        interactiveNode.handleKeyboardEvent!(keyboardEvent);
-                      });
-                    } else {
-                      interactiveNode.handleKeyboardEvent(keyboardEvent);
-                    }
-
-                    // If dropdown was open and Enter/Space was pressed, ensure it's closed
-                    // and render IMMEDIATELY (not batched) so user sees the change
-                    interface KeyWithChar extends KeyEvent {
-                      char?: string;
-                    }
-                    if (
-                      wasDropdownOpen &&
-                      ((key as KeyWithChar).return || (key as KeyWithChar).char === ' ')
-                    ) {
-                      // Re-find the dropdown in case node was recreated
-                      const freshRoot = Node._rootContainer || root;
-                      const freshComponents = getInteractiveComponents(freshRoot);
-                      const dropdown = freshComponents.find(
-                        (c) => c.type === 'dropdown' && c.id === focused.id
-                      );
-                      if (dropdown) {
-                        const dropdownNode = dropdown as unknown as InteractiveNode;
-                        if (dropdownNode.isOpen) {
-                          dropdownNode.isOpen = false;
-                        }
-                      }
-                      // Force immediate render for dropdown close
-                      flushBatchedUpdatesSync();
-                      performRender();
-                    } else {
-                      // Schedule an update after handling keyboard input
-                      scheduleUpdate();
-                    }
-                  }
-
-                  // Handle submitButtonId on Enter for input components
-                  if (key.tab === false && key.return && focused.type === 'input') {
-                    const submitButtonId = interactiveNode.submitButtonId;
-                    if (submitButtonId) {
-                      // Find the button with the given ID and trigger its onClick
-                      const submitButton = currentComponents.find(
-                        (comp) => comp.type === 'button' && comp.id === submitButtonId
-                      );
-                      if (submitButton) {
-                        const buttonNode = submitButton as unknown as InteractiveNode;
-                        if (buttonNode.onClick && !buttonNode.disabled) {
-                          buttonNode.onClick({ target: submitButton });
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-
-            if (!focused && currentComponents.length > 0) {
-              const focusableComponents = currentComponents.filter((comp) => {
-                const focusable = comp as FocusableNode;
-                return (
-                  !focusable.disabled &&
-                  (focusable.tabIndex === undefined || focusable.tabIndex >= 0)
-                );
-              });
-              if (focusableComponents.length > 0) {
-                const sorted = [...focusableComponents].sort((a, b) => {
-                  const aFocusable = a as FocusableNode;
-                  const bFocusable = b as FocusableNode;
-                  return (aFocusable.tabIndex || 0) - (bFocusable.tabIndex || 0);
-                });
-                const first = sorted[0]!;
-                const firstFocusable = first as FocusableNode;
-                firstFocusable.focused = true;
-                terminal.setFocusedComponent(first as unknown as import('../../types').ConsoleNode);
-                if (firstFocusable.onFocus) {
-                  const focusEvent = { target: first, nativeEvent: { target: first } };
-                  firstFocusable.onFocus(focusEvent);
-                }
-                scheduleUpdate();
-              }
-            }
-          }
-        } catch (error) {
-          reportError(error, ErrorType.INPUT_PARSING, {
-            hasKey: !!key,
-            hasMouse: !!mouse,
-            chunkLength: _chunk?.length || 0,
-          });
-        }
-      });
-    };
-
-    // Start input listener if interactive
-    // Use multiple setImmediate/setTimeout to ensure React has fully committed
-    // and the tree is completely built before we collect components
-    if (Node._isInteractive && Node._rootContainer) {
-      const startInput = () => {
-        // First ensure a render has happened to build the tree
-        performRender();
-        // Then setup input handling
-        setupInputHandling(Node._rootContainer!);
-      };
-      // Use double defer to ensure React has finished all work
-      if (typeof setImmediate !== 'undefined') {
-        setImmediate(() => setImmediate(startInput));
-      } else {
-        setTimeout(() => setTimeout(startInput, 0), 0);
-      }
-    }
+    const { render } = require('../../renderer/RenderEntry');
+    return render(element, options);
   }
 
   /**
    * Unmount the rendered React application
+   * Cleans up input listeners, resets terminal state, and positions cursor
    */
   static unmount(): void {
-    // Prevent multiple unmount calls (can happen with multiple SIGINT handlers)
-    // Use globalThis state to survive ESM/CJS dual loading
-    if (globalState.unmountInProgress) {
-      process.stderr.write(`[unmount] Already in progress, skipping\n`);
-      return;
-    }
-    globalState.unmountInProgress = true;
-
-    const { showCursor } = require('../../renderer/ansi');
-    const { resetBufferRenderer, getBufferRenderer } = require('../../buffer');
-    const { clearBatchedUpdates } = require('../../renderer/batching');
-    const { stopInputListener } = require('../../renderer/input');
-    const { getTerminalDimensions } = require('../../utils/terminal');
-
-    // Store state FIRST before any cleanup - use global state as primary
-    const wasInteractive = globalState.wasInteractiveMode || globalState.isInteractive;
-
-    // Get content height before cleanup
-    let contentHeight = 0;
-    if (wasInteractive) {
-      try {
-        const bufferRenderer = getBufferRenderer();
-        contentHeight = bufferRenderer.lastContentHeight;
-      } catch {
-        // Buffer may not be initialized
-      }
-      // Fallback to terminal rows if no content height
-      if (contentHeight <= 0) {
-        const dims = getTerminalDimensions();
-        contentHeight = dims.rows;
-      }
-    }
-
-    // FIRST: Prevent any more renders by clearing callback and batched updates
-    Node.setOnCommitCallback(null);
-    clearBatchedUpdates();
-
-    // ALWAYS stop input listener - this disables mouse tracking and exits raw mode
-    // Must be called before any output to ensure mouse tracking is disabled
-    stopInputListener();
-
-    // Clean up resize listener
-    if (Node._resizeCleanup) {
-      Node._resizeCleanup();
-      Node._resizeCleanup = null;
-    }
-
-    // Reset state BEFORE final output to prevent any late renders
-    const hadRootFiber = Node._rootFiber !== null;
-    const rootFiber = Node._rootFiber;
-    const rootContainer = Node._rootContainer;
-
-    Node._rootFiber = null;
-    Node._rootContainer = null;
-    Node._currentElement = null;
-    Node._isInteractive = false;
-    Node._wasInteractiveMode = false;
-    Node._renderCallback = null;
-    // Also reset global state
-    globalState.isInteractive = false;
-    globalState.wasInteractiveMode = false;
-
-    // Reset buffer renderer
-    resetBufferRenderer();
-
-    // Unmount React tree (after our state is cleared to prevent render callbacks)
-    if (hadRootFiber && rootFiber && rootContainer) {
-      try {
-        const { reconciler } = require('../../renderer/reconciler');
-        reconciler.updateContainer(null, rootFiber, null, () => {});
-      } catch {
-        // Reconciler may not be available
-      }
-    }
-
-    // Build final output for cleanup
-    let finalOutput = '';
-
-    // For interactive/fullscreen mode, position cursor after all content
-    if (wasInteractive) {
-      // Interactive apps render from top of screen, so move to after content
-      // Move cursor to row after content, column 1
-      const targetRow = Math.max(contentHeight, 1);
-      finalOutput += `\x1b[${targetRow + 1};1H`;
-
-      // Clear from cursor to end of screen to remove any artifacts
-      finalOutput += '\x1b[J';
-    }
-
-    // Show cursor (always)
-    finalOutput += showCursor();
-
-    // Add newline to ensure clean prompt
-    finalOutput += '\n';
-
-    // Write everything in one call
-    process.stdout.write(finalOutput);
+    const { unmount } = require('../../renderer/RenderEntry');
+    unmount();
   }
 
   /**
    * Exit the application after rendering
+   * Calls unmount and then exits the process
+   *
+   * @param exitCode - The exit code (default 0)
    */
   static exit(exitCode: number = 0): void {
-    try {
-      const { notifyAppExit } = require('../../hooks/lifecycle');
-      notifyAppExit();
-    } catch {
-      // Hooks module may not be loaded yet
-    }
-
-    Node.unmount();
-
-    // Exit immediately - unmount has already written all cleanup sequences
-    // The writes are synchronous (not buffered) so they should complete
-    process.exit(exitCode);
+    const { exit } = require('../../renderer/RenderEntry');
+    exit(exitCode);
   }
 }

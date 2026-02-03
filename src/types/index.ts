@@ -29,6 +29,9 @@ export type {
   InputEvent,
   KeyboardEvent,
   MouseEvent,
+  GestureResponderEvent,
+  LayoutChangeEvent,
+  NativeSyntheticEvent,
   ComponentEventHandlers,
 } from './events';
 

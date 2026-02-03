@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / Dropdown
 
@@ -8,7 +8,7 @@
 
 > **Dropdown**(`props`): `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>
 
-Defined in: src/components/selection/Dropdown.tsx:71
+Defined in: [src/components/selection/Dropdown.tsx:84](https://github.com/Baseline-Operations/react-console/blob/main/src/components/selection/Dropdown.tsx#L84)
 
 Dropdown component - Single or multiple selection dropdown
 

@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / createErrorHandlerWrapper
 
@@ -8,7 +8,7 @@
 
 > **createErrorHandlerWrapper**(`handler`, `defaultType`): \<`T`\>(`fn`, `type`, `context?`, `rethrow`) => `T`
 
-Defined in: src/utils/errorHandlers.ts:184
+Defined in: [src/utils/errorHandlers.ts:183](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errorHandlers.ts#L183)
 
 Create a function wrapper with class-based error handling
 Similar to withErrorHandling but uses class-based handlers
@@ -31,7 +31,7 @@ Similar to withErrorHandling but uses class-based handlers
 
 #### T
 
-`T` *extends* (...`args`) => `unknown`
+`T` _extends_ (...`args`) => `unknown`
 
 ### Parameters
 

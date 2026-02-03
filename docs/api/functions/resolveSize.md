@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / resolveSize
 
@@ -8,11 +8,12 @@
 
 > **resolveSize**(`size`, `dimension`, `maxSize?`): `number` \| `undefined`
 
-Defined in: src/utils/responsive.ts:39
+Defined in: [src/utils/responsive.ts:39](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/responsive.ts#L39)
 
 Resolve a responsive size to a pixel value based on terminal dimensions
 
 Supports multiple size formats:
+
 - Fixed numbers: `80` (80 characters)
 - Percentages: `"50%"` (50% of terminal width/height)
 - Viewport units: `"80vw"` (80% width), `"50vh"` (50% height)

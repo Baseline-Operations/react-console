@@ -5,6 +5,7 @@ This document describes the state management patterns and best practices for Rea
 ## Overview
 
 React Console provides several state management patterns:
+
 - **Component State**: React hooks (`useState`, `useReducer`) for component-local state
 - **Terminal-Specific Hooks**: Custom hooks for terminal-specific state (dimensions, focus, input, selection)
 - **Context**: React Context for shared state across components
@@ -23,7 +24,7 @@ import { View, Text, Button } from 'react-console';
 
 function Counter() {
   const [count, setCount] = useState(0);
-  
+
   return (
     <View>
       <Text>Count: {count}</Text>
@@ -59,7 +60,7 @@ function reducer(state: State, action: Action): State {
 
 function Counter() {
   const [state, dispatch] = useReducer(reducer, { count: 0, step: 1 });
-  
+
   return (
     <View>
       <Text>Count: {state.count}</Text>
@@ -83,16 +84,19 @@ import { View, Text } from 'react-console';
 
 function ResponsiveComponent() {
   const { columns, rows } = useTerminalDimensions();
-  
+
   return (
     <View>
-      <Text>Terminal size: {columns}x{rows}</Text>
+      <Text>
+        Terminal size: {columns}x{rows}
+      </Text>
     </View>
   );
 }
 ```
 
 **Best Practices**:
+
 - Use for responsive layouts that adapt to terminal size
 - Automatically updates on terminal resize
 - Access via Context: `useTerminalDimensionsContext()` for context-based access
@@ -103,14 +107,14 @@ Use `useFocus()` for component focus state:
 
 ```tsx
 import { useFocus } from 'react-console/hooks';
-import { View, Input, Button } from 'react-console';
+import { View, TextInput, Button } from 'react-console';
 
 function Form() {
   const { focusedComponent, focus, blur } = useFocus();
-  
+
   return (
     <View>
-      <Input
+      <TextInput
         ref={(node) => {
           if (focusedComponent === node) {
             // Component is focused
@@ -124,6 +128,7 @@ function Form() {
 ```
 
 **Best Practices**:
+
 - Use for programmatic focus management
 - Access via Context: `useFocusContext()` for context-based access
 - Focus is automatically managed by the renderer for interactive components
@@ -134,19 +139,15 @@ Use `useInputState()` for input value and cursor position:
 
 ```tsx
 import { useInputState } from 'react-console/hooks';
-import { View, Input } from 'react-console';
+import { View, TextInput } from 'react-console';
 
 function InputComponent() {
   const [inputNode, setInputNode] = useState(null);
   const { value, cursorPosition, setValue, setCursorPosition } = useInputState(inputNode);
-  
+
   return (
     <View>
-      <Input
-        ref={setInputNode}
-        value={value}
-        onChange={(e) => setValue(e.value)}
-      />
+      <TextInput ref={setInputNode} value={value} onChangeText={setValue} />
       <Text>Cursor at: {cursorPosition}</Text>
     </View>
   );
@@ -154,6 +155,7 @@ function InputComponent() {
 ```
 
 **Best Practices**:
+
 - Use when you need to programmatically control input state
 - Most components handle input state internally - only use this hook for advanced cases
 
@@ -168,7 +170,7 @@ import { View, Radio } from 'react-console';
 function SelectionComponent() {
   const [radioNode, setRadioNode] = useState(null);
   const { selected, select, isOpen, open, close } = useSelection(radioNode);
-  
+
   return (
     <View>
       <Radio
@@ -184,6 +186,7 @@ function SelectionComponent() {
 ```
 
 **Best Practices**:
+
 - Use for programmatic control of selection components
 - Most components handle selection state internally - only use this hook for advanced cases
 
@@ -197,12 +200,14 @@ import { View, Text } from 'react-console';
 
 function TerminalInfo() {
   const { supportsColor, supportsMouse, dimensions } = useTerminalConfig();
-  
+
   return (
     <View>
       <Text>Color support: {supportsColor ? 'Yes' : 'No'}</Text>
       <Text>Mouse support: {supportsMouse ? 'Yes' : 'No'}</Text>
-      <Text>Size: {dimensions.columns}x{dimensions.rows}</Text>
+      <Text>
+        Size: {dimensions.columns}x{dimensions.rows}
+      </Text>
     </View>
   );
 }
@@ -228,7 +233,7 @@ function ThemedApp() {
 
 function ThemedComponent() {
   const { theme, colors, setTheme } = useTheme();
-  
+
   return (
     <View>
       <Text color={colors.text}>Themed text</Text>
@@ -239,6 +244,7 @@ function ThemedComponent() {
 ```
 
 **Best Practices**:
+
 - Wrap your app with `ThemeProvider` at the root
 - Use `useTheme()` or `useThemeColors()` to access theme
 - Theme automatically syncs with renderer
@@ -251,18 +257,15 @@ Use `useStorage()` for state that persists across component unmounts:
 
 ```tsx
 import { useStorage } from 'react-console/hooks';
-import { View, Input, Text } from 'react-console';
+import { View, TextInput, Text } from 'react-console';
 
 function PersistentForm() {
   const [username, setUsername, removeUsername] = useStorage('username', 'guest');
-  
+
   return (
     <View>
       <Text>Username: {username}</Text>
-      <Input
-        value={username}
-        onChange={(e) => setUsername(e.value)}
-      />
+      <TextInput value={username} onChangeText={setUsername} />
       <Button onClick={removeUsername}>Clear</Button>
     </View>
   );
@@ -270,6 +273,7 @@ function PersistentForm() {
 ```
 
 **Best Practices**:
+
 - Use for user preferences, settings, and data that should persist
 - Storage is automatically namespaced per application
 - Changes sync across all components using the same key
@@ -292,7 +296,7 @@ function SaveButton() {
     data,
     (current, update) => update
   );
-  
+
   const handleSave = async () => {
     addOptimisticUpdate('saving...');
     try {
@@ -302,7 +306,7 @@ function SaveButton() {
       // Optimistic update will revert on error
     }
   };
-  
+
   return (
     <View>
       <Text>{optimisticData}</Text>
@@ -313,6 +317,7 @@ function SaveButton() {
 ```
 
 **Best Practices**:
+
 - Use for actions that may take time (network requests, file I/O)
 - Provides immediate UI feedback
 - Automatically reverts on error
@@ -323,7 +328,7 @@ Use `useActionStateTerminal()` for form submissions and actions:
 
 ```tsx
 import { useActionStateTerminal } from 'react-console/hooks';
-import { View, Input, Button, Text } from 'react-console';
+import { View, TextInput, Button, Text } from 'react-console';
 
 async function submitForm(prevState: { message: string }, formData: FormData) {
   const name = formData.get('name');
@@ -335,25 +340,21 @@ async function submitForm(prevState: { message: string }, formData: FormData) {
 }
 
 function FormComponent() {
-  const [state, formAction, isPending] = useActionStateTerminal(
-    submitForm,
-    { message: '' }
-  );
-  
+  const [state, formAction, isPending] = useActionStateTerminal(submitForm, { message: '' });
+
   return (
     <View>
       <Text>{state.message}</Text>
       {isPending && <Text>Saving...</Text>}
-      <Input name="name" />
-      <Button onClick={() => formAction(new FormData())}>
-        Submit
-      </Button>
+      <TextInput name="name" />
+      <Button onClick={() => formAction(new FormData())}>Submit</Button>
     </View>
   );
 }
 ```
 
 **Best Practices**:
+
 - Use for form submissions and async actions
 - Tracks pending state automatically
 - Handles errors gracefully
@@ -373,10 +374,10 @@ async function loadData() {
 
 function DataComponent() {
   const { data, error, isLoading } = useAsync(loadData);
-  
+
   if (isLoading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;
-  
+
   return (
     <View>
       <Text>Data: {JSON.stringify(data)}</Text>
@@ -386,6 +387,7 @@ function DataComponent() {
 ```
 
 **Best Practices**:
+
 - Use for loading data from APIs or async operations
 - Provides loading and error states
 - Use `useAsyncWithFallback()` for fallback data
@@ -410,10 +412,10 @@ function Counter() {
 ```tsx
 function App() {
   const [value, setValue] = useState('');
-  
+
   return (
     <View>
-      <Input value={value} onChange={(e) => setValue(e.value)} />
+      <TextInput value={value} onChangeText={setValue} />
       <Display value={value} />
     </View>
   );
@@ -429,7 +431,7 @@ const ThemeContext = createContext();
 
 function App() {
   const [theme, setTheme] = useState('dark');
-  
+
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       <ThemedApp />
@@ -470,21 +472,18 @@ function Settings() {
 function Form() {
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [errors, setErrors] = useState({});
-  
+
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user types
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
-  
+
   return (
     <View>
-      <Input
-        value={formData.name}
-        onChange={(e) => handleChange('name', e.value)}
-      />
+      <TextInput value={formData.name} onChangeText={(text) => handleChange('name', text)} />
       {errors.name && <Text color="red">{errors.name}</Text>}
     </View>
   );
@@ -496,18 +495,16 @@ function Form() {
 ```tsx
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   return (
     <View>
       <Button onClick={() => setIsModalOpen(true)}>Open Modal</Button>
-      {isModalOpen && (
-        <Overlay>
-          <View>
-            <Text>Modal Content</Text>
-            <Button onClick={() => setIsModalOpen(false)}>Close</Button>
-          </View>
-        </Overlay>
-      )}
+      <Modal visible={isModalOpen} onRequestClose={() => setIsModalOpen(false)}>
+        <View>
+          <Text>Modal Content</Text>
+          <Button onClick={() => setIsModalOpen(false)}>Close</Button>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -518,15 +515,13 @@ function App() {
 ```tsx
 function ListComponent() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  
+
   const toggleSelection = (item: string) => {
-    setSelectedItems(prev =>
-      prev.includes(item)
-        ? prev.filter(i => i !== item)
-        : [...prev, item]
+    setSelectedItems((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
   };
-  
+
   return (
     <Checkbox
       options={['Item 1', 'Item 2', 'Item 3']}

@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / disableMouseTracking
 
@@ -8,7 +8,7 @@
 
 > **disableMouseTracking**(): `void`
 
-Defined in: src/utils/mouse.ts:81
+Defined in: [src/utils/mouse.ts:81](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/mouse.ts#L81)
 
 Disable mouse tracking in terminal
 

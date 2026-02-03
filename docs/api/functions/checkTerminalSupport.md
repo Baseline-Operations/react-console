@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / checkTerminalSupport
 
@@ -8,7 +8,7 @@
 
 > **checkTerminalSupport**(): `object`
 
-Defined in: src/utils/errors.ts:99
+Defined in: [src/utils/errors.ts:187](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/errors.ts#L187)
 
 Graceful degradation: Check if terminal supports required features
 

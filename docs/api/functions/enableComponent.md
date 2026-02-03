@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / enableComponent
 
@@ -8,7 +8,7 @@
 
 > **enableComponent**(`component`, `scheduleUpdate`): `void`
 
-Defined in: src/renderer/utils/navigation.ts:219
+Defined in: [src/renderer/utils/focus/management.ts:132](https://github.com/Baseline-Operations/react-console/blob/main/src/renderer/utils/focus/management.ts#L132)
 
 Programmatically enable a component
 

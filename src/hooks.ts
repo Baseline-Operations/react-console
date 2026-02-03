@@ -24,6 +24,18 @@ export { useInputState } from './hooks/input';
 // Lifecycle Events
 export { onAppStart, onAppExit } from './hooks/lifecycle';
 
+// Utility Hooks
+export {
+  useColorScheme,
+  useTimeout,
+  useInterval,
+  usePrevious,
+  useIsMounted,
+  useDebounce,
+  useToggle,
+} from './hooks/utility';
+export type { ColorScheme } from './hooks/utility';
+
 // Context Providers and hooks
 export {
   TerminalDimensionsProvider,

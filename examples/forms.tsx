@@ -9,7 +9,7 @@ import {
   render,
   Text,
   View,
-  Input,
+  TextInput,
   Button,
   Radio,
   Dropdown,
@@ -100,7 +100,7 @@ function App() {
   const [submitted, setSubmitted] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const validateField = (field: keyof FormData, value: any): string | undefined => {
+  const validateField = (field: keyof FormData, value: string): string | undefined => {
     switch (field) {
       case 'name':
         if (!value?.trim()) return 'Required';
@@ -236,10 +236,9 @@ function App() {
             <Text>
               Name {touched.name && errors.name && <Text style={styles.error}>{errors.name}</Text>}
             </Text>
-            <Input
-              type="text"
+            <TextInput
               value={formData.name}
-              onChange={(e) => updateField('name', e.value as string)}
+              onChangeText={(text) => updateField('name', text)}
               placeholder="Your name"
               autoFocus
             />
@@ -250,10 +249,9 @@ function App() {
               Email{' '}
               {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
             </Text>
-            <Input
-              type="text"
+            <TextInput
               value={formData.email}
-              onChange={(e) => updateField('email', e.value as string)}
+              onChangeText={(text) => updateField('email', text)}
               placeholder="email@example.com"
             />
           </View>
@@ -262,10 +260,10 @@ function App() {
             <Text>
               Age {touched.age && errors.age && <Text style={styles.error}>{errors.age}</Text>}
             </Text>
-            <Input
-              type="number"
+            <TextInput
+              keyboardType="numeric"
               value={formData.age}
-              onChange={(e) => updateField('age', e.value as string | number)}
+              onChangeText={(text) => updateField('age', text ? parseInt(text, 10) || text : '')}
               placeholder="25"
               min={18}
               max={120}
@@ -321,13 +319,12 @@ function App() {
             <Text>
               Bio {touched.bio && errors.bio && <Text style={styles.error}>{errors.bio}</Text>}
             </Text>
-            <Input
-              type="text"
+            <TextInput
               value={formData.bio}
-              onChange={(e) => updateField('bio', e.value as string)}
+              onChangeText={(text) => updateField('bio', text)}
               placeholder="About yourself..."
               multiline
-              maxLines={3}
+              numberOfLines={3}
             />
           </View>
         </View>

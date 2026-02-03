@@ -14,7 +14,8 @@ React Console allows you to build terminal/console applications using React 19+ 
 - ✅ **React Compiler integration** (automatic memoization)
 - ✅ **TypeScript** with strict mode
 - ✅ **ESLint 9+** configuration
-- ✅ **Component-based architecture** (Text, View, Input, Button, and more)
+- ✅ **Component-based architecture** (Text, View, TextInput, Button, Switch, FlatList, and more)
+- ✅ **React Native-style APIs** (Platform, Dimensions, Clipboard, Alert, AppState, etc.)
 - ✅ **ANSI color and styling support** (foreground, background, text styles)
 - ✅ **Layout system** with padding, margin, responsive sizing
 - ✅ **Interactive components** with JSX-style event handlers
@@ -93,21 +94,21 @@ Explicit line break component.
 <Text>Second line</Text>
 ```
 
-### `<Input>`
+### `<TextInput>`
 
-Text input component with JSX-style event handlers. Supports single-line and multiline input.
+Text input component with React Native-compatible API. Supports single-line and multiline input.
 
 ```tsx
 const [value, setValue] = useState('');
 
-<Input
+<TextInput
   value={value}
-  onChange={(event) => setValue(event.value)}
-  onSubmit={(event) => console.log('Submitted:', event.value)}
+  onChangeText={setValue}
+  onSubmitEditing={(event) => console.log('Submitted:', event.nativeEvent.text)}
   placeholder="Enter text..."
   maxWidth={80}
   multiline
-  maxLines={5}
+  numberOfLines={5}
   autoFocus
 />;
 ```
@@ -116,16 +117,19 @@ const [value, setValue] = useState('');
 
 - `value` / `defaultValue` - Controlled or uncontrolled input
 - `placeholder` - Placeholder text
+- `placeholderTextColor` - Placeholder text color
 - `maxLength` - Maximum character length
 - `maxWidth` - Maximum input width (defaults to terminal width)
 - `multiline` - Allow multiline input
-- `maxLines` - Maximum number of lines for multiline input
-- `mask` - Character to mask input (e.g., '\*' for password)
-- `disabled` - Disable input
+- `numberOfLines` - Maximum number of lines for multiline input
+- `secureTextEntry` - Mask input for passwords
+- `keyboardType` - Input type: `'default'`, `'numeric'`, `'decimal-pad'`, `'number-pad'`
+- `editable` / `disabled` - Enable/disable input
 - `autoFocus` - Auto-focus on mount
 - `tabIndex` - Tab order
-- `onChange` - Called when value changes
-- `onSubmit` - Called when Enter is pressed (single-line) or Ctrl+Enter (multiline)
+- `onChangeText` - Called with text string when value changes
+- `onSubmitEditing` - Called when Enter is pressed
+- `onEndEditing` - Called when editing ends
 - `onKeyDown` / `onKeyUp` / `onKeyPress` - Keyboard event handlers
 - `onFocus` / `onBlur` - Focus event handlers
 
@@ -149,12 +153,58 @@ Clickable button component with keyboard and mouse support.
 
 ### `<Pressable>`
 
-React Native-like pressable component that can wrap any content.
+React Native-like pressable component that can wrap any content. Supports state-based styling.
 
 ```tsx
-<Pressable onPress={() => console.log('Pressed!')} tabIndex={0}>
+<Pressable
+  onPress={() => console.log('Pressed!')}
+  onPressIn={() => console.log('Press started')}
+  onPressOut={() => console.log('Press ended')}
+  style={{ padding: 1, backgroundColor: 'blue' }}
+  pressedStyle={{ backgroundColor: 'darkblue' }}
+  hoveredStyle={{ backgroundColor: 'lightblue' }}
+  focusedStyle={{ borderColor: 'yellow' }}
+  tabIndex={0}
+>
   <Text>Pressable content</Text>
-</Pressable>
+</Pressable>;
+
+{
+  /* Function-based styling */
+}
+<Pressable
+  onPress={handlePress}
+  style={({ pressed, focused, hovered }) => ({
+    backgroundColor: pressed ? 'darkblue' : hovered ? 'lightblue' : 'blue',
+    borderColor: focused ? 'yellow' : 'transparent',
+  })}
+>
+  {({ pressed }) => <Text>{pressed ? 'Pressing...' : 'Press me'}</Text>}
+</Pressable>;
+```
+
+### `<Switch>`
+
+Toggle switch component with React Native-compatible API.
+
+```tsx
+const [isEnabled, setIsEnabled] = useState(false);
+
+<Switch
+  value={isEnabled}
+  onValueChange={setIsEnabled}
+  trackColor={{ false: 'gray', true: 'green' }}
+  thumbColor="white"
+/>;
+```
+
+### `<ActivityIndicator>`
+
+Loading indicator (spinner) component.
+
+```tsx
+<ActivityIndicator animating={true} color="cyan" size="large" />
+<ActivityIndicator spinnerStyle="dots" label="Loading..." />
 ```
 
 ### `<Focusable>`
@@ -184,24 +234,71 @@ Scrollable container for overflow content.
 - `horizontal` - Scroll horizontally instead of vertically
 - `showsScrollIndicator` - Show scroll indicators (planned)
 
-### `<Overlay>`
+### `<Modal>`
 
-Overlay/modal component for layered rendering.
+Modal/overlay component for layered rendering (React Native-compatible).
 
 ```tsx
-<Overlay backdrop backdropColor="black" zIndex={10}>
+const [visible, setVisible] = useState(false);
+
+<Modal visible={visible} onRequestClose={() => setVisible(false)} transparent animationType="fade">
   <View padding={2}>
     <Text>Modal content</Text>
+    <Button onPress={() => setVisible(false)}>Close</Button>
   </View>
-</Overlay>
+</Modal>;
 ```
 
 **Props:**
 
-- `backdrop` - Show backdrop
+- `visible` - Show/hide modal
+- `onRequestClose` - Called when back/escape pressed
+- `onShow` - Called when modal shows
+- `onDismiss` - Called when modal dismisses
+- `transparent` - Transparent background
+- `animationType` - Animation type: `'none'`, `'slide'`, `'fade'`
+- `backdrop` - Show backdrop (terminal-specific)
 - `backdropColor` - Backdrop color
 - `zIndex` - Z-index for layering
-- `width` / `height` - Responsive sizing
+
+### `<FlatList>`
+
+Performant list rendering component (React Native-compatible).
+
+```tsx
+<FlatList
+  data={items}
+  renderItem={({ item, index }) => (
+    <View>
+      <Text>{item.title}</Text>
+    </View>
+  )}
+  keyExtractor={(item) => item.id}
+  ListHeaderComponent={<Text bold>Header</Text>}
+  ListFooterComponent={<Text>Footer</Text>}
+  ListEmptyComponent={<Text>No items</Text>}
+  ItemSeparatorComponent={<View style={{ height: 1 }} />}
+  maxHeight={10}
+  onEndReached={() => loadMore()}
+/>
+```
+
+### `<SectionList>`
+
+Sectioned list component (React Native-compatible).
+
+````tsx
+<SectionList
+  sections={[
+    { title: 'Section 1', data: ['Item 1', 'Item 2'] },
+    { title: 'Section 2', data: ['Item 3', 'Item 4'] },
+  ]}
+  renderItem={({ item }) => <Text>{item}</Text>}
+  renderSectionHeader={({ section }) => (
+    <Text bold>{section.title}</Text>
+  )}
+  keyExtractor={(item, index) => `${item}-${index}`}
+/>
 
 ## Styling
 
@@ -226,7 +323,7 @@ Overlay/modal component for layered rendering.
 <Text backgroundColor="blue" color="white">
   White text on blue background
 </Text>
-```
+````
 
 ### Responsive Sizing
 
@@ -299,21 +396,30 @@ React Console supports all React 19 features:
 
 ## Event Handling
 
-All components support JSX-style event handlers:
+All components support JSX-style event handlers with React Native-compatible patterns:
 
 ```tsx
-<Input
-  onChange={(event) => {
-    console.log('Value:', event.value);
+<TextInput
+  onChangeText={(text) => {
+    console.log('Value:', text);
+  }}
+  onSubmitEditing={(event) => {
+    console.log('Submitted:', event.nativeEvent.text);
   }}
   onKeyDown={(event) => {
     if (event.key.escape) {
       // Handle Escape key
     }
   }}
-  onSubmit={(event) => {
-    console.log('Submitted:', event.value);
-  }}
+/>
+
+<Pressable
+  onPress={() => console.log('Pressed!')}
+  onPressIn={() => console.log('Press started')}
+  onPressOut={() => console.log('Press ended')}
+  onLongPress={() => console.log('Long pressed!')}
+  onHoverIn={() => console.log('Hover started')}
+  onHoverOut={() => console.log('Hover ended')}
 />
 
 <Button
@@ -331,7 +437,7 @@ All components support JSX-style event handlers:
 Components automatically support tab navigation:
 
 ```tsx
-<Input tabIndex={0} autoFocus />
+<TextInput tabIndex={0} autoFocus />
 <Button tabIndex={1} />
 <Button tabIndex={2} />
 ```
@@ -355,15 +461,142 @@ For terminals that support mouse events:
 
 Mouse tracking is automatically enabled in interactive and fullscreen modes.
 
+## React Native-Compatible APIs
+
+### Platform API
+
+Detect the platform and select platform-specific values.
+
+```tsx
+import { Platform } from 'react-console';
+
+console.log(Platform.OS); // 'terminal'
+console.log(Platform.Version); // Node.js version
+console.log(Platform.isMacOS); // true/false
+console.log(Platform.isWindows); // true/false
+
+const message = Platform.select({
+  terminal: 'Running in terminal',
+  default: 'Unknown platform',
+});
+```
+
+### Dimensions API
+
+Get terminal dimensions with resize events.
+
+```tsx
+import { Dimensions, useWindowDimensions } from 'react-console';
+
+// Hook (recommended)
+function MyComponent() {
+  const { width, height } = useWindowDimensions();
+  return (
+    <Text>
+      Terminal: {width}x{height}
+    </Text>
+  );
+}
+
+// API
+const dims = Dimensions.get('window');
+const subscription = Dimensions.addEventListener('change', ({ window }) => {
+  console.log('Resized:', window.width, window.height);
+});
+```
+
+### Clipboard API
+
+Copy and paste text using system clipboard.
+
+```tsx
+import { Clipboard, useClipboard } from 'react-console';
+
+// Hook
+const [content, setClipboard] = useClipboard();
+
+// API
+await Clipboard.setString('Hello!');
+const text = await Clipboard.getString();
+const hasContent = await Clipboard.hasString();
+```
+
+### AppState API
+
+Monitor app lifecycle (active/background).
+
+```tsx
+import { AppState, useAppState } from 'react-console';
+
+// Hook
+const appState = useAppState(); // 'active' | 'background' | 'inactive'
+
+// API
+const subscription = AppState.addEventListener('change', (state) => {
+  console.log('App state:', state);
+});
+```
+
+### BackHandler API
+
+Handle escape key (like Android back button).
+
+```tsx
+import { BackHandler, useBackHandler } from 'react-console';
+
+// Hook
+useBackHandler(() => {
+  console.log('Escape pressed');
+  return true; // Return true to prevent default (exit)
+});
+
+// API
+BackHandler.addEventListener('hardwareBackPress', () => {
+  return true; // Handled
+});
+```
+
+### Alert API
+
+Display modal alert dialogs.
+
+```tsx
+import { Alert } from 'react-console';
+
+Alert.alert('Confirm', 'Are you sure?', [
+  { text: 'Cancel', style: 'cancel' },
+  { text: 'OK', onPress: () => console.log('Confirmed') },
+]);
+```
+
+### Bell API
+
+Terminal audio feedback (beeps).
+
+```tsx
+import { Bell, useBell } from 'react-console';
+
+Bell.ring(); // Single beep
+Bell.beep(3); // Multiple beeps
+Bell.alert(); // Alert pattern
+Bell.success(); // Success pattern
+Bell.error(); // Error pattern
+Bell.setEnabled(false); // Mute
+```
+
 ## Utilities
 
 ### Terminal Utilities
 
 ```tsx
-import { getTerminalDimensions, supportsColor } from 'react-console';
+import { getTerminalDimensions, supportsColor, Dimensions } from 'react-console';
 
+// Legacy API
 const dims = getTerminalDimensions();
 console.log(`Terminal: ${dims.columns}x${dims.rows}`);
+
+// React Native-compatible API
+const { width, height } = Dimensions.get('window');
 
 if (supportsColor()) {
   // Terminal supports colors
@@ -393,18 +626,45 @@ const truncated = truncateText('Very long text...', 20);
 
 See the `examples/` directory for complete examples:
 
+**Basic:**
+
 - `basic.tsx` - Simple text output
 - `flexbox.tsx` - Flexbox layout examples
 - `forms.tsx` - Form handling with inputs
-- `responsive.tsx` - Responsive sizing examples
+- `responsive.tsx` - Responsive sizing and Dimensions API
 - `state-hooks.tsx` - State management with hooks
 - `stylesheet.tsx` - StyleSheet API usage
+
+**Components:**
+
+- `switch.tsx` - Switch component demo
+- `flatlist.tsx` - FlatList component demo
+- `sectionlist.tsx` - SectionList component demo
+- `state-styles.tsx` - State-based styling patterns
+
+**APIs:**
+
+- `clipboard.tsx` - Clipboard API demo
+- `bell.tsx` - Bell API demo
+- `platform-dimensions.tsx` - Platform and Dimensions APIs
+- `appstate-backhandler.tsx` - AppState and BackHandler APIs
+
+**Refs:**
+
+- `textinput-ref.tsx` - TextInput ref methods
+- `scrollview-ref.tsx` - ScrollView ref methods
+- `flatlist-ref.tsx` - FlatList ref methods
+
+**CLI:**
+
 - `cli/` - CLI application examples
 
 Run examples with:
 
 ```bash
 npx tsx examples/basic.tsx
+npx tsx examples/switch.tsx
+npx tsx examples/clipboard.tsx
 ```
 
 ## Documentation

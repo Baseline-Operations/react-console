@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { render, Text, View, Input, Button, LineBreak, debug } from '../src/index';
+import { render, Text, View, TextInput, Button, LineBreak, debug } from '../src/index';
 
 function App() {
   const [name, setName] = useState('');
@@ -60,14 +60,13 @@ function App() {
       {!submitted ? (
         <>
           <Text>Enter your name:</Text>
-          <Input
+          <TextInput
             value={name}
-            onChange={(event) => {
-              const newValue = event.value as string;
-              setName(newValue);
+            onChangeText={(text) => {
+              setName(text);
               // Clear error when user types
               if (touched && error) {
-                const validationError = validateName(newValue);
+                const validationError = validateName(text);
                 setError(validationError);
               }
             }}

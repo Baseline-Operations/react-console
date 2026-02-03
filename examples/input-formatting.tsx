@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { render, Text, View, Input, LineBreak, Box } from '../src/index';
+import { render, Text, View, TextInput, LineBreak, Box } from '../src/index';
 
 function App() {
   const [currencyValue, setCurrencyValue] = useState<number | string>('');
@@ -36,16 +36,20 @@ function App() {
 
   return (
     <View padding={2}>
-      <Text color="cyan" bold>Input Formatting Example</Text>
+      <Text color="cyan" bold>
+        Input Formatting Example
+      </Text>
       <LineBreak />
-      
-      <Text color="yellow" bold>1. Currency Formatting (formatDisplay)</Text>
+
+      <Text color="yellow" bold>
+        1. Currency Formatting (formatDisplay)
+      </Text>
       <Text>Enter amount (display formatted as $X.XX, raw value stored as number):</Text>
-      <Input
-        type="number"
+      <TextInput
+        keyboardType="numeric"
         value={currencyValue}
-        onChange={(event) => {
-          setCurrencyValue(event.value as string | number);
+        onChangeText={(text) => {
+          setCurrencyValue(text ? parseFloat(text) || text : '');
         }}
         placeholder="0.00"
         min={0}
@@ -62,13 +66,15 @@ function App() {
       <Text color="dim">Display shows $X.XX format, but actual value is a number</Text>
       <LineBreak />
 
-      <Text color="yellow" bold>2. Percentage Formatting (formatDisplay)</Text>
+      <Text color="yellow" bold>
+        2. Percentage Formatting (formatDisplay)
+      </Text>
       <Text>Enter percentage (display formatted as X.X%, raw value stored as number):</Text>
-      <Input
-        type="number"
+      <TextInput
+        keyboardType="numeric"
         value={percentageValue}
-        onChange={(event) => {
-          setPercentageValue(event.value as string | number);
+        onChangeText={(text) => {
+          setPercentageValue(text ? parseFloat(text) || text : '');
         }}
         placeholder="0"
         min={0}
@@ -84,13 +90,14 @@ function App() {
       <Text color="dim">Display shows X.X% format, but actual value is a number</Text>
       <LineBreak />
 
-      <Text color="yellow" bold>3. Phone Number Formatting (formatValue)</Text>
+      <Text color="yellow" bold>
+        3. Phone Number Formatting (formatValue)
+      </Text>
       <Text>Enter phone number (formatted as XXX-XXX-XXXX):</Text>
-      <Input
-        type="text"
+      <TextInput
         value={phoneValue}
-        onChange={(event) => {
-          const raw = (event.value as string).replace(/\D/g, '');
+        onChangeText={(text) => {
+          const raw = text.replace(/\D/g, '');
           if (raw.length <= 10) {
             setPhoneValue(raw);
           }
@@ -109,13 +116,15 @@ function App() {
       <Text color="dim">Value is formatted on display, but raw digits are stored</Text>
       <LineBreak />
 
-      <Text color="yellow" bold>4. Number with Step and Range</Text>
+      <Text color="yellow" bold>
+        4. Number with Step and Range
+      </Text>
       <Text>Enter number (step: 5, range: 0-100):</Text>
-      <Input
-        type="number"
+      <TextInput
+        keyboardType="numeric"
         value={rawNumberValue}
-        onChange={(event) => {
-          setRawNumberValue(event.value as string | number);
+        onChangeText={(text) => {
+          setRawNumberValue(text ? parseFloat(text) || text : '');
         }}
         placeholder="0"
         min={0}
@@ -129,22 +138,22 @@ function App() {
       <Text color="dim">Use arrow keys to adjust by step (5), or type directly</Text>
       <LineBreak />
 
-      <Text color="yellow" bold>5. Number with Decimal Places Enforcement</Text>
+      <Text color="yellow" bold>
+        5. Number with Decimal Places Enforcement
+      </Text>
       <Text>Enter decimal number (enforced to 3 decimal places):</Text>
-      <Input
-        type="number"
+      <TextInput
+        keyboardType="decimal-pad"
         value={rawNumberValue}
-        onChange={(event) => {
-          setRawNumberValue(event.value as string | number);
+        onChangeText={(text) => {
+          setRawNumberValue(text ? parseFloat(text) || text : '');
         }}
         placeholder="0.000"
         allowDecimals
         decimalPlaces={3}
         style={{ width: 30 }}
       />
-      <Text color="gray">
-        Value: {String(rawNumberValue)} (rounded to 3 decimals)
-      </Text>
+      <Text color="gray">Value: {String(rawNumberValue)} (rounded to 3 decimals)</Text>
       <LineBreak />
 
       <Box
@@ -155,9 +164,22 @@ function App() {
           margin: { top: 2 },
         }}
       >
-        <Text color="cyan" bold>Formatting Summary:</Text>
-        <Text>Currency: ${typeof currencyValue === 'number' ? currencyValue.toFixed(2) : parseFloat(String(currencyValue || '0')).toFixed(2)}</Text>
-        <Text>Percentage: {typeof percentageValue === 'number' ? percentageValue.toFixed(1) : parseFloat(String(percentageValue || '0')).toFixed(1)}%</Text>
+        <Text color="cyan" bold>
+          Formatting Summary:
+        </Text>
+        <Text>
+          Currency: $
+          {typeof currencyValue === 'number'
+            ? currencyValue.toFixed(2)
+            : parseFloat(String(currencyValue || '0')).toFixed(2)}
+        </Text>
+        <Text>
+          Percentage:{' '}
+          {typeof percentageValue === 'number'
+            ? percentageValue.toFixed(1)
+            : parseFloat(String(percentageValue || '0')).toFixed(1)}
+          %
+        </Text>
         <Text>Phone: {formatPhone(phoneValue) || '(empty)'}</Text>
         <Text>Raw Number: {String(rawNumberValue) || '(empty)'}</Text>
       </Box>
@@ -171,15 +193,21 @@ function App() {
           margin: { top: 1 },
         }}
       >
-        <Text color="yellow" bold>Notes:</Text>
-        <Text color="dim">&bull; formatDisplay: Formats for display only (doesn&apos;t change stored value)</Text>
+        <Text color="yellow" bold>
+          Notes:
+        </Text>
+        <Text color="dim">
+          &bull; formatDisplay: Formats for display only (doesn&apos;t change stored value)
+        </Text>
         <Text color="dim">&bull; formatValue: Formats the actual value stored</Text>
         <Text color="dim">&bull; decimalPlaces: Enforces precision on number inputs</Text>
         <Text color="dim">&bull; step: Controls increment/decrement with arrow keys</Text>
       </Box>
 
       <LineBreak />
-      <Text color="gray" dim>Use Tab to navigate between inputs. Press Ctrl+C to exit.</Text>
+      <Text color="gray" dim>
+        Use Tab to navigate between inputs. Press Ctrl+C to exit.
+      </Text>
     </View>
   );
 }

@@ -6,7 +6,7 @@
 import React from 'react';
 import { render } from '../../src/index';
 import { CLIApp, CommandRouter, Default } from '../../src/cli';
-import { Text, View, Input, Button } from '../../src/index';
+import { Text, View, TextInput, Button } from '../../src/index';
 import { useState } from 'react';
 
 function App() {
@@ -33,7 +33,12 @@ function SimpleAppComponent() {
       <Text>This is a single-component app with no routing.</Text>
       <View style={{ margin: { top: 1 } }}>
         <Text>Enter your name:</Text>
-        <Input value={name} onChange={(e) => setName(e.value as string)} placeholder="Your name" style={{ width: 30 }} />
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          placeholder="Your name"
+          style={{ width: 30 }}
+        />
       </View>
       <View style={{ marginTop: 1 }}>
         <Button onClick={() => setGreeting(name ? `Hello, ${name}!` : 'Hello, World!')}>

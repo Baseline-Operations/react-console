@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / memoizeStyle
 
@@ -8,7 +8,7 @@
 
 > **memoizeStyle**\<`T`\>(`style`, `key?`): `T` \| `undefined`
 
-Defined in: src/utils/memoization.ts:35
+Defined in: [src/utils/memoization.ts:35](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/memoization.ts#L35)
 
 Memoize style object
 Caches style objects to avoid recalculating merged styles
@@ -17,7 +17,7 @@ Caches style objects to avoid recalculating merged styles
 
 ### T
 
-`T` *extends* `ViewStyle` \| `TextStyle`
+`T` _extends_ `ViewStyle` \| `TextStyle`
 
 ## Parameters
 

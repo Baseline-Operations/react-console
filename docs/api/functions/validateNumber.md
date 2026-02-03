@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / validateNumber
 
@@ -8,7 +8,7 @@
 
 > **validateNumber**(`input`, `constraints?`): [`ValidationResult`](../interfaces/ValidationResult.md)\<`number`\>
 
-Defined in: src/utils/validation.ts:94
+Defined in: [src/utils/validation.ts:94](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/validation.ts#L94)
 
 Generic number validator
 

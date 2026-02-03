@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / applyStyles
 
@@ -8,7 +8,7 @@
 
 > **applyStyles**(`text`, `styles?`): `string`
 
-Defined in: src/renderer/ansi.ts:170
+Defined in: [src/renderer/ansi.ts:183](https://github.com/Baseline-Operations/react-console/blob/main/src/renderer/ansi.ts#L183)
 
 Apply styles to text using ANSI escape codes
 
@@ -40,8 +40,8 @@ Styled text with ANSI escape codes
 
 ```ts
 applyStyles('Hello', { color: 'red', bold: true });
-// '\x1b[31m\x1b[1mHello\x1b[0m'
+// '\x1b[1;31mHello\x1b[0m' (combined codes)
 
 applyStyles('World', { backgroundColor: 'blue', underline: true });
-// '\x1b[44m\x1b[4mWorld\x1b[0m'
+// '\x1b[4;44mWorld\x1b[0m' (combined codes)
 ```

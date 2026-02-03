@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / getCacheStats
 
@@ -8,7 +8,7 @@
 
 > **getCacheStats**(): `object`
 
-Defined in: src/utils/memoization.ts:113
+Defined in: [src/utils/memoization.ts:112](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/memoization.ts#L112)
 
 Get cache statistics (for debugging)
 

@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / wrapText
 
@@ -8,7 +8,7 @@
 
 > **wrapText**(`text`, `width`): `string`[]
 
-Defined in: src/utils/measure.ts:48
+Defined in: [src/utils/measure.ts:211](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/measure.ts#L211)
 
 Wrap text to fit within a given width
 

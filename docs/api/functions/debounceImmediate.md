@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / debounceImmediate
 
@@ -8,7 +8,7 @@
 
 > **debounceImmediate**\<`T`\>(`fn`, `delay`, `immediate`): (...`args`) => `void`
 
-Defined in: src/utils/debounce.ts:65
+Defined in: [src/utils/debounce.ts:65](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/debounce.ts#L65)
 
 Debounce with immediate execution option
 Can execute immediately on first call, then debounce subsequent calls
@@ -17,7 +17,7 @@ Can execute immediately on first call, then debounce subsequent calls
 
 ### T
 
-`T` *extends* (...`args`) => `unknown`
+`T` _extends_ (...`args`) => `unknown`
 
 ## Parameters
 
@@ -58,9 +58,13 @@ Debounced function
 ## Example
 
 ```ts
-const debounced = debounceImmediate(() => {
-  console.log('Called');
-}, 100, true);
+const debounced = debounceImmediate(
+  () => {
+    console.log('Called');
+  },
+  100,
+  true
+);
 
 debounced(); // Executes immediately
 debounced(); // Debounced

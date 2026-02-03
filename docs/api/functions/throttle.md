@@ -1,6 +1,6 @@
 [**React Console API v0.1.0**](../README.md)
 
-***
+---
 
 [React Console API](../globals.md) / throttle
 
@@ -8,7 +8,7 @@
 
 > **throttle**\<`T`\>(`fn`, `delay`): (...`args`) => `void`
 
-Defined in: src/utils/debounce.ts:116
+Defined in: [src/utils/debounce.ts:116](https://github.com/Baseline-Operations/react-console/blob/main/src/utils/debounce.ts#L116)
 
 Throttle a function call
 Limits execution to at most once per specified delay period
@@ -17,7 +17,7 @@ Limits execution to at most once per specified delay period
 
 ### T
 
-`T` *extends* (...`args`) => `unknown`
+`T` _extends_ (...`args`) => `unknown`
 
 ## Parameters
 
