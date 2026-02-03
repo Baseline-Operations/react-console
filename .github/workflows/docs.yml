@@ -7,6 +7,12 @@ on:
       - 'docs/**'
       - 'src/**'
       - 'README.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'README.md'
   workflow_dispatch:
 
 jobs:
@@ -15,21 +21,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build documentation
         run: npm run docs
-      
+
       - name: Check documentation links
-        run: |
-          echo "Documentation link checking would go here"
-          echo "Consider using markdown-link-check or similar"
-        continue-on-error: true
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress './docs/**/*.md' './README.md'
+          fail: false

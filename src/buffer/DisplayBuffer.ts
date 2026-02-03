@@ -29,6 +29,7 @@ export class DisplayBuffer {
   private ansiGenerator: ANSIGenerator;
   private _width: number;
   private _height: number;
+  private _lastContentLine: number = 0;
   private cursorX: number = 0;
   private cursorY: number = 0;
 
@@ -49,6 +50,14 @@ export class DisplayBuffer {
 
   get height(): number {
     return this._height;
+  }
+
+  /**
+   * Get the last line with content from the most recent flush
+   * Returns 0-indexed line number
+   */
+  get lastContentLine(): number {
+    return this._lastContentLine;
   }
 
   /**
@@ -123,6 +132,9 @@ export class DisplayBuffer {
         lastContentLine = y;
       }
     }
+
+    // Track for external access
+    this._lastContentLine = lastContentLine;
 
     // Only output up to the last content line + 1
     const linesToOutput = outputLines.slice(0, lastContentLine + 1);

@@ -1,50 +1,49 @@
-# Auto-label PRs based on changed files
+# Auto-label PRs based on changed files (labeler v5 format)
 
-# CLI related changes
 cli:
-  - src/components/cli/**/*
-  - src/utils/cli/**/*
-  - '**/*cli*'
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/cli/**/*
+          - src/utils/cli/**/*
 
-# Renderer changes
 renderer:
-  - src/renderer/**/*
+  - changed-files:
+      - any-glob-to-any-file: src/renderer/**/*
 
-# Component changes
 components:
-  - src/components/**/*
-  - '!src/components/cli/**/*'
+  - changed-files:
+      - any-glob-to-any-file: src/components/**/*
 
-# Documentation
 docs:
-  - '**/*.md'
-  - docs/**/*
-  - '!CHANGELOG.md'
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - docs/**/*
 
-# Build system
 build:
-  - src/utils/build/**/*
-  - build.config.ts
-  - babel.config.js
-  - tsconfig*.json
+  - changed-files:
+      - any-glob-to-any-file:
+          - build.config.ts
+          - babel.config.js
+          - tsconfig*.json
 
-# Tests
 tests:
-  - src/__tests__/**/*
-  - '**/*.test.ts'
-  - '**/*.test.tsx'
-  - vitest.config.ts
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/__tests__/**/*
+          - '**/*.test.ts'
+          - '**/*.test.tsx'
+          - vitest.config.ts
 
-# Examples
 examples:
-  - examples/**/*
+  - changed-files:
+      - any-glob-to-any-file: examples/**/*
 
-# Configuration
 config:
-  - .github/**/*
-  - .husky/**/*
-  - .lintstagedrc.js
-  - .prettierrc
-  - eslint.config.js
-  - package.json
-  - package-lock.json
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**/*
+          - .husky/**/*
+          - .lintstagedrc.js
+          - eslint.config.mjs
+          - package.json

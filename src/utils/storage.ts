@@ -18,7 +18,11 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from '
 import { join, dirname } from 'path';
 import { createHash, createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync } from 'crypto';
 import os from 'os';
+import { createRequire } from 'node:module';
 import { reportError, ErrorType } from './errors';
+
+// Create require function for ESM compatibility (needed for dynamic imports to avoid circular deps)
+const require = createRequire(import.meta.url);
 
 /**
  * Supported storage value types
@@ -137,12 +141,24 @@ class StorageManager {
 
     process.on('SIGINT', () => {
       this.persistToDisk();
-      process.exit(0);
+      // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+      try {
+        const { Node } = require('../nodes/base/Node');
+        Node.exit(0);
+      } catch {
+        process.exit(0);
+      }
     });
 
     process.on('SIGTERM', () => {
       this.persistToDisk();
-      process.exit(0);
+      // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+      try {
+        const { Node } = require('../nodes/base/Node');
+        Node.exit(0);
+      } catch {
+        process.exit(0);
+      }
     });
   }
 
@@ -528,11 +544,23 @@ export class ApplicationStorage {
       });
       process.on('SIGINT', () => {
         this.clear();
-        process.exit(0);
+        // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+        try {
+          const { Node } = require('../nodes/base/Node');
+          Node.exit(0);
+        } catch {
+          process.exit(0);
+        }
       });
       process.on('SIGTERM', () => {
         this.clear();
-        process.exit(0);
+        // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+        try {
+          const { Node } = require('../nodes/base/Node');
+          Node.exit(0);
+        } catch {
+          process.exit(0);
+        }
       });
     }
   }

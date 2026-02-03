@@ -4,8 +4,10 @@ module.exports = {
       '@babel/preset-env',
       {
         targets: {
-          node: '18',
+          node: '20',
         },
+        // Let Rollup handle module format
+        modules: false,
       },
     ],
     [

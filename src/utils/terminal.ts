@@ -3,6 +3,7 @@
  */
 
 import type { TerminalDimensions } from '../types';
+import { debounce } from './debounce';
 
 // Global render mode state
 let currentRenderMode: 'static' | 'interactive' | 'fullscreen' = 'static';
@@ -190,8 +191,6 @@ export function onTerminalResizeDebounced(callback: () => void, delay: number = 
     return () => {};
   }
 
-  // Import debounce here to avoid circular dependencies
-  const { debounce } = require('./debounce');
   const debouncedCallback = debounce(callback, delay);
 
   // Listen for resize events with debounced callback

@@ -1,16 +1,83 @@
 name: Dependabot Auto-merge
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
 
 jobs:
   auto-merge:
     name: Auto-merge Dependabot PRs
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
+      - name: Get PR info
+        id: pr-info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get the PR from the workflow run
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`
+            });
+
+            const pr = prs[0];
+            if (!pr) {
+              console.log('No open PR found');
+              core.setOutput('found', 'false');
+              return;
+            }
+
+            core.setOutput('found', 'true');
+            core.setOutput('number', pr.number);
+            core.setOutput('title', pr.title);
+
+      - name: Add version label
+        if: steps.pr-info.outputs.found == 'true'
+        uses: actions/github-script@v7
+        env:
+          PR_TITLE: ${{ steps.pr-info.outputs.title }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.number }}
+        with:
+          script: |
+            const title = process.env.PR_TITLE;
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
+
+            // Single regex to capture all version components
+            // Matches: "from X.Y.Z to A.B.C"
+            const match = title.match(/from (\d+)\.(\d+)\.(\d+) to (\d+)\.(\d+)\.(\d+)/);
+
+            let label = 'patch';
+            if (match) {
+              const [, fromMajor, fromMinor, , toMajor, toMinor] = match;
+              
+              if (fromMajor !== toMajor) {
+                label = 'major';
+              } else if (fromMinor !== toMinor) {
+                label = 'minor';
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: [label]
+            });
+
+            console.log(`Added ${label} label to Dependabot PR`);
+
       - name: Auto-merge Dependabot PRs
+        if: steps.pr-info.outputs.found == 'true'
         uses: fastify/github-action-merge-dependabot@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

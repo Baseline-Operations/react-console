@@ -3,6 +3,7 @@
  * Contains only essential functionality: identity, tree structure, box model
  */
 
+import { createRequire } from 'node:module';
 import type {
   BoundingBox,
   BorderInfo,
@@ -16,6 +17,30 @@ import { Position as PositionEnum, BorderStyle } from './types';
 import { decodeHtmlEntities } from '../../utils/measure';
 import { debug } from '../../utils/debug';
 import type { ViewStyle, TextStyle } from '../../types';
+
+// Create require function for ESM compatibility (needed for lazy loading to avoid circular deps)
+const require = createRequire(import.meta.url);
+
+// Use globalThis to store state that survives ESM/CJS dual loading
+// When tsx loads modules, ESM and CJS create separate module instances
+// globalThis is the only way to share state between them
+const GLOBAL_KEY = '__react_console_node_state__';
+interface GlobalNodeState {
+  isInteractive: boolean;
+  wasInteractiveMode: boolean;
+  unmountInProgress: boolean;
+}
+
+// Initialize global state if not exists
+if (!(globalThis as Record<string, unknown>)[GLOBAL_KEY]) {
+  (globalThis as Record<string, unknown>)[GLOBAL_KEY] = {
+    isInteractive: false,
+    wasInteractiveMode: false,
+    unmountInProgress: false,
+  };
+}
+
+const globalState = (globalThis as Record<string, unknown>)[GLOBAL_KEY] as GlobalNodeState;
 
 // Types for dynamic node capabilities (exported for mixin type inference)
 export interface RenderingInfo {
@@ -682,7 +707,13 @@ export abstract class Node {
   private static _isInteractive: boolean = false;
   private static _resizeCleanup: (() => void) | null = null;
   private static _renderCallback: (() => void) | null = null;
-  private static _lastRenderedHeight: number = 0;
+  // Kept for backward compat but globalState.wasInteractiveMode is now used
+  private static _wasInteractiveMode: boolean = false;
+
+  // Getter to satisfy TypeScript's "never read" check
+  static get wasInteractiveModeFlag(): boolean {
+    return Node._wasInteractiveMode;
+  }
 
   /**
    * Register a callback to be called after React commits changes
@@ -697,21 +728,10 @@ export abstract class Node {
    * This is the interface between React and the Node system
    * Returns the host config object required by react-reconciler
    */
-  static createHostConfig(): import('react-reconciler').HostConfig<
-    string,
-    Record<string, unknown>,
-    Node,
-    Node,
-    Node,
-    Node,
-    Node,
-    Node,
-    object,
-    unknown[],
-    unknown,
-    number,
-    number
-  > {
+  // Return type uses 'any' to allow additional properties required by react-reconciler 0.31+
+  // that aren't in the @types/react-reconciler type definitions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static createHostConfig(): any {
     const { NodeFactory } = require('../NodeFactory');
 
     const getPublicInstance = (instance: Node): Node => instance;
@@ -909,9 +929,24 @@ export abstract class Node {
       return false;
     };
 
-    const getCurrentEventPriority = (): number => 0;
+    const getCurrentEventPriority = (): number => DefaultEventPriority;
 
-    // Use default scheduling from react-reconciler
+    // Priority tracking for react-reconciler
+    const DefaultEventPriority = 32;
+    let currentUpdatePriority = DefaultEventPriority;
+
+    const getCurrentUpdatePriority = (): number => currentUpdatePriority;
+
+    const setCurrentUpdatePriority = (priority: number): void => {
+      currentUpdatePriority = priority;
+    };
+
+    const resolveUpdatePriority = (): number => {
+      if (currentUpdatePriority !== DefaultEventPriority) {
+        return currentUpdatePriority;
+      }
+      return DefaultEventPriority;
+    };
 
     const appendChild = (parentInstance: Node, child: Node | string): void => {
       appendInitialChild(parentInstance, child);
@@ -1107,10 +1142,9 @@ export abstract class Node {
       prepareUpdate,
       shouldSetTextContent,
       getCurrentEventPriority,
-      // Note: These properties are internal helpers, not part of HostConfig
-      // resolveUpdatePriority, setCurrentUpdatePriority, getCurrentUpdatePriority,
-      // resolveEventType, resolveEventTimeStamp are used internally but not in returned config
-      // Let react-reconciler use default scheduling
+      getCurrentUpdatePriority,
+      setCurrentUpdatePriority,
+      resolveUpdatePriority,
       // Wrap setTimeout/clearTimeout to handle Node.js Timeout type
       scheduleTimeout: (fn: (...args: unknown[]) => unknown, delay?: number) =>
         setTimeout(fn, delay) as unknown as number,
@@ -1141,6 +1175,13 @@ export abstract class Node {
       prepareScopeUpdate: () => {},
       getInstanceFromScope: () => null,
       detachDeletedInstance: () => {},
+      // React 19 / reconciler 0.31+ required methods
+      maySuspendCommit: () => false,
+      preloadInstance: () => true,
+      startSuspendingCommit: () => {},
+      suspendInstance: () => {},
+      waitForCommitToBeReady: () => null,
+      NotPendingTransition: null,
     };
   }
 
@@ -1234,6 +1275,27 @@ export abstract class Node {
     setRenderMode(mode === 'static' ? 'static' : 'interactive');
     resetBufferRenderer(); // Reset buffer renderer with new dimensions
 
+    // Set interactive mode flags EARLY - before any SIGINT handlers are registered
+    // This ensures cleanup knows we're in interactive mode even if Ctrl+C is pressed immediately
+    // Use globalThis state to survive ESM/CJS dual loading
+    const isInteractiveMode = mode === 'interactive' || mode === 'fullscreen';
+    globalState.isInteractive = isInteractiveMode;
+    globalState.wasInteractiveMode = isInteractiveMode;
+    globalState.unmountInProgress = false; // Reset unmount flag for new render
+    Node._isInteractive = isInteractiveMode;
+    Node._wasInteractiveMode = isInteractiveMode;
+    Node._currentElement = element;
+
+    // Register SIGINT handler for proper cleanup (cursor positioning, mouse tracking)
+    // This is critical for interactive mode to ensure clean exit
+    if (mode !== 'static') {
+      // Remove any existing SIGINT handlers first to avoid duplicates
+      process.removeAllListeners('SIGINT');
+      process.on('SIGINT', () => {
+        Node.exit(0);
+      });
+    }
+
     initializeStorage(options?.appId);
 
     let previousFocusedComponent: Node | null = null;
@@ -1255,9 +1317,6 @@ export abstract class Node {
         // Ignore
       }
     }
-
-    Node._isInteractive = mode === 'interactive' || mode === 'fullscreen';
-    Node._currentElement = element;
 
     // Create root container using new Node system
     if (!Node._rootContainer) {
@@ -1484,12 +1543,6 @@ export abstract class Node {
                 }
               }
             }
-          }
-
-          // Track rendered height for proper cursor positioning on exit
-          if (Node._rootContainer.bounds) {
-            Node._lastRenderedHeight =
-              Node._rootContainer.bounds.y + Node._rootContainer.bounds.height;
           }
 
           isFirstRender = false;
@@ -1954,29 +2007,52 @@ export abstract class Node {
    * Unmount the rendered React application
    */
   static unmount(): void {
+    // Prevent multiple unmount calls (can happen with multiple SIGINT handlers)
+    // Use globalThis state to survive ESM/CJS dual loading
+    if (globalState.unmountInProgress) {
+      process.stderr.write(`[unmount] Already in progress, skipping\n`);
+      return;
+    }
+    globalState.unmountInProgress = true;
+
     const { showCursor } = require('../../renderer/ansi');
-    const { resetBufferRenderer } = require('../../buffer');
+    const { resetBufferRenderer, getBufferRenderer } = require('../../buffer');
     const { clearBatchedUpdates } = require('../../renderer/batching');
     const { stopInputListener } = require('../../renderer/input');
+    const { getTerminalDimensions } = require('../../utils/terminal');
+
+    // Store state FIRST before any cleanup - use global state as primary
+    const wasInteractive = globalState.wasInteractiveMode || globalState.isInteractive;
+
+    // Get content height before cleanup
+    let contentHeight = 0;
+    if (wasInteractive) {
+      try {
+        const bufferRenderer = getBufferRenderer();
+        contentHeight = bufferRenderer.lastContentHeight;
+      } catch {
+        // Buffer may not be initialized
+      }
+      // Fallback to terminal rows if no content height
+      if (contentHeight <= 0) {
+        const dims = getTerminalDimensions();
+        contentHeight = dims.rows;
+      }
+    }
 
     // FIRST: Prevent any more renders by clearing callback and batched updates
-    // This must happen before anything else to avoid render artifacts
     Node.setOnCommitCallback(null);
     clearBatchedUpdates();
 
-    // Stop input listener if interactive (prevents more input from triggering renders)
-    if (Node._isInteractive) {
-      stopInputListener();
-    }
+    // ALWAYS stop input listener - this disables mouse tracking and exits raw mode
+    // Must be called before any output to ensure mouse tracking is disabled
+    stopInputListener();
 
     // Clean up resize listener
     if (Node._resizeCleanup) {
       Node._resizeCleanup();
       Node._resizeCleanup = null;
     }
-
-    // Store height before resetting state
-    const lastHeight = Node._lastRenderedHeight;
 
     // Reset state BEFORE final output to prevent any late renders
     const hadRootFiber = Node._rootFiber !== null;
@@ -1987,8 +2063,11 @@ export abstract class Node {
     Node._rootContainer = null;
     Node._currentElement = null;
     Node._isInteractive = false;
+    Node._wasInteractiveMode = false;
     Node._renderCallback = null;
-    Node._lastRenderedHeight = 0;
+    // Also reset global state
+    globalState.isInteractive = false;
+    globalState.wasInteractiveMode = false;
 
     // Reset buffer renderer
     resetBufferRenderer();
@@ -2003,23 +2082,25 @@ export abstract class Node {
       }
     }
 
-    // Move cursor to end of rendered content
-    // The cursor might be anywhere in the rendered area (at focused component)
-    // We need to move to just past the last row of content
+    // Build final output for cleanup
     let finalOutput = '';
 
-    // Use ANSI escape to move cursor to specific row (just past content)
-    // ESC[row;colH moves cursor to absolute position
-    if (lastHeight > 0) {
-      // Move cursor to row (lastHeight + 1), column 1
-      finalOutput += `\x1b[${lastHeight + 1};1H`;
+    // For interactive/fullscreen mode, position cursor after all content
+    if (wasInteractive) {
+      // Interactive apps render from top of screen, so move to after content
+      // Move cursor to row after content, column 1
+      const targetRow = Math.max(contentHeight, 1);
+      finalOutput += `\x1b[${targetRow + 1};1H`;
+
+      // Clear from cursor to end of screen to remove any artifacts
+      finalOutput += '\x1b[J';
     }
 
-    // Add one newline to ensure prompt appears on clean line
-    finalOutput += '\n';
-
-    // Show cursor - this uses \x1b[?25h which has [? not just [
+    // Show cursor (always)
     finalOutput += showCursor();
+
+    // Add newline to ensure clean prompt
+    finalOutput += '\n';
 
     // Write everything in one call
     process.stdout.write(finalOutput);
@@ -2037,6 +2118,9 @@ export abstract class Node {
     }
 
     Node.unmount();
+
+    // Exit immediately - unmount has already written all cleanup sequences
+    // The writes are synchronous (not buffered) so they should complete
     process.exit(exitCode);
   }
 }

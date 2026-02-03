@@ -51,6 +51,9 @@ interface InteractiveNode extends Node {
   dropdownHeight?: number;
   dropdownPosition?: 'auto' | 'above' | 'below';
   handlesOwnChildren?: boolean;
+  // Input-specific properties
+  multiline?: boolean;
+  maxLines?: number;
 }
 
 /**
@@ -76,11 +79,19 @@ export class BufferRenderer {
   private compositeBuffer: CompositeBuffer;
   private displayBuffer: DisplayBuffer;
   private isFirstRender: boolean = true;
+  private _lastContentHeight: number = 0;
 
   constructor() {
     const dims = getTerminalDimensions();
     this.compositeBuffer = new CompositeBuffer(dims.columns, dims.rows);
     this.displayBuffer = new DisplayBuffer(dims.columns, dims.rows);
+  }
+
+  /**
+   * Get the actual content height from the last render
+   */
+  get lastContentHeight(): number {
+    return this._lastContentHeight;
   }
 
   /**
@@ -125,8 +136,12 @@ export class BufferRenderer {
     } else if (fullOptions.fullRedraw || this.isFirstRender) {
       // Pass cursor position to flush so everything is in one write operation
       this.displayBuffer.flush(process.stdout, fullOptions.clearScreen, fullOptions.cursorPosition);
+      // Track content height for proper cursor positioning on exit
+      this._lastContentHeight = this.displayBuffer.lastContentLine + 1;
     } else {
       this.displayBuffer.flushDiff(process.stdout);
+      // Also update content height during diff renders to keep it accurate
+      this._lastContentHeight = this.displayBuffer.lastContentLine + 1;
     }
 
     this.isFirstRender = false;
@@ -168,6 +183,9 @@ export class BufferRenderer {
         break;
       }
     }
+
+    // Track content height for proper cursor positioning on exit
+    this._lastContentHeight = contentHeight;
 
     // Generate output only for content area
     let output = '';
@@ -446,7 +464,17 @@ export class BufferRenderer {
 
     if (isInteractive) {
       // For open dropdowns, include the expanded options area in bounds
+      // For multiline inputs, ensure full height is included
       let regBounds = { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+
+      // Handle multiline inputs - ensure height includes all lines
+      if (node.type === 'input' && interactiveNode.multiline) {
+        const maxLines = interactiveNode.maxLines || 3;
+        // Ensure bounds height is at least maxLines
+        if (regBounds.height < maxLines) {
+          regBounds.height = maxLines;
+        }
+      }
 
       if (node.type === 'dropdown' && interactiveNode.isOpen) {
         const options = interactiveNode.options || [];
@@ -457,14 +485,8 @@ export class BufferRenderer {
         if (visibleOptions > 0) {
           // Determine if options are above or below
           const dropdownPosition = interactiveNode.dropdownPosition || 'auto';
-          const dims = { rows: 24, cols: 80 }; // Default, actual will be calculated
-          try {
-            const termDims = require('../../utils/terminal').getTerminalDimensions();
-            dims.rows = termDims.rows;
-            dims.cols = termDims.cols;
-          } catch {
-            /* use defaults */
-          }
+          const termDims = getTerminalDimensions();
+          const dims = { rows: termDims.rows, columns: termDims.columns };
 
           const spaceBelow = dims.rows - bounds.y - 2;
           const spaceAbove = bounds.y - 1;
