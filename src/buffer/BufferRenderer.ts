@@ -184,6 +184,9 @@ export class BufferRenderer {
       }
     }
 
+    // Track content height for proper cursor positioning on exit
+    this._lastContentHeight = contentHeight;
+
     // Generate output only for content area
     let output = '';
     for (let y = 0; y < contentHeight; y++) {
