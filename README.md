@@ -30,14 +30,14 @@ React Console allows you to build terminal/console applications using React 19+ 
 ## Installation
 
 ```bash
-npm install react-console react@^19.0.0
+npm install @baseline-operations/react-console react@^19.0.0
 ```
 
 ## Quick Start
 
 ```tsx
 import React from 'react';
-import { render, Text, View } from 'react-console';
+import { render, Text, View } from '@baseline-operations/react-console';
 
 function App() {
   return (
@@ -468,7 +468,7 @@ Mouse tracking is automatically enabled in interactive and fullscreen modes.
 Detect the platform and select platform-specific values.
 
 ```tsx
-import { Platform } from 'react-console';
+import { Platform } from '@baseline-operations/react-console';
 
 console.log(Platform.OS); // 'terminal'
 console.log(Platform.Version); // Node.js version
@@ -486,7 +486,7 @@ const message = Platform.select({
 Get terminal dimensions with resize events.
 
 ```tsx
-import { Dimensions, useWindowDimensions } from 'react-console';
+import { Dimensions, useWindowDimensions } from '@baseline-operations/react-console';
 
 // Hook (recommended)
 function MyComponent() {
@@ -510,7 +510,7 @@ const subscription = Dimensions.addEventListener('change', ({ window }) => {
 Copy and paste text using system clipboard.
 
 ```tsx
-import { Clipboard, useClipboard } from 'react-console';
+import { Clipboard, useClipboard } from '@baseline-operations/react-console';
 
 // Hook
 const [content, setClipboard] = useClipboard();
@@ -526,7 +526,7 @@ const hasContent = await Clipboard.hasString();
 Monitor app lifecycle (active/background).
 
 ```tsx
-import { AppState, useAppState } from 'react-console';
+import { AppState, useAppState } from '@baseline-operations/react-console';
 
 // Hook
 const appState = useAppState(); // 'active' | 'background' | 'inactive'
@@ -542,7 +542,7 @@ const subscription = AppState.addEventListener('change', (state) => {
 Handle escape key (like Android back button).
 
 ```tsx
-import { BackHandler, useBackHandler } from 'react-console';
+import { BackHandler, useBackHandler } from '@baseline-operations/react-console';
 
 // Hook
 useBackHandler(() => {
@@ -561,7 +561,7 @@ BackHandler.addEventListener('hardwareBackPress', () => {
 Display modal alert dialogs.
 
 ```tsx
-import { Alert } from 'react-console';
+import { Alert } from '@baseline-operations/react-console';
 
 Alert.alert('Confirm', 'Are you sure?', [
   { text: 'Cancel', style: 'cancel' },
@@ -574,7 +574,7 @@ Alert.alert('Confirm', 'Are you sure?', [
 Terminal audio feedback (beeps).
 
 ```tsx
-import { Bell, useBell } from 'react-console';
+import { Bell, useBell } from '@baseline-operations/react-console';
 
 Bell.ring(); // Single beep
 Bell.beep(3); // Multiple beeps
@@ -589,7 +589,11 @@ Bell.setEnabled(false); // Mute
 ### Terminal Utilities
 
 ```tsx
-import { getTerminalDimensions, supportsColor, Dimensions } from 'react-console';
+import {
+  getTerminalDimensions,
+  supportsColor,
+  Dimensions,
+} from '@baseline-operations/react-console';
 
 // Legacy API
 const dims = getTerminalDimensions();
@@ -606,7 +610,7 @@ if (supportsColor()) {
 ### Responsive Utilities
 
 ```tsx
-import { resolveWidth, resolveHeight } from 'react-console';
+import { resolveWidth, resolveHeight } from '@baseline-operations/react-console';
 
 const width = resolveWidth('50%', 100); // 50
 const height = resolveHeight('80vh', 24); // 19 (80% of 24)
@@ -615,7 +619,7 @@ const height = resolveHeight('80vh', 24); // 19 (80% of 24)
 ### Text Measurement
 
 ```tsx
-import { measureText, wrapText, truncateText } from 'react-console';
+import { measureText, wrapText, truncateText } from '@baseline-operations/react-console';
 
 const width = measureText('Hello'); // 5
 const lines = wrapText('Long text...', 80);

@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { storage, useStorage, initializeStorage } from 'react-console/storage';
+ * import { storage, useStorage, initializeStorage } from '@baseline-operations/react-console/storage';
  * ```
  */
 

@@ -46,10 +46,10 @@ export type { DropdownProps, DropdownOption } from './components/selection/Dropd
 export { List } from './components/selection/List';
 export type { ListProps, ListOption } from './components/selection/List';
 
-// Selection components also available via 'react-console/selection'
+// Selection components also available via '@baseline-operations/react-console/selection'
 // See src/selection.ts for exports
 
-// Layout components are available via 'react-console/layout'
+// Layout components are available via '@baseline-operations/react-console/layout'
 // See src/layout.ts for exports
 
 // Components - Data
@@ -100,10 +100,10 @@ export type {
   FormValidator,
 } from './components/Form';
 
-// Animation components and utilities are available via 'react-console/animations'
+// Animation components and utilities are available via '@baseline-operations/react-console/animations'
 // See src/animations.ts for exports
 
-// CLI components and utilities are available via 'react-console/cli' or 'react-console/router'
+// CLI components and utilities are available via '@baseline-operations/react-console/cli' or '@baseline-operations/react-console/router'
 // See src/cli.ts and src/router.ts for exports
 
 // Utilities - Debug
@@ -334,13 +334,13 @@ export {
 export { terminal, updateTerminalDimensions } from './utils/globalTerminal';
 export type { GlobalTerminal } from './utils/globalTerminal';
 
-// Storage system is available via 'react-console/storage'
+// Storage system is available via '@baseline-operations/react-console/storage'
 // See src/storage.ts for exports
 
-// Advanced hooks are available via 'react-console/hooks'
+// Advanced hooks are available via '@baseline-operations/react-console/hooks'
 // See src/hooks.ts for exports
 
-// Theme system is available via 'react-console/theme'
+// Theme system is available via '@baseline-operations/react-console/theme'
 // See src/theme.ts for exports
 
 // Focus and component management utilities
@@ -379,7 +379,7 @@ export {
   classNameRegistry,
 } from './utils/className';
 
-// React Native compatible APIs are available via 'react-console/apis'
+// React Native compatible APIs are available via '@baseline-operations/react-console/apis'
 // See src/apis.ts for exports
 // Also re-exported here for convenience:
 export {

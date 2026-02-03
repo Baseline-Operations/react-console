@@ -12,6 +12,7 @@
   "categorizeByGroup": true,
   "categoryOrder": ["Components", "Hooks", "Utilities", "Types", "*"],
   "gitRevision": "main",
+  "sourceLinkTemplate": "https://github.com/baseline-operations/react-console/blob/{gitRevision}/{path}#L{line}",
   "sort": ["source-order", "alphabetical"],
   "kindSortOrder": [
     "Project",

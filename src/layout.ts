@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { ScrollView, Row, Column, Modal } from 'react-console/layout';
+ * import { ScrollView, Row, Column, Modal } from '@baseline-operations/react-console/layout';
  * ```
  */
 

@@ -61,6 +61,7 @@ jobs:
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" || exit 0
 
       - name: Publish to npm
+        # Publishes @baseline-operations/react-console; --access public required for scoped packages
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

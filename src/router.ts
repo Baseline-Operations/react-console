@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { Router, Route, Default } from 'react-console/router';
+ * import { Router, Route, Default } from '@baseline-operations/react-console/router';
  *
  * function App() {
  *   return (

@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { CLIApp, CommandRouter, Command, Route, Default } from 'react-console/cli';
+ * import { CLIApp, CommandRouter, Command, Route, Default } from '@baseline-operations/react-console/cli';
  *
  * function App() {
  *   return (

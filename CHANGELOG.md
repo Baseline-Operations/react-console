@@ -9,12 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial release of React Console
-- CLI framework with CommandRouter
-- React 19+ support
-- TypeScript support
-- Comprehensive documentation
-
 ### Changed
 
 ### Deprecated
@@ -25,4 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-[Unreleased]: https://github.com/your-username/react-console/compare/v0.1.0...HEAD
+## [0.1.0] - 2025-02-03
+
+### Added
+
+- Initial release of React Console
+- CLI framework with CommandRouter
+- React 19+ support
+- TypeScript support
+- Comprehensive documentation
+
+[Unreleased]: https://github.com/baseline-operations/react-console/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/baseline-operations/react-console/releases/tag/v0.1.0

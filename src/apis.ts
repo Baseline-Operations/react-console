@@ -1,11 +1,11 @@
 /**
  * React Native Compatible APIs
  *
- * Import path: 'react-console/apis'
+ * Import path: '@baseline-operations/react-console/apis'
  *
  * @example
  * ```tsx
- * import { AppState, Keyboard, BackHandler, Clipboard, Alert } from 'react-console/apis';
+ * import { AppState, Keyboard, BackHandler, Clipboard, Alert } from '@baseline-operations/react-console/apis';
  * ```
  */
 

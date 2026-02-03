@@ -4,7 +4,7 @@
  *
  * @example
  * ```tsx
- * import { Radio, Checkbox, Dropdown, List } from 'react-console/selection';
+ * import { Radio, Checkbox, Dropdown, List } from '@baseline-operations/react-console/selection';
  * ```
  */
 

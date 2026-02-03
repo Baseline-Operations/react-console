@@ -5,7 +5,7 @@
  *
  * @example
  * ```tsx
- * import { AppState, Keyboard, BackHandler, Clipboard, Alert } from 'react-console/apis';
+ * import { AppState, Keyboard, BackHandler, Clipboard, Alert } from '@baseline-operations/react-console/apis';
  *
  * // Monitor app state
  * AppState.addEventListener('change', (state) => {
