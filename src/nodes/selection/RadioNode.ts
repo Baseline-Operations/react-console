@@ -54,7 +54,7 @@ export class RadioNode extends SelectionNode {
   }
 
   computeLayout(
-    _constraints: import('../base/mixins/Layoutable').LayoutConstraints
+    constraints: import('../base/mixins/Layoutable').LayoutConstraints
   ): import('../base/mixins/Layoutable').LayoutResult {
     const explicitWidth = this.width;
 
@@ -74,7 +74,10 @@ export class RadioNode extends SelectionNode {
 
     // Use explicit width if set, otherwise use content-based width (intrinsic sizing)
     // Radio buttons should NOT expand to fill available width - they are inline-like
-    const totalWidth = explicitWidth ?? minWidth;
+    // But respect maxWidth constraint to avoid overflow in narrow containers
+    const desiredWidth = explicitWidth ?? minWidth;
+    const maxWidth = Number.isFinite(constraints.maxWidth) ? constraints.maxWidth : Infinity;
+    const totalWidth = Math.min(desiredWidth, maxWidth);
     const totalHeight = options.length || 1;
 
     const dimensions: Dimensions = {
@@ -124,11 +127,12 @@ export class RadioNode extends SelectionNode {
     zIndex: number;
   }): void {
     const { buffer, x, y, layerId, nodeId, zIndex } = context;
-    // CRITICAL: Limit maxWidth/maxHeight to reasonable values to prevent infinite loops
-    const maxWidth = Math.min(context.maxWidth, 1000);
-    const maxHeight = Math.min(context.maxHeight, 100);
-
     const options = this.options || [];
+    // Sanitize maxWidth/maxHeight - only filter out non-finite values
+    // Use options.length as fallback for height since rendering is bounded by options.length
+    const maxWidth = Number.isFinite(context.maxWidth) ? context.maxWidth : 1000;
+    const maxHeight = Number.isFinite(context.maxHeight) ? context.maxHeight : options.length;
+
     const currentValue = this.value;
     const isFocused = this.focused;
     const isDisabled = this.disabled;

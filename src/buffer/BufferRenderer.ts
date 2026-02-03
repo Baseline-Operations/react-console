@@ -140,7 +140,8 @@ export class BufferRenderer {
       this._lastContentHeight = this.displayBuffer.lastContentLine + 1;
     } else {
       this.displayBuffer.flushDiff(process.stdout);
-      // flushDiff doesn't recalculate content height, but we still have the previous value
+      // Also update content height during diff renders to keep it accurate
+      this._lastContentHeight = this.displayBuffer.lastContentLine + 1;
     }
 
     this.isFirstRender = false;

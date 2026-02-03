@@ -2,11 +2,8 @@
  * Terminal utilities for detecting dimensions and capabilities
  */
 
-import { createRequire } from 'node:module';
 import type { TerminalDimensions } from '../types';
-
-// Create require function for ESM compatibility
-const require = createRequire(import.meta.url);
+import { debounce } from './debounce';
 
 // Global render mode state
 let currentRenderMode: 'static' | 'interactive' | 'fullscreen' = 'static';
@@ -194,8 +191,6 @@ export function onTerminalResizeDebounced(callback: () => void, delay: number = 
     return () => {};
   }
 
-  // Import debounce here to avoid circular dependencies
-  const { debounce } = require('./debounce');
   const debouncedCallback = debounce(callback, delay);
 
   // Listen for resize events with debounced callback

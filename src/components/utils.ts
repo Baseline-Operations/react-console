@@ -4,13 +4,10 @@
  * Reduces need for `as unknown as ReactElement` assertions
  */
 
-import { createRequire } from 'node:module';
 import React from 'react';
-
-// Create require function for ESM compatibility
-const require = createRequire(import.meta.url);
 import type { ReactNode, ReactElement } from 'react';
 import type { ConsoleNode, ViewStyle, TextStyle } from '../types';
+import { mergeClassNameWithStyle } from '../utils/className';
 
 /**
  * Convert ReactNode children to ConsoleNode[] array
@@ -101,13 +98,12 @@ export function mergeClassNameAndStyle(
   style?: ViewStyle | TextStyle | (ViewStyle | TextStyle)[],
   ...additionalStyles: Array<ViewStyle | TextStyle | undefined | null>
 ): ViewStyle | TextStyle {
-  const { mergeClassNameWithStyle } = require('../utils/className');
   const classNameStyle = mergeClassNameWithStyle(className, style);
 
   if (additionalStyles.length > 0) {
     const filteredStyles = additionalStyles.filter((s): s is ViewStyle | TextStyle => s != null);
     if (filteredStyles.length > 0) {
-      return mergeStyles(classNameStyle, ...filteredStyles);
+      return mergeStyles(classNameStyle, ...filteredStyles) || {};
     }
   }
 

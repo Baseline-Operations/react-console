@@ -26,6 +26,6 @@ jobs:
         run: |
           echo "Verifying that staged files would pass pre-commit checks"
           BASE_REF="${{ github.base_ref || github.event.repository.default_branch || 'main' }}"
-          git fetch origin "${BASE_REF}" --depth=1 || true
+          git fetch origin "${BASE_REF}" || true
           npx lint-staged --diff="origin/${BASE_REF}...HEAD" || true
         continue-on-error: true
