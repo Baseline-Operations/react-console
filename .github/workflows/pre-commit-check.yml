@@ -23,5 +23,6 @@ jobs:
       - name: Run lint-staged check
         run: |
           echo "Verifying that staged files would pass pre-commit checks"
-          npx lint-staged --diff=origin/${{ github.base_ref }}...HEAD || true
+          BASE_REF="${{ github.base_ref }}"
+          npx lint-staged --diff="origin/${BASE_REF:-main}...HEAD" || true
         continue-on-error: true

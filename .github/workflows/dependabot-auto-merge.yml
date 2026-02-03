@@ -44,10 +44,13 @@ jobs:
       - name: Add version label
         if: steps.pr-info.outputs.found == 'true'
         uses: actions/github-script@v7
+        env:
+          PR_TITLE: ${{ steps.pr-info.outputs.title }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.number }}
         with:
           script: |
-            const title = '${{ steps.pr-info.outputs.title }}';
-            const prNumber = ${{ steps.pr-info.outputs.number }};
+            const title = process.env.PR_TITLE;
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
 
             // Single regex to capture all version components
             // Matches: "from X.Y.Z to A.B.C"

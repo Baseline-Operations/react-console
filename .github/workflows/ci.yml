@@ -94,7 +94,8 @@ jobs:
 
       - name: Check build artifacts
         run: |
-          test -f dist/index.js || exit 1
+          test -f dist/esm/index.js || exit 1
+          test -f dist/cjs/index.cjs || exit 1
           test -f dist/index.d.ts || exit 1
 
       - name: Upload build artifacts
