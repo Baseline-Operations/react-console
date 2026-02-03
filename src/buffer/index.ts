@@ -14,7 +14,7 @@
  */
 
 // Types
-export {
+export type {
   Cell,
   PartialCell,
   DirtyRegion,
@@ -22,6 +22,9 @@ export {
   CellDiff,
   LayerInfo,
   BufferRenderOptions,
+} from './types';
+
+export {
   createEmptyCell,
   createCell,
   isCellTransparent,
@@ -40,9 +43,5 @@ export { DisplayBuffer } from './DisplayBuffer';
 export { ANSIGenerator, fgColor, bgColor, reset } from './ANSIGenerator';
 
 // Main Renderer
-export {
-  BufferRenderer,
-  CellRenderContext,
-  getBufferRenderer,
-  resetBufferRenderer,
-} from './BufferRenderer';
+export type { CellRenderContext } from './BufferRenderer';
+export { BufferRenderer, getBufferRenderer, resetBufferRenderer } from './BufferRenderer';

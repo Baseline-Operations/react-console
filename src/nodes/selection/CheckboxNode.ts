@@ -56,10 +56,8 @@ export class CheckboxNode extends SelectionNode {
   }
 
   computeLayout(
-    constraints: import('../base/mixins/Layoutable').LayoutConstraints
+    _constraints: import('../base/mixins/Layoutable').LayoutConstraints
   ): import('../base/mixins/Layoutable').LayoutResult {
-    // Use explicit width if set, otherwise use available width (like display: block in HTML)
-    const availableWidth = constraints?.availableWidth || constraints?.maxWidth || 80;
     const explicitWidth = this.width;
 
     // Calculate minimum width based on longest option + checkbox indicator
@@ -76,8 +74,9 @@ export class CheckboxNode extends SelectionNode {
     const prefixWidth = 2 + 2;
     const minWidth = prefixWidth + minContentWidth;
 
-    // Use explicit width, or fill available width (block behavior), but at least minWidth
-    const totalWidth = explicitWidth ?? Math.max(minWidth, availableWidth);
+    // Use explicit width if set, otherwise use content-based width (intrinsic sizing)
+    // Checkboxes should NOT expand to fill available width - they are inline-like
+    const totalWidth = explicitWidth ?? minWidth;
     const totalHeight = options.length || 1;
 
     const dimensions: Dimensions = {
@@ -147,7 +146,10 @@ export class CheckboxNode extends SelectionNode {
     nodeId: string | null;
     zIndex: number;
   }): void {
-    const { buffer, x, y, maxWidth, maxHeight, layerId, nodeId, zIndex } = context;
+    const { buffer, x, y, layerId, nodeId, zIndex } = context;
+    // CRITICAL: Limit maxWidth/maxHeight to reasonable values to prevent infinite loops
+    const maxWidth = Math.min(context.maxWidth, 1000);
+    const maxHeight = Math.min(context.maxHeight, 100);
 
     const options = this.options || [];
     const isFocused = this.focused;

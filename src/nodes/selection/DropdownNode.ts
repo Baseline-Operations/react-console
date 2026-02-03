@@ -121,7 +121,9 @@ export class DropdownNode extends SelectionNode {
     nodeId: string | null;
     zIndex: number;
   }): void {
-    const { buffer, x, y, maxWidth, layerId, nodeId, zIndex } = context;
+    const { buffer, x, y, layerId, nodeId, zIndex } = context;
+    // CRITICAL: Limit maxWidth to reasonable values to prevent infinite loops
+    const maxWidth = Math.min(context.maxWidth, 1000);
 
     const options = this.options || [];
     const isFocused = this.focused;

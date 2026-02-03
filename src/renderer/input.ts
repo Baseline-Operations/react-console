@@ -2,7 +2,11 @@
  * Input handling for interactive components
  */
 
+import { createRequire } from 'node:module';
 import { enterRawMode, exitRawMode } from '../utils/terminal';
+
+// Create require function for ESM compatibility
+const require = createRequire(import.meta.url);
 import type { KeyPress, MouseEvent } from '../types';
 import {
   parseMouseEvent,
@@ -480,6 +484,7 @@ export function stopInputListener(): void {
 
     // Remove all data listeners before exiting raw mode
     process.stdin.removeAllListeners('data');
+
     exitRawMode();
     isRawModeActive = false;
   }

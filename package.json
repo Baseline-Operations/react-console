@@ -107,11 +107,9 @@
   ],
   "prepublishOnly": "npm run build",
   "scripts": {
-    "build": "npm run clean && npm run build:types && npm run build:esm && npm run build:cjs",
+    "build": "npm run clean && npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly --outDir dist",
-    "build:esm": "BABEL_ENV=esm babel src --out-dir dist/esm --extensions .ts,.tsx --source-maps --ignore '**/__tests__/**'",
-    "build:cjs": "BABEL_ENV=cjs babel src --out-dir dist/cjs --extensions .ts,.tsx --source-maps --ignore '**/__tests__/**' && npm run build:cjs:rename",
-    "build:cjs:rename": "find dist/cjs -name '*.js' -exec sh -c 'mv \"$0\" \"${0%.js}.cjs\"' {} \\; && find dist/cjs -name '*.js.map' -exec sh -c 'mv \"$0\" \"${0%.js.map}.cjs.map\"' {} \\;",
+    "build:js": "rollup -c",
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
@@ -154,11 +152,15 @@
     "@babel/preset-env": "^7.25.0",
     "@babel/preset-react": "^7.25.0",
     "@babel/preset-typescript": "^7.25.0",
+    "@rollup/plugin-babel": "^6.1.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "^22.10.1",
     "@types/react": "^19.0.0",
     "@types/react-reconciler": "^0.28.5",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
+    "@vitest/coverage-v8": "^2.1.8",
     "babel-plugin-react-compiler": "^19.0.0-beta-45e3631b-20250413",
     "eslint": "^9.19.0",
     "eslint-plugin-react": "^7.37.3",
@@ -168,11 +170,11 @@
     "lint-staged": "^15.5.2",
     "prettier": "^3.4.2",
     "react": "^19.1.0",
+    "rollup": "^4.57.1",
     "typedoc": "^0.28.16",
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8",
-    "@vitest/coverage-v8": "^2.1.8"
+    "vitest": "^2.1.8"
   },
   "engines": {
     "node": ">=20.0.0"

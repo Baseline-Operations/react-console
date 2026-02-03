@@ -68,6 +68,10 @@ let scrollbarDragState: ScrollbarDragState = {
 // Track hover state for mouse enter/leave events
 let hoveredComponent: ConsoleNode | null = null;
 
+// Track selection component press to prevent release from focusing different component
+// When dropdown closes after selection, release event may hit a different component
+let selectionPressHandled = false;
+
 /**
  * Handle mouse click on selection component option
  *
@@ -110,7 +114,15 @@ function handleSelectionComponentClick(
     if (component.type === 'radio') {
       // Radio: select clicked option
       component.value = option.value;
-      component.focusedIndex = optionIndex;
+      // Set highlighted index for keyboard navigation
+      if (
+        'setHighlightedIndex' in component &&
+        typeof component.setHighlightedIndex === 'function'
+      ) {
+        component.setHighlightedIndex(optionIndex);
+      } else {
+        component.focusedIndex = optionIndex;
+      }
       if (component.onChange) {
         component.onChange({
           value: option.value,
@@ -147,7 +159,15 @@ function handleSelectionComponentClick(
         : [...selectedValues, option.value];
 
       component.value = newSelectedValues as string[] | number[];
-      component.focusedIndex = optionIndex;
+      // Set highlighted index for keyboard navigation
+      if (
+        'setHighlightedIndex' in component &&
+        typeof component.setHighlightedIndex === 'function'
+      ) {
+        component.setHighlightedIndex(optionIndex);
+      } else {
+        component.focusedIndex = optionIndex;
+      }
       if (component.onChange) {
         component.onChange({
           value: newSelectedValues as string[] | number[],
@@ -749,6 +769,14 @@ export function handleMouseEvent(
     isPressed?: boolean;
   }
   if (mouse.button === 0 || mouse.button === 1 || mouse.button === 2) {
+    // Check if this is a release after a selection component press
+    // When dropdown closes after selection, release may hit a different component
+    // We don't want to focus that component - the selection already handled focus
+    if (mouse.eventType === 'release' && selectionPressHandled) {
+      selectionPressHandled = false;
+      return;
+    }
+
     // Mouse button click (left, middle, or right)
     // Focus component on click - always handle focus for any left click (press or release)
     const focusableTarget = target as unknown as FocusableTargetNode;
@@ -787,6 +815,9 @@ export function handleMouseEvent(
       target.type === 'list'
     ) {
       if (mouse.eventType === 'press') {
+        // Mark that we handled a selection press - release may hit different component
+        // after dropdown closes, and we don't want to focus that component
+        selectionPressHandled = true;
         handleSelectionComponentClick(target, mouse, scheduleUpdate, immediateRender);
       }
       return;

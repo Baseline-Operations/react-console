@@ -2,7 +2,11 @@
  * Terminal utilities for detecting dimensions and capabilities
  */
 
+import { createRequire } from 'node:module';
 import type { TerminalDimensions } from '../types';
+
+// Create require function for ESM compatibility
+const require = createRequire(import.meta.url);
 
 // Global render mode state
 let currentRenderMode: 'static' | 'interactive' | 'fullscreen' = 'static';

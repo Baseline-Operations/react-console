@@ -72,11 +72,14 @@ describe('mouse utilities', () => {
       process.env.TERM = 'xterm-256color';
       process.stdout.isTTY = true;
       enableMouseTracking();
-      expect(process.stdout.write).toHaveBeenCalledTimes(4);
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1006h');
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1000h');
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1002h');
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1003h'); // Move reporting for hover
+      // All codes combined into single write for reliability
+      expect(process.stdout.write).toHaveBeenCalledTimes(1);
+      expect(process.stdout.write).toHaveBeenCalledWith(
+        '\x1b[?1000h' + // Click reporting
+          '\x1b[?1002h' + // Drag reporting
+          '\x1b[?1003h' + // Move reporting for hover
+          '\x1b[?1006h' // SGR extended mode
+      );
     });
   });
 
@@ -92,11 +95,14 @@ describe('mouse utilities', () => {
       process.env.TERM = 'xterm-256color';
       process.stdout.isTTY = true;
       disableMouseTracking();
-      expect(process.stdout.write).toHaveBeenCalledTimes(4);
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1006l');
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1000l');
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1002l');
-      expect(process.stdout.write).toHaveBeenCalledWith('\x1b[?1003l'); // Disable move reporting
+      // All codes combined into single write for reliability
+      expect(process.stdout.write).toHaveBeenCalledTimes(1);
+      expect(process.stdout.write).toHaveBeenCalledWith(
+        '\x1b[?1006l' + // Disable SGR extended mode first
+          '\x1b[?1003l' + // Disable move reporting
+          '\x1b[?1002l' + // Disable drag reporting
+          '\x1b[?1000l' // Disable click reporting last
+      );
     });
   });
 

@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -23,6 +25,7 @@ jobs:
       - name: Run lint-staged check
         run: |
           echo "Verifying that staged files would pass pre-commit checks"
-          BASE_REF="${{ github.base_ref }}"
-          npx lint-staged --diff="origin/${BASE_REF:-main}...HEAD" || true
+          BASE_REF="${{ github.base_ref || github.event.repository.default_branch || 'main' }}"
+          git fetch origin "${BASE_REF}" --depth=1 || true
+          npx lint-staged --diff="origin/${BASE_REF}...HEAD" || true
         continue-on-error: true

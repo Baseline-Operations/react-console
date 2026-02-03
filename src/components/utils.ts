@@ -4,7 +4,11 @@
  * Reduces need for `as unknown as ReactElement` assertions
  */
 
+import { createRequire } from 'node:module';
 import React from 'react';
+
+// Create require function for ESM compatibility
+const require = createRequire(import.meta.url);
 import type { ReactNode, ReactElement } from 'react';
 import type { ConsoleNode, ViewStyle, TextStyle } from '../types';
 

@@ -137,12 +137,24 @@ class StorageManager {
 
     process.on('SIGINT', () => {
       this.persistToDisk();
-      process.exit(0);
+      // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+      try {
+        const { Node } = require('../nodes/base/Node');
+        Node.exit(0);
+      } catch {
+        process.exit(0);
+      }
     });
 
     process.on('SIGTERM', () => {
       this.persistToDisk();
-      process.exit(0);
+      // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+      try {
+        const { Node } = require('../nodes/base/Node');
+        Node.exit(0);
+      } catch {
+        process.exit(0);
+      }
     });
   }
 
@@ -528,11 +540,23 @@ export class ApplicationStorage {
       });
       process.on('SIGINT', () => {
         this.clear();
-        process.exit(0);
+        // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+        try {
+          const { Node } = require('../nodes/base/Node');
+          Node.exit(0);
+        } catch {
+          process.exit(0);
+        }
       });
       process.on('SIGTERM', () => {
         this.clear();
-        process.exit(0);
+        // Use Node.exit() for proper cleanup (cursor positioning, mouse tracking)
+        try {
+          const { Node } = require('../nodes/base/Node');
+          Node.exit(0);
+        } catch {
+          process.exit(0);
+        }
       });
     }
   }

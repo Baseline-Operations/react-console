@@ -3,6 +3,11 @@
  * Provides error logging and graceful error handling
  */
 
+import { createRequire } from 'node:module';
+
+// Create require function for ESM compatibility
+const require = createRequire(import.meta.url);
+
 /**
  * Error types for different error categories
  */

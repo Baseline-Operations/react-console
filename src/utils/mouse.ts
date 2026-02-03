@@ -56,14 +56,13 @@ export function enableMouseTracking(): void {
   if (!supportsMouse()) return;
 
   // Enable mouse tracking (SGR mode - reports coordinates)
-  // \x1b[?1000h - Enable mouse click reporting
-  // \x1b[?1002h - Enable mouse drag reporting
-  // \x1b[?1003h - Enable mouse move reporting (for hover)
-  // \x1b[?1006h - Enable SGR extended mouse mode
-  process.stdout.write('\x1b[?1006h'); // SGR extended mode
-  process.stdout.write('\x1b[?1000h'); // Click reporting
-  process.stdout.write('\x1b[?1002h'); // Drag reporting
-  process.stdout.write('\x1b[?1003h'); // Move reporting (for hover)
+  // Combine into single write to ensure all codes are sent together
+  process.stdout.write(
+    '\x1b[?1000h' + // Click reporting
+      '\x1b[?1002h' + // Drag reporting
+      '\x1b[?1003h' + // Move reporting (for hover)
+      '\x1b[?1006h' // SGR extended mode (must be after other modes)
+  );
 }
 
 /**
@@ -82,11 +81,14 @@ export function enableMouseTracking(): void {
 export function disableMouseTracking(): void {
   if (!supportsMouse()) return;
 
-  // Disable mouse tracking
-  process.stdout.write('\x1b[?1006l'); // Disable SGR extended mode
-  process.stdout.write('\x1b[?1000l'); // Disable click reporting
-  process.stdout.write('\x1b[?1002l'); // Disable drag reporting
-  process.stdout.write('\x1b[?1003l'); // Disable move reporting
+  // Disable mouse tracking - disable in reverse order of enable
+  // Combine into single write to ensure all codes are sent together
+  process.stdout.write(
+    '\x1b[?1006l' + // Disable SGR extended mode first
+      '\x1b[?1003l' + // Disable move reporting
+      '\x1b[?1002l' + // Disable drag reporting
+      '\x1b[?1000l' // Disable click reporting last
+  );
 }
 
 /**
