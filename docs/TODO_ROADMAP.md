@@ -62,7 +62,7 @@ Based on audit findings:
 
 **Error**:
 
-```
+```text
 ReferenceError: require is not defined in ES module scope
 ```
 
@@ -120,7 +120,7 @@ ReferenceError: require is not defined in ES module scope
 
 **Warning**:
 
-```
+```text
 `use` was called from inside a try/catch block. This is not allowed and can lead to unexpected behavior.
 ```
 
@@ -368,7 +368,7 @@ Review code organization before adding new features to ensure proper placement.
 
 **Current Structure Assessment**:
 
-```
+```text
 src/
 ├── __tests__/      # ✅ Good - E2E and integration tests
 ├── apis/           # ✅ Good - Platform APIs (AppState, Clipboard, etc.)
@@ -1030,7 +1030,7 @@ Links should be clickable in **static apps** too, not just interactive ones. OSC
 
 1. **Primary - OSC 8**: Always emit OSC 8 escape sequences for terminal-native hyperlinks
 
-   ```
+   ```text
    \x1b]8;;URL\x07TEXT\x1b]8;;\x07
    ```
 
