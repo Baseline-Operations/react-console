@@ -40,6 +40,159 @@ Based on audit findings:
 - Color utilities (export internals, add manipulation)
 - Terminal I/O (wrap in React hooks)
 
+### Bug Fixes Required (v0.1.3)
+
+| Bug                                               | Severity | Files Affected       | Fix                             |
+| ------------------------------------------------- | -------- | -------------------- | ------------------------------- |
+| ESM examples use `require.main === module`        | Medium   | 10 example files     | Use ESM pattern or remove check |
+| `useAsyncWithFallback` wraps `use()` in try/catch | High     | `src/hooks/async.ts` | Redesign to work with Suspense  |
+
+---
+
+## Bug Fixes (v0.1.3)
+
+### BF-1: ESM Compatibility in Examples
+
+**Priority**: Medium  
+**Status**: [ ] Not started
+
+**Problem**: Examples use `require.main === module` which is a CommonJS pattern that doesn't work in ESM context. The package has `"type": "module"` so all `.tsx` files are treated as ESM.
+
+**Error**:
+
+```
+ReferenceError: require is not defined in ES module scope
+```
+
+**Files Affected** (10 files):
+
+- `examples/cli/basic-cli.tsx`
+- `examples/cli/commands-with-params.tsx`
+- `examples/cli/help-customization.tsx`
+- `examples/cli/mixed-mode.tsx`
+- `examples/cli/nested-commands.tsx`
+- `examples/cli/path-based-commands.tsx`
+- `examples/cli/routes-only.tsx`
+- `examples/cli/single-component.tsx`
+- `examples/animations.tsx`
+- `examples/slide-animations.tsx`
+
+**Solution Options**:
+
+1. **Remove the check entirely** (Recommended for examples):
+
+   ```tsx
+   // Before
+   if (require.main === module) {
+     render(<App />, { mode: 'interactive' });
+   }
+
+   // After - just run directly
+   render(<App />, { mode: 'interactive' });
+   ```
+
+2. **Use ESM pattern** (If conditional execution needed):
+
+   ```tsx
+   import { fileURLToPath } from 'url';
+
+   if (process.argv[1] === fileURLToPath(import.meta.url)) {
+     render(<App />, { mode: 'interactive' });
+   }
+   ```
+
+**Tasks**:
+
+- [ ] Update all 10 affected example files
+- [ ] Test each example runs correctly
+- [ ] Consider adding ESM utility helper if pattern is common
+
+---
+
+### BF-2: `useAsyncWithFallback` Hook Misuse of `use()`
+
+**Priority**: High  
+**Status**: [ ] Not started
+
+**Problem**: The `useAsyncWithFallback` hook wraps React 19's `use()` in a try/catch block, which is not allowed. The `use()` hook throws promises for Suspense to catch - wrapping it in try/catch prevents Suspense from working.
+
+**Warning**:
+
+```
+`use` was called from inside a try/catch block. This is not allowed and can lead to unexpected behavior.
+```
+
+**File**: `src/hooks/async.ts`
+
+**Current Implementation**:
+
+```typescript
+export function useAsyncWithFallback<T>(promise: Promise<T>, fallback: T): T {
+  try {
+    return use(promise);
+  } catch {
+    return fallback;
+  }
+}
+```
+
+**Solution Options**:
+
+1. **Deprecate and remove** - Users should use Suspense + ErrorBoundary:
+
+   ```tsx
+   <ErrorBoundary fallback={<FallbackComponent />}>
+     <Suspense fallback={<Loading />}>
+       <AsyncComponent />
+     </Suspense>
+   </ErrorBoundary>
+   ```
+
+2. **Redesign using state** - Don't use `use()`, manage promise state manually:
+
+   ```typescript
+   export function useAsyncWithFallback<T>(promise: Promise<T>, fallback: T): T {
+     const [result, setResult] = useState<T>(fallback);
+     const [, setError] = useState<Error | null>(null);
+
+     useEffect(() => {
+       let cancelled = false;
+       promise
+         .then((value) => {
+           if (!cancelled) setResult(value);
+         })
+         .catch((err) => {
+           if (!cancelled) setError(err);
+         });
+       return () => {
+         cancelled = true;
+       };
+     }, [promise]);
+
+     return result;
+   }
+   ```
+
+3. **Keep `use()` but document requirement** - Require ErrorBoundary wrapper:
+   ```typescript
+   /**
+    * @requires Must be wrapped in ErrorBoundary for fallback behavior
+    */
+   export function useAsyncWithFallback<T>(promise: Promise<T>, _fallback: T): T {
+     return use(promise);
+   }
+   ```
+
+**Recommended**: Option 2 - Redesign using state for true fallback behavior without requiring Suspense/ErrorBoundary.
+
+**Tasks**:
+
+- [ ] Decide on solution approach
+- [ ] Implement fix
+- [ ] Update example in `state-hooks.tsx`
+- [ ] Add/update tests
+- [ ] Update documentation
+
 ---
 
 ## Status Legend
@@ -2401,7 +2554,7 @@ const metrics = usePerformanceMetrics();
 
 Use this checklist to track overall progress. **All items must be completed before v0.2.0. Nothing is deferred.**
 
-**Phase 0: Audits** (Do First - Informs Everything Else)
+**Phase 0: Audits & Bug Fixes** (Do First - Informs Everything Else)
 
 - [x] 1.1 API surface audit
 - [x] 1.2 Component completeness audit
@@ -2410,6 +2563,8 @@ Use this checklist to track overall progress. **All items must be completed befo
 - [x] 1.5 Existing feature verification
 - [x] 1.6 Gap analysis for terminal UI library
 - [x] Update this roadmap based on audit findings
+- [ ] BF-1: Fix ESM compatibility in examples
+- [ ] BF-2: Fix `useAsyncWithFallback` hook
 
 **Phase 1: Core Components** (Foundation)
 
@@ -2486,7 +2641,7 @@ When completing any task:
 
 All work in this roadmap will be completed before v0.2.0. Each logical grouping gets its own patch release. Nothing is deferred or skipped.
 
-### v0.1.3 - Audits Complete ✅
+### v0.1.3 - Audits & Bug Fixes
 
 - [x] 1.1 API surface audit
 - [x] 1.2 Component completeness audit
@@ -2495,6 +2650,8 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 - [x] 1.5 Existing feature verification
 - [x] 1.6 Gap analysis for terminal UI library
 - [x] Update roadmap based on findings
+- [ ] BF-1: Fix ESM compatibility in examples (10 files)
+- [ ] BF-2: Fix `useAsyncWithFallback` hook
 
 ### v0.1.4 - Core Layout Components
 
