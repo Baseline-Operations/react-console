@@ -40,12 +40,14 @@ Based on audit findings:
 - Color utilities (export internals, add manipulation)
 - Terminal I/O (wrap in React hooks)
 
-### Bug Fixes Required (v0.1.3)
+### Bug Fixes Required (v0.1.3) ✅ COMPLETE
 
-| Bug                                               | Severity | Files Affected       | Fix                             |
-| ------------------------------------------------- | -------- | -------------------- | ------------------------------- |
-| ESM examples use `require.main === module`        | Medium   | 10 example files     | Use ESM pattern or remove check |
-| `useAsyncWithFallback` wraps `use()` in try/catch | High     | `src/hooks/async.ts` | Redesign to work with Suspense  |
+| Bug                                               | Severity | Status   | Fix Applied                        |
+| ------------------------------------------------- | -------- | -------- | ---------------------------------- |
+| ESM examples use `require.main === module`        | Medium   | ✅ Fixed | Removed conditional check          |
+| `useAsyncWithFallback` wraps `use()` in try/catch | High     | ✅ Fixed | Redesigned with useState/useEffect |
+| bell.tsx buttons don't work                       | Medium   | ✅ Fixed | Added `mode: 'interactive'`        |
+| borderTop/borderRight/etc props missing           | Medium   | ✅ Fixed | Added props and style handling     |
 
 ---
 
@@ -54,7 +56,7 @@ Based on audit findings:
 ### BF-1: ESM Compatibility in Examples
 
 **Priority**: Medium  
-**Status**: [ ] Not started
+**Status**: [x] Complete
 
 **Problem**: Examples use `require.main === module` which is a CommonJS pattern that doesn't work in ESM context. The package has `"type": "module"` so all `.tsx` files are treated as ESM.
 
@@ -112,7 +114,7 @@ ReferenceError: require is not defined in ES module scope
 ### BF-2: `useAsyncWithFallback` Hook Misuse of `use()`
 
 **Priority**: High  
-**Status**: [ ] Not started
+**Status**: [x] Complete
 
 **Problem**: The `useAsyncWithFallback` hook wraps React 19's `use()` in a try/catch block, which is not allowed. The `use()` hook throws promises for Suspense to catch - wrapping it in try/catch prevents Suspense from working.
 
@@ -2563,8 +2565,10 @@ Use this checklist to track overall progress. **All items must be completed befo
 - [x] 1.5 Existing feature verification
 - [x] 1.6 Gap analysis for terminal UI library
 - [x] Update this roadmap based on audit findings
-- [ ] BF-1: Fix ESM compatibility in examples
-- [ ] BF-2: Fix `useAsyncWithFallback` hook
+- [x] BF-1: Fix ESM compatibility in examples
+- [x] BF-2: Fix `useAsyncWithFallback` hook
+- [x] BF-3: Fix bell.tsx buttons (add interactive mode)
+- [x] BF-4: Add borderTop/borderRight/borderBottom/borderLeft props
 
 **Phase 1: Core Components** (Foundation)
 
@@ -2650,8 +2654,10 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 - [x] 1.5 Existing feature verification
 - [x] 1.6 Gap analysis for terminal UI library
 - [x] Update roadmap based on findings
-- [ ] BF-1: Fix ESM compatibility in examples (10 files)
-- [ ] BF-2: Fix `useAsyncWithFallback` hook
+- [x] BF-1: Fix ESM compatibility in examples (10 files)
+- [x] BF-2: Fix `useAsyncWithFallback` hook
+- [x] BF-3: Fix bell.tsx buttons (add interactive mode)
+- [x] BF-4: Add borderTop/borderRight/borderBottom/borderLeft props
 
 ### v0.1.4 - Core Layout Components
 
