@@ -874,21 +874,46 @@ await open('https://example.com', { app: { name: 'firefox' } });
 
 **Props**:
 
-| Prop          | Type                  | Default  | Description                   |
-| ------------- | --------------------- | -------- | ----------------------------- |
-| href          | string                | required | URL to open                   |
-| children      | ReactNode             | required | Link text                     |
-| openInBrowser | boolean               | true     | Auto-open in browser on press |
-| onPress       | (url: string) => void | -        | Custom press handler          |
-| showUrl       | boolean               | false    | Display URL after text        |
-| style         | TextStyle             | -        | Text styling                  |
+| Prop               | Type                    | Default  | Description                         |
+| ------------------ | ----------------------- | -------- | ----------------------------------- |
+| href               | string                  | required | URL to open                         |
+| children           | ReactNode               | required | Link text                           |
+| openInBrowser      | boolean                 | true     | Auto-open in browser on press       |
+| disabled           | boolean                 | false    | Disable interaction                 |
+| tabIndex           | number                  | 0        | Focus order (-1 to skip)            |
+| style              | TextStyle \| StateStyle | -        | Text styling (supports state-based) |
+| onPress            | (url: string) => void   | -        | Custom press handler                |
+| onHover            | () => void              | -        | Called when mouse enters            |
+| onHoverOut         | () => void              | -        | Called when mouse leaves            |
+| onFocus            | () => void              | -        | Called when focused                 |
+| onBlur             | () => void              | -        | Called when focus lost              |
+| showUrl            | boolean                 | false    | Display URL after text              |
+| accessibilityLabel | string                  | -        | Screen reader label                 |
+
+**State-Based Styling** (like Pressable):
+
+```tsx
+<Link
+  href="https://example.com"
+  style={({ focused, hovered, disabled }) => ({
+    color: disabled ? 'gray' : hovered ? 'brightCyan' : 'cyan',
+    underline: !disabled,
+    dim: disabled,
+  })}
+>
+  Visit website
+</Link>
+```
 
 **Implementation Notes**:
 
 - Use `open` package (lightweight, cross-platform, well-maintained)
 - Default styling: cyan color with underline (standard link appearance)
-- Link is a focusable/pressable text element
+- Link is a focusable/pressable text element (extends Pressable behavior)
 - Enter/Space triggers open action when focused
+- Support state-based styling like Pressable (focused, hovered, disabled states)
+- Disabled state prevents interaction and applies dim styling by default
+- tabIndex controls focus order (-1 removes from tab order)
 - Optional enhancement: Also support OSC 8 for terminals that support native hyperlinks
 
 **Tasks**:
@@ -896,8 +921,13 @@ await open('https://example.com', { app: { name: 'firefox' } });
 - [ ] Add `open` as dependency
 - [ ] Create `src/components/primitives/Link.tsx`
 - [ ] Implement as Pressable Text with open behavior
+- [ ] Add disabled prop with appropriate styling
+- [ ] Add tabIndex for focus order control
+- [ ] Add state-based styling support (focused, hovered, disabled)
+- [ ] Add onHover, onHoverOut, onFocus, onBlur handlers
 - [ ] Add showUrl option for accessibility
 - [ ] Add onPress custom handler support
+- [ ] Add accessibilityLabel prop
 - [ ] Optional: Add OSC 8 terminal hyperlink support as enhancement
 - [ ] Export from primitives
 - [ ] Add unit tests
