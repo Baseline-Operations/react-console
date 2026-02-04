@@ -72,4 +72,4 @@ function BellExample() {
   );
 }
 
-render(<BellExample />);
+render(<BellExample />, { mode: 'interactive' });

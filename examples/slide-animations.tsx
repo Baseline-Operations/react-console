@@ -98,7 +98,14 @@ function SlideOutToLeft() {
       <Text bold color="red">
         Slide to Left
       </Text>
-      <Animated key={key} type="slide" direction={direction} from="left" distance={30} duration={600}>
+      <Animated
+        key={key}
+        type="slide"
+        direction={direction}
+        from="left"
+        distance={30}
+        duration={600}
+      >
         <Text>← Sliding {direction}...</Text>
       </Animated>
       <Button onClick={toggle}>Slide {direction === 'in' ? 'Out' : 'In'}</Button>
@@ -121,7 +128,14 @@ function SlideOutToRight() {
       <Text bold color="blue">
         Slide to Right
       </Text>
-      <Animated key={key} type="slide" direction={direction} from="right" distance={30} duration={600}>
+      <Animated
+        key={key}
+        type="slide"
+        direction={direction}
+        from="right"
+        distance={30}
+        duration={600}
+      >
         <Text>Sliding {direction}... →</Text>
       </Animated>
       <Button onClick={toggle}>Slide {direction === 'in' ? 'Out' : 'In'}</Button>
@@ -164,8 +178,6 @@ function App() {
 }
 
 // Run the app
-if (require.main === module) {
-  render(<App />, { mode: 'interactive' });
-}
+render(<App />, { mode: 'interactive' });
 
 export default App;

@@ -397,7 +397,8 @@ export function Stylable<TBase extends Constructor<Node> | AbstractConstructor<N
     normalizeBorder(style: StyleMap): BorderInfo {
       const border = style.border;
       const borderWidth = style.borderWidth;
-      const borderStyle = (
+      // Get base border style, can be overridden by individual side props
+      let borderStyleValue = (
         typeof style.borderStyle === 'string' ? style.borderStyle : BorderStyleEnum.SINGLE
       ) as BorderStyle;
       const borderColor = typeof style.borderColor === 'string' ? style.borderColor : null;
@@ -425,6 +426,10 @@ export function Stylable<TBase extends Constructor<Node> | AbstractConstructor<N
       if (border === true) {
         // border: true means show all borders
         show = { top: true, right: true, bottom: true, left: true };
+      } else if (typeof border === 'string') {
+        // border: 'single' | 'double' | etc. means show all borders with that style
+        show = { top: true, right: true, bottom: true, left: true };
+        borderStyleValue = border as BorderStyle;
       } else if (typeof border === 'object' && border !== null) {
         // border: { top: true, right: true, ... } for individual sides
         const borderObj = border as BorderSides;
@@ -434,6 +439,33 @@ export function Stylable<TBase extends Constructor<Node> | AbstractConstructor<N
           bottom: borderObj.bottom ?? false,
           left: borderObj.left ?? false,
         };
+      }
+
+      // Handle convenience props: borderTop, borderRight, borderBottom, borderLeft
+      // These override the border object settings
+      if (style.borderTop !== undefined) {
+        show.top = !!style.borderTop;
+        if (typeof style.borderTop === 'string') {
+          borderStyleValue = style.borderTop as BorderStyle;
+        }
+      }
+      if (style.borderRight !== undefined) {
+        show.right = !!style.borderRight;
+        if (typeof style.borderRight === 'string') {
+          borderStyleValue = style.borderRight as BorderStyle;
+        }
+      }
+      if (style.borderBottom !== undefined) {
+        show.bottom = !!style.borderBottom;
+        if (typeof style.borderBottom === 'string') {
+          borderStyleValue = style.borderBottom as BorderStyle;
+        }
+      }
+      if (style.borderLeft !== undefined) {
+        show.left = !!style.borderLeft;
+        if (typeof style.borderLeft === 'string') {
+          borderStyleValue = style.borderLeft as BorderStyle;
+        }
       }
 
       // Handle border width: number for all sides, or object with individual sides
@@ -460,7 +492,7 @@ export function Stylable<TBase extends Constructor<Node> | AbstractConstructor<N
       return {
         show,
         width,
-        style: borderStyle,
+        style: borderStyleValue,
         color: borderColor,
         backgroundColor: borderBackgroundColor,
       };
