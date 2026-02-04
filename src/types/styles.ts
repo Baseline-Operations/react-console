@@ -129,6 +129,11 @@ export interface ViewStyle extends StyleProps, LayoutProps {
         bottom?: boolean;
         left?: boolean;
       };
+  // Convenience props for individual borders (shorthand for border: { top: true }, etc.)
+  borderTop?: boolean | 'single' | 'double' | 'thick' | 'dashed' | 'dotted' | 'ascii';
+  borderRight?: boolean | 'single' | 'double' | 'thick' | 'dashed' | 'dotted' | 'ascii';
+  borderBottom?: boolean | 'single' | 'double' | 'thick' | 'dashed' | 'dotted' | 'ascii';
+  borderLeft?: boolean | 'single' | 'double' | 'thick' | 'dashed' | 'dotted' | 'ascii';
   borderColor?: Color;
   borderBackgroundColor?: Color; // Background color for border area (defaults to backgroundColor if not set)
   borderStyle?: 'single' | 'double' | 'thick' | 'dashed' | 'dotted' | 'ascii';

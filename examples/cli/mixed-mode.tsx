@@ -118,8 +118,6 @@ function ProfileComponent() {
 }
 
 // Run the app
-if (require.main === module) {
-  render(<App />, { mode: 'interactive' });
-}
+render(<App />, { mode: 'interactive' });
 
 export default App;
