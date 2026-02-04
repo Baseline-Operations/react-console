@@ -831,12 +831,16 @@ export function InlineText(props: TextProps) {
 **Priority**: Low  
 **Status**: [ ] Not started
 
-Display clickable/openable URLs that can open in the system default browser.
+Display clickable URLs using OSC 8 terminal hyperlinks (primary) with `open` package fallback.
+
+**Key Design Decision**:
+
+Links should be clickable in **static apps** too, not just interactive ones. OSC 8 terminal hyperlinks enable this - the terminal handles the click, no keyboard interaction needed. For terminals without OSC 8 support, fall back to the `open` package (requires interactive mode).
 
 **Proposed API**:
 
 ```tsx
-// Basic link - opens in browser on press
+// Basic link - uses OSC 8 (clickable in static output on supported terminals)
 <Link href="https://example.com">Click here</Link>
 
 // With custom styling
@@ -844,13 +848,22 @@ Display clickable/openable URLs that can open in the system default browser.
   Visit website
 </Link>
 
-// Disable auto-open, use custom handler
+// Custom fallback handler (instead of open package)
 <Link
   href="https://example.com"
-  openInBrowser={false}
-  onPress={(url) => console.log('Custom handling:', url)}
+  fallback={(url) => console.log('Custom fallback:', url)}
 >
-  Custom action
+  Custom fallback
+</Link>
+
+// Disable fallback - OSC 8 only (link won't work in unsupported terminals)
+<Link href="https://example.com" fallback={false}>
+  OSC 8 only
+</Link>
+
+// Force open package (skip OSC 8, always require keypress)
+<Link href="https://example.com" fallback="always">
+  Always use open package
 </Link>
 
 // Show URL inline for accessibility
@@ -860,35 +873,58 @@ Display clickable/openable URLs that can open in the system default browser.
 
 **Implementation Approach**:
 
-Use the `open` package to open URLs in the system default browser. This works cross-platform (macOS, Windows, Linux) and doesn't depend on inconsistent terminal hyperlink support.
+1. **Primary - OSC 8**: Always emit OSC 8 escape sequences for terminal-native hyperlinks
 
-```typescript
-import open from 'open';
+   ```
+   \x1b]8;;URL\x07TEXT\x1b]8;;\x07
+   ```
 
-// Opens URL in default browser
-await open('https://example.com');
+   This makes links clickable even in static output on supported terminals.
 
-// Can also specify browser
-await open('https://example.com', { app: { name: 'firefox' } });
-```
+2. **Fallback - `open` package**: For interactive mode on unsupported terminals
+
+   ```typescript
+   import open from 'open';
+   await open('https://example.com');
+   ```
+
+   Triggered by Enter/Space when link is focused.
+
+3. **Detection**: Auto-detect OSC 8 support via TERM_PROGRAM, TERM, etc.
+
+**Supported Terminals for OSC 8**:
+
+- iTerm2 3.1+
+- VTE-based (GNOME Terminal, Tilix, Terminator)
+- Windows Terminal
+- Hyper, Alacritty, Kitty, WezTerm
 
 **Props**:
 
-| Prop               | Type                    | Default  | Description                         |
-| ------------------ | ----------------------- | -------- | ----------------------------------- |
-| href               | string                  | required | URL to open                         |
-| children           | ReactNode               | required | Link text                           |
-| openInBrowser      | boolean                 | true     | Auto-open in browser on press       |
-| disabled           | boolean                 | false    | Disable interaction                 |
-| tabIndex           | number                  | 0        | Focus order (-1 to skip)            |
-| style              | TextStyle \| StateStyle | -        | Text styling (supports state-based) |
-| onPress            | (url: string) => void   | -        | Custom press handler                |
-| onHover            | () => void              | -        | Called when mouse enters            |
-| onHoverOut         | () => void              | -        | Called when mouse leaves            |
-| onFocus            | () => void              | -        | Called when focused                 |
-| onBlur             | () => void              | -        | Called when focus lost              |
-| showUrl            | boolean                 | false    | Display URL after text              |
-| accessibilityLabel | string                  | -        | Screen reader label                 |
+| Prop               | Type                                         | Default  | Description                                |
+| ------------------ | -------------------------------------------- | -------- | ------------------------------------------ |
+| href               | string                                       | required | URL to open                                |
+| children           | ReactNode                                    | required | Link text                                  |
+| fallback           | boolean \| 'always' \| (url: string) => void | true     | Fallback when OSC 8 unsupported            |
+| disabled           | boolean                                      | false    | Disable interaction                        |
+| tabIndex           | number                                       | 0        | Focus order (-1 to skip)                   |
+| style              | TextStyle \| StateStyle                      | -        | Text styling (supports state-based)        |
+| onPress            | (url: string) => void                        | -        | Custom press handler (in addition to open) |
+| onHover            | () => void                                   | -        | Called when mouse enters                   |
+| onHoverOut         | () => void                                   | -        | Called when mouse leaves                   |
+| onFocus            | () => void                                   | -        | Called when focused                        |
+| onBlur             | () => void                                   | -        | Called when focus lost                     |
+| showUrl            | boolean                                      | false    | Display URL after text                     |
+| accessibilityLabel | string                                       | -        | Screen reader label                        |
+
+**Fallback Prop Behavior**:
+
+| Value            | Behavior                                                    |
+| ---------------- | ----------------------------------------------------------- |
+| `true` (default) | Use `open` package when OSC 8 not supported                 |
+| `false`          | OSC 8 only - no keypress handler for unsupported terminals  |
+| `'always'`       | Skip OSC 8 detection, always use `open` package on keypress |
+| `(url) => void`  | Custom fallback function instead of `open` package          |
 
 **State-Based Styling** (like Pressable):
 
@@ -907,32 +943,34 @@ await open('https://example.com', { app: { name: 'firefox' } });
 
 **Implementation Notes**:
 
-- Use `open` package (lightweight, cross-platform, well-maintained)
+- **OSC 8 first**: Always emit OSC 8 sequences (works in supported terminals, ignored in others)
+- **Fallback for interaction**: In interactive mode, handle keypress to use `open` package
+- **Static mode**: OSC 8 makes links clickable without any keypress handling
 - Default styling: cyan color with underline (standard link appearance)
-- Link is a focusable/pressable text element (extends Pressable behavior)
-- Enter/Space triggers open action when focused
-- Support state-based styling like Pressable (focused, hovered, disabled states)
+- Link extends Pressable behavior for full interactivity
+- Enter/Space triggers fallback action when focused (interactive mode only)
 - Disabled state prevents interaction and applies dim styling by default
 - tabIndex controls focus order (-1 removes from tab order)
-- Optional enhancement: Also support OSC 8 for terminals that support native hyperlinks
 
 **Tasks**:
 
-- [ ] Add `open` as dependency
+- [ ] Add `open` as optional/peer dependency
+- [ ] Create OSC 8 terminal capability detection utility
 - [ ] Create `src/components/primitives/Link.tsx`
-- [ ] Implement as Pressable Text with open behavior
+- [ ] Implement OSC 8 escape sequence output (always emitted)
+- [ ] Implement fallback behavior with `open` package
+- [ ] Add fallback prop with all modes (true/false/'always'/function)
 - [ ] Add disabled prop with appropriate styling
 - [ ] Add tabIndex for focus order control
 - [ ] Add state-based styling support (focused, hovered, disabled)
 - [ ] Add onHover, onHoverOut, onFocus, onBlur handlers
 - [ ] Add showUrl option for accessibility
-- [ ] Add onPress custom handler support
+- [ ] Add onPress handler (in addition to fallback)
 - [ ] Add accessibilityLabel prop
-- [ ] Optional: Add OSC 8 terminal hyperlink support as enhancement
 - [ ] Export from primitives
 - [ ] Add unit tests
-- [ ] Add example
-- [ ] Document usage
+- [ ] Add example (both static and interactive modes)
+- [ ] Document terminal support and fallback behavior
 
 **Related Utilities** (can be added alongside):
 
