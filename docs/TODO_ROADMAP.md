@@ -465,19 +465,29 @@ Identify missing features that a comprehensive terminal UI library should have.
 
 **React Native API Gaps**:
 
-| API        | Status     | Notes                 |
-| ---------- | ---------- | --------------------- |
-| Linking    | ❌ Missing | Terminal hyperlinks   |
-| Share      | N/A        | Not applicable        |
-| Vibration  | N/A        | Use Bell instead      |
-| PixelRatio | N/A        | Not applicable        |
-| Appearance | ✅ Have    | useColorScheme exists |
+| API        | Status     | Notes                        |
+| ---------- | ---------- | ---------------------------- |
+| Linking    | 📋 Planned | Section 3.3 - Link component |
+| Share      | N/A        | Not applicable               |
+| Vibration  | N/A        | Use Bell instead             |
+| PixelRatio | N/A        | Not applicable               |
+| Appearance | ✅ Have    | useColorScheme exists        |
+
+**Additional Opportunities Identified**:
+
+| Feature                | Priority | Notes                                  |
+| ---------------------- | -------- | -------------------------------------- |
+| TextInput autocomplete | Medium   | CLI has it, general TextInput doesn't  |
+| Progress with ETA      | Low      | Enhance ProgressBar with time estimate |
+| openApp utility        | Low      | Expose `open` package's app opening    |
+| revealFile utility     | Low      | Show file in Finder/Explorer           |
 
 **New Items Added to Roadmap**:
 
 1. Add Divider component (section 2)
-2. Add Link component (terminal hyperlinks)
+2. Add Link component (uses `open` package for browser opening)
 3. Add Code component (syntax highlighting) - lower priority
+4. Add TouchableOpacity/TouchableHighlight aliases
 
 **Summary**: Core functionality is solid. Main gaps are in developer tooling (testing, DevTools) and some convenience components (Spacer, Divider, notifications). These are all already planned in the roadmap.
 
@@ -814,54 +824,93 @@ export function InlineText(props: TextProps) {
 
 ---
 
-### 3.3 `<Link>` Component (Terminal Hyperlinks)
+### 3.3 `<Link>` Component (Openable URLs)
 
 > **Audit Finding**: Identified as missing during gap analysis.
 
 **Priority**: Low  
 **Status**: [ ] Not started
 
-Support terminal hyperlinks (OSC 8) for clickable URLs in supported terminals.
+Display clickable/openable URLs that can open in the system default browser.
 
 **Proposed API**:
 
 ```tsx
+// Basic link - opens in browser on press
 <Link href="https://example.com">Click here</Link>
 
-<Link
-  href="https://example.com"
-  onPress={() => console.log('Link clicked')}
-  style={{ color: 'cyan', underline: true }}
->
+// With custom styling
+<Link href="https://example.com" style={{ color: 'cyan', underline: true }}>
   Visit website
 </Link>
+
+// Disable auto-open, use custom handler
+<Link
+  href="https://example.com"
+  openInBrowser={false}
+  onPress={(url) => console.log('Custom handling:', url)}
+>
+  Custom action
+</Link>
+
+// Show URL inline for accessibility
+<Link href="https://example.com" showUrl />
+// Renders: "Click here (https://example.com)"
 ```
+
+**Implementation Approach**:
+
+Use the `open` package to open URLs in the system default browser. This works cross-platform (macOS, Windows, Linux) and doesn't depend on inconsistent terminal hyperlink support.
+
+```typescript
+import open from 'open';
+
+// Opens URL in default browser
+await open('https://example.com');
+
+// Can also specify browser
+await open('https://example.com', { app: { name: 'firefox' } });
+```
+
+**Props**:
+
+| Prop          | Type                  | Default  | Description                   |
+| ------------- | --------------------- | -------- | ----------------------------- |
+| href          | string                | required | URL to open                   |
+| children      | ReactNode             | required | Link text                     |
+| openInBrowser | boolean               | true     | Auto-open in browser on press |
+| onPress       | (url: string) => void | -        | Custom press handler          |
+| showUrl       | boolean               | false    | Display URL after text        |
+| style         | TextStyle             | -        | Text styling                  |
 
 **Implementation Notes**:
 
-- Use OSC 8 escape sequence: `\x1b]8;;URL\x1b\\TEXT\x1b]8;;\x1b\\`
-- Detect terminal hyperlink support
-- Fallback to plain text with URL shown for unsupported terminals
-- Consider `onPress` handler for custom behavior
-
-**Supported Terminals**:
-
-- iTerm2 3.1+
-- VTE-based (GNOME Terminal, Tilix, etc.)
-- Windows Terminal
-- Hyper
-- Alacritty (recent versions)
+- Use `open` package (lightweight, cross-platform, well-maintained)
+- Default styling: cyan color with underline (standard link appearance)
+- Link is a focusable/pressable text element
+- Enter/Space triggers open action when focused
+- Optional enhancement: Also support OSC 8 for terminals that support native hyperlinks
 
 **Tasks**:
 
-- [ ] Research OSC 8 escape sequence format
-- [ ] Create terminal hyperlink capability detection
+- [ ] Add `open` as dependency
 - [ ] Create `src/components/primitives/Link.tsx`
-- [ ] Implement fallback for unsupported terminals
-- [ ] Add onPress handler support
+- [ ] Implement as Pressable Text with open behavior
+- [ ] Add showUrl option for accessibility
+- [ ] Add onPress custom handler support
+- [ ] Optional: Add OSC 8 terminal hyperlink support as enhancement
 - [ ] Export from primitives
 - [ ] Add unit tests
-- [ ] Document terminal requirements
+- [ ] Add example
+- [ ] Document usage
+
+**Related Utilities** (can be added alongside):
+
+The `open` package also supports:
+
+- Opening apps: `openApp('xcode')` - could expose as utility
+- Opening files: `open('document.pdf')` - already works with href
+- Consider adding `revealFile` utility (shows file in Finder/Explorer)
 
 ---
 
