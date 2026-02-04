@@ -403,9 +403,31 @@ export function render(element: ReactElement, options?: RenderOptions): string |
     throw error;
   }
 
-  // For static mode, return immediately
+  // For static mode, check if there are interactive components
+  // If so, auto-upgrade to interactive mode so buttons/inputs work
   if (mode === 'static' && !renderState.isInteractive) {
-    return outputResult;
+    const interactiveComponents: NodeLike[] = [];
+    collectInteractiveComponents(renderState.rootContainer, interactiveComponents);
+    if (interactiveComponents.length > 0) {
+      // Auto-enable interactive mode for components with buttons/inputs
+      debug('[render] Auto-enabling interactive mode - found interactive components:', {
+        count: interactiveComponents.length,
+        types: interactiveComponents.map((c: NodeLike) => c.type),
+      });
+      globalState.isInteractive = true;
+      globalState.wasInteractiveMode = true;
+      renderState.isInteractive = true;
+      renderState.wasInteractiveMode = true;
+
+      // Register SIGINT handler for proper cleanup (since we're now interactive)
+      process.removeAllListeners('SIGINT');
+      process.on('SIGINT', () => {
+        exit(0);
+      });
+    } else {
+      // No interactive components, return static output
+      return outputResult;
+    }
   }
 
   // Set up terminal resize listener for interactive mode

@@ -72,4 +72,5 @@ function BellExample() {
   );
 }
 
-render(<BellExample />, { mode: 'interactive' });
+// No need to specify mode: 'interactive' - auto-detected from Button components
+render(<BellExample />);
