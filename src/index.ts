@@ -397,6 +397,12 @@ export {
   useBell,
   useWindowDimensions,
 } from './apis';
+
+// Global input hook for keyboard handling (games, shortcuts, etc.)
+export { useInput } from './hooks/input';
+
+// Terminal dimension hooks for responsive layouts
+export { useTerminalDimensions, useFocus, useTerminalConfig } from './hooks/terminal';
 export type {
   AppStateStatus,
   NativeEventSubscription,

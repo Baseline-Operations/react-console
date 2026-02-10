@@ -626,6 +626,20 @@ export class ScrollViewNode extends ScrollViewNodeBase {
 
           contentWidth = Math.max(contentWidth, childWidth);
           currentY += childHeight;
+        } else {
+          // Handle non-layoutable children with estimated size
+          // Use explicit dimensions if set, or sensible defaults
+          const childNode = child as Node;
+          const estimatedWidth = childNode.width ?? childNode.bounds?.width ?? contentAreaWidth;
+          const estimatedHeight = childNode.height ?? childNode.bounds?.height ?? 1;
+
+          this._childLayouts.push({
+            node: child,
+            bounds: { x: 0, y: currentY, width: estimatedWidth, height: estimatedHeight },
+          });
+
+          contentWidth = Math.max(contentWidth, estimatedWidth);
+          currentY += estimatedHeight;
         }
       }
       contentHeight = currentY;

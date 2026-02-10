@@ -269,9 +269,36 @@ export function createHostConfig(): any {
 
   const insertBefore = (
     parentInstance: Node,
-    child: Node | string,
+    child: Node | string | TextInstance,
     beforeChild: Node | string
   ): void => {
+    // Handle TextInstance objects (raw text like {'Status: '})
+    if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
+      const textInstance = child as TextInstance;
+      textInstance.parentNode = parentInstance;
+
+      // Create a child TextNode wrapper
+      const textNode = NodeFactory.createNode(
+        {
+          type: 'Text',
+          props: { children: textInstance.text },
+        } as import('react').ReactElement,
+        parentInstance
+      );
+
+      // Store reference to child node for updates via commitTextUpdate
+      textInstance.childNode = textNode;
+
+      // Insert the wrapper node
+      const beforeIndex = parentInstance.children.indexOf(beforeChild as Node);
+      if (beforeIndex >= 0) {
+        parentInstance.children.splice(beforeIndex, 0, textNode);
+      } else {
+        parentInstance.appendChild(textNode);
+      }
+      return;
+    }
+
     if (typeof child === 'string') {
       const textElement = {
         type: 'Text',
@@ -303,17 +330,32 @@ export function createHostConfig(): any {
     insertBefore(container, child, beforeChild);
   };
 
-  const removeChild = (parentInstance: Node, child: Node | string): void => {
+  const removeChild = (parentInstance: Node, child: Node | string | TextInstance): void => {
+    // Handle TextInstance objects - remove the wrapper node referenced by childNode
+    if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
+      const textInstance = child as TextInstance;
+      if (textInstance.childNode) {
+        const index = parentInstance.children.indexOf(textInstance.childNode);
+        if (index >= 0) {
+          parentInstance.children.splice(index, 1);
+          textInstance.childNode.parent = null;
+        }
+        textInstance.childNode = undefined;
+      }
+      textInstance.parentNode = null;
+      return;
+    }
+
     if (typeof child === 'string') {
       const index = parentInstance.children.findIndex((c) => c.content === child);
       if (index >= 0) {
         parentInstance.children.splice(index, 1);
       }
     } else {
-      const index = parentInstance.children.indexOf(child);
+      const index = parentInstance.children.indexOf(child as Node);
       if (index >= 0) {
         parentInstance.children.splice(index, 1);
-        child.parent = null;
+        (child as Node).parent = null;
       }
     }
   };

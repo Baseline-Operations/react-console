@@ -11,6 +11,7 @@ import type { Reconciler as ReconcilerType, FiberRoot } from 'react-reconciler';
 import { renderState, setOnCommitCallback, resetRenderState } from './RenderState';
 import { debug } from '../utils/debug';
 import { setBellRenderCallback, setBellFlushSyncCallback } from '../apis/Bell';
+import { callGlobalInputHandlers } from '../hooks/input';
 
 // Global state for ESM/CJS dual loading (mirrors Node.ts pattern)
 // This is accessed via globalThis to survive module reloading
@@ -657,6 +658,10 @@ export function render(element: ReactElement, options?: RenderOptions): string |
         }
 
         if (key) {
+          // Call global input handlers first (for useInput hook)
+          // These handlers receive all key events regardless of focus
+          callGlobalInputHandlers(_chunk, key as unknown as import('../types').KeyPress);
+
           if (key.tab) {
             debug('[TAB] Starting tab handler', {
               time: Date.now(),

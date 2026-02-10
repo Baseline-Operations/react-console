@@ -346,11 +346,18 @@ export class TextNode extends TextNodeBase {
 
     // Calculate where this line starts in the full text using index (not value equality)
     // This correctly handles identical lines at different positions
+    // Also accounts for newlines that wrapText strips
+    const fullContent = this.textSegments.map((s) => s.text).join('');
     let lineStartInFull = 0;
     for (let i = 0; i < lineIndex && i < this.wrappedLines.length; i++) {
       const wrappedLine = this.wrappedLines[i];
       if (wrappedLine) {
         lineStartInFull += wrappedLine.length;
+        // Check if there was a newline after this line in the original text
+        // wrapText splits on \n first, so we need to account for stripped newlines
+        if (lineStartInFull < fullContent.length && fullContent[lineStartInFull] === '\n') {
+          lineStartInFull++; // Skip the newline
+        }
       }
     }
 

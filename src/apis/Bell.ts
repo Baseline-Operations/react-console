@@ -6,6 +6,7 @@
  * terminal bell limitations.
  */
 
+import { useMemo } from 'react';
 import { debug } from '../utils/debug';
 import { createRequire } from 'module';
 
@@ -16,10 +17,16 @@ import { createRequire } from 'module';
 interface SpeakerInstance {
   write(buffer: Buffer, callback?: () => void): boolean;
   end(buffer?: Buffer): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on(event: string, callback: (...args: any[]) => void): this;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  once(event: string, callback: (...args: any[]) => void): this;
+  on(event: 'error', callback: (err: Error) => void): this;
+  on(event: 'close', callback: () => void): this;
+  on(event: 'drain', callback: () => void): this;
+  on(event: 'finish', callback: () => void): this;
+  on(event: string, callback: () => void): this;
+  once(event: 'error', callback: (err: Error) => void): this;
+  once(event: 'close', callback: () => void): this;
+  once(event: 'drain', callback: () => void): this;
+  once(event: 'finish', callback: () => void): this;
+  once(event: string, callback: () => void): this;
   destroy(error?: Error): void;
   close?(): void;
   cork?(): void;
@@ -95,13 +102,17 @@ function clearFallbackTimeouts(audioId?: string): void {
   if (audioId) {
     const timeouts = map.get(audioId);
     if (timeouts) {
-      timeouts.forEach((t) => clearTimeout(t));
+      timeouts.forEach((t) => {
+        clearTimeout(t);
+      });
       map.delete(audioId);
     }
   } else {
     // Clear all
     for (const timeouts of map.values()) {
-      timeouts.forEach((t) => clearTimeout(t));
+      timeouts.forEach((t) => {
+        clearTimeout(t);
+      });
     }
     map.clear();
   }
@@ -493,6 +504,13 @@ function playBeepWithSpeaker(
 
     speaker.on('error', (err: Error) => {
       debug('[Bell] Speaker error during beep playback', { audioId, error: String(err) });
+      // Stop playback and cleanup on error
+      unregisterActiveSpeaker(audioId);
+      try {
+        speaker.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     });
 
     speaker.on('close', () => {
@@ -613,6 +631,13 @@ function playSequenceWithSpeaker(tones: BellTone[]): string {
 
     speaker.on('error', (err: Error) => {
       debug('[Bell] Speaker error during sequence playback', { audioId, error: String(err) });
+      // Stop playback and cleanup on error
+      unregisterActiveSpeaker(audioId);
+      try {
+        speaker.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     });
 
     speaker.on('close', () => {
@@ -972,10 +997,41 @@ class BellModule {
         sampleRate: config.sampleRate,
       });
 
+      // Generate an audio ID for this continuous tone
+      const audioId = generateAudioId();
+
       // Store speaker reference for stopping later
       (globalThis as Record<string, unknown>)[CONTINUOUS_SPEAKER_KEY] = speaker;
 
-      debug('[Bell.startTone] Starting continuous tone', { frequency, volume, waveform, pan });
+      // Register as active speaker so cancel() can stop it
+      registerActiveSpeaker(audioId, speaker);
+
+      // Add error handler to cleanup on errors
+      speaker.on('error', (err: Error) => {
+        debug('[Bell.startTone] Speaker error', { audioId, error: String(err) });
+        // Clean up on error
+        if ((globalThis as Record<string, unknown>)[CONTINUOUS_SPEAKER_KEY] === speaker) {
+          (globalThis as Record<string, unknown>)[CONTINUOUS_SPEAKER_KEY] = undefined;
+        }
+        unregisterActiveSpeaker(audioId);
+        try {
+          speaker.destroy();
+        } catch {
+          // Ignore cleanup errors
+        }
+      });
+
+      speaker.on('close', () => {
+        unregisterActiveSpeaker(audioId);
+      });
+
+      debug('[Bell.startTone] Starting continuous tone', {
+        audioId,
+        frequency,
+        volume,
+        waveform,
+        pan,
+      });
 
       // Generate and write chunks continuously with back-pressure handling
       const writeChunk = () => {
@@ -1379,47 +1435,52 @@ export const Bell = new BellModule();
  * ```
  */
 export function useBell() {
-  return {
-    // Configuration
-    configure: (config: BellAudioConfig) => Bell.configure(config),
-    getConfig: () => Bell.getConfig(),
+  // Memoize the returned object to avoid creating new references on every render
+  // Since Bell is a stable singleton, these functions never change
+  return useMemo(
+    () => ({
+      // Configuration
+      configure: (config: BellAudioConfig) => Bell.configure(config),
+      getConfig: () => Bell.getConfig(),
 
-    // Core methods
-    ring: (options?: BellOptions) => Bell.ring(options),
-    play: (tones: BellTone[]) => Bell.play(tones),
-    beep: (pattern: number | BellPattern) => Bell.beep(pattern),
+      // Core methods
+      ring: (options?: BellOptions) => Bell.ring(options),
+      play: (tones: BellTone[]) => Bell.play(tones),
+      beep: (pattern: number | BellPattern) => Bell.beep(pattern),
 
-    // Continuous tones
-    startTone: (options?: Omit<BellOptions, 'visual' | 'duration'>) => Bell.startTone(options),
-    stopTone: () => Bell.stopTone(),
+      // Continuous tones
+      startTone: (options?: Omit<BellOptions, 'visual' | 'duration'>) => Bell.startTone(options),
+      stopTone: () => Bell.stopTone(),
 
-    // Pattern management
-    playPattern: (name: string) => Bell.playPattern(name),
-    registerPattern: (name: string, tones: BellTone[]) => Bell.registerPattern(name, tones),
-    getPatternNames: () => Bell.getPatternNames(),
-    getPattern: (name: string) => Bell.getPattern(name),
+      // Pattern management
+      playPattern: (name: string) => Bell.playPattern(name),
+      registerPattern: (name: string, tones: BellTone[]) => Bell.registerPattern(name, tones),
+      getPatternNames: () => Bell.getPatternNames(),
+      getPattern: (name: string) => Bell.getPattern(name),
 
-    // Preset sounds
-    alert: () => Bell.alert(),
-    success: () => Bell.success(),
-    error: () => Bell.error(),
-    warning: () => Bell.warning(),
-    notification: () => Bell.notification(),
-    ding: () => Bell.ding(),
-    bell: () => Bell.bell(),
-    phone: () => Bell.phone(),
-    chime: () => Bell.chime(),
-    doorbell: () => Bell.doorbell(),
-    complete: () => Bell.complete(),
-    levelUp: () => Bell.levelUp(),
-    powerUp: () => Bell.powerUp(),
-    powerDown: () => Bell.powerDown(),
-    coin: () => Bell.coin(),
-    blip: () => Bell.blip(),
+      // Preset sounds
+      alert: () => Bell.alert(),
+      success: () => Bell.success(),
+      error: () => Bell.error(),
+      warning: () => Bell.warning(),
+      notification: () => Bell.notification(),
+      ding: () => Bell.ding(),
+      bell: () => Bell.bell(),
+      phone: () => Bell.phone(),
+      chime: () => Bell.chime(),
+      doorbell: () => Bell.doorbell(),
+      complete: () => Bell.complete(),
+      levelUp: () => Bell.levelUp(),
+      powerUp: () => Bell.powerUp(),
+      powerDown: () => Bell.powerDown(),
+      coin: () => Bell.coin(),
+      blip: () => Bell.blip(),
 
-    // Control
-    cancel: (audioId?: string) => Bell.cancel(audioId),
-    setEnabled: (enabled: boolean) => Bell.setEnabled(enabled),
-    isEnabled: () => Bell.isEnabled(),
-  };
+      // Control
+      cancel: (audioId?: string) => Bell.cancel(audioId),
+      setEnabled: (enabled: boolean) => Bell.setEnabled(enabled),
+      isEnabled: () => Bell.isEnabled(),
+    }),
+    []
+  );
 }

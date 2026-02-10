@@ -15,6 +15,17 @@ import type { TerminalDimensions } from '../types';
 import type { ConsoleNode } from '../types';
 
 /**
+ * Get actual terminal dimensions directly from process.stdout
+ * This bypasses the render mode check to get real dimensions
+ */
+function getActualTerminalDimensions(): TerminalDimensions {
+  return {
+    columns: process.stdout.columns ?? 80,
+    rows: process.stdout.rows ?? 24,
+  };
+}
+
+/**
  * Hook for reactive terminal dimensions
  *
  * Returns the current terminal dimensions and automatically updates
@@ -36,22 +47,29 @@ import type { ConsoleNode } from '../types';
  * ```
  */
 export function useTerminalDimensions(): TerminalDimensions {
+  // Get actual dimensions directly from process.stdout (not cached)
   const [dimensions, setDimensions] = useState<TerminalDimensions>(() => {
-    return terminal.dimensions;
+    return getActualTerminalDimensions();
   });
 
   useEffect(() => {
+    // Update dimensions immediately on mount (in case initial state was stale)
+    const actualDims = getActualTerminalDimensions();
+    if (actualDims.columns !== dimensions.columns || actualDims.rows !== dimensions.rows) {
+      setDimensions(actualDims);
+    }
+
     // Update dimensions when terminal resizes
     const updateDims = () => {
       updateTerminalDimensions();
-      setDimensions({ ...terminal.dimensions });
+      setDimensions(getActualTerminalDimensions());
     };
 
     // Listen to terminal resize events with debouncing to prevent excessive updates
     const cleanup = onTerminalResizeDebounced(updateDims, 100);
 
     return cleanup;
-  }, []);
+  }, [dimensions.columns, dimensions.rows]);
 
   return dimensions;
 }

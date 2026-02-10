@@ -4,10 +4,145 @@
  * Provides React hooks for managing input component state:
  * - Input value and cursor position
  * - Multiline input state
+ * - Global input handling (useInput)
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { ConsoleNode } from '../types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { ConsoleNode, KeyPress } from '../types';
+
+// Global input handlers registry - stored in globalThis for ESM/CJS compatibility
+const GLOBAL_INPUT_HANDLERS_KEY = '__reactConsoleGlobalInputHandlers__';
+
+type InputHandler = (input: string, key: KeyPress) => void;
+
+interface GlobalInputHandlersRegistry {
+  handlers: Map<string, InputHandler>;
+  idCounter: number;
+}
+
+function getGlobalInputHandlers(): GlobalInputHandlersRegistry {
+  let registry = (globalThis as Record<string, unknown>)[GLOBAL_INPUT_HANDLERS_KEY] as
+    | GlobalInputHandlersRegistry
+    | undefined;
+
+  if (!registry) {
+    registry = {
+      handlers: new Map(),
+      idCounter: 0,
+    };
+    (globalThis as Record<string, unknown>)[GLOBAL_INPUT_HANDLERS_KEY] = registry;
+  }
+
+  return registry;
+}
+
+/**
+ * Register a global input handler
+ * @internal - Used by useInput hook
+ */
+export function registerGlobalInputHandler(handler: InputHandler): string {
+  const registry = getGlobalInputHandlers();
+  const id = `input_handler_${++registry.idCounter}`;
+  registry.handlers.set(id, handler);
+  return id;
+}
+
+/**
+ * Unregister a global input handler
+ * @internal - Used by useInput hook
+ */
+export function unregisterGlobalInputHandler(id: string): void {
+  const registry = getGlobalInputHandlers();
+  registry.handlers.delete(id);
+}
+
+/**
+ * Call all registered global input handlers
+ * @internal - Called by the renderer's input listener
+ */
+export function callGlobalInputHandlers(input: string, key: KeyPress): void {
+  const registry = getGlobalInputHandlers();
+  for (const handler of registry.handlers.values()) {
+    try {
+      handler(input, key);
+    } catch (error) {
+      // Don't let one handler's error break others
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Global input handler error:', error);
+      }
+    }
+  }
+}
+
+/**
+ * Check if there are any global input handlers registered
+ * @internal - Used by renderer to decide whether to propagate events
+ */
+export function hasGlobalInputHandlers(): boolean {
+  const registry = getGlobalInputHandlers();
+  return registry.handlers.size > 0;
+}
+
+/**
+ * Hook for global keyboard input handling
+ *
+ * Receives all keyboard input regardless of focus state.
+ * Useful for games, global shortcuts, and other scenarios
+ * where you need to capture keyboard input at the app level.
+ *
+ * @param handler - Callback function that receives input string and key info
+ * @param options - Options for input handling
+ *
+ * @example
+ * ```tsx
+ * function GameComponent() {
+ *   const [position, setPosition] = useState({ x: 0, y: 0 });
+ *
+ *   useInput((input, key) => {
+ *     if (key.upArrow) setPosition(p => ({ ...p, y: p.y - 1 }));
+ *     if (key.downArrow) setPosition(p => ({ ...p, y: p.y + 1 }));
+ *     if (key.leftArrow) setPosition(p => ({ ...p, x: p.x - 1 }));
+ *     if (key.rightArrow) setPosition(p => ({ ...p, x: p.x + 1 }));
+ *     if (input === 'q') process.exit(0);
+ *   });
+ *
+ *   return <Text>Position: {position.x}, {position.y}</Text>;
+ * }
+ * ```
+ */
+export function useInput(handler: InputHandler, options: { isActive?: boolean } = {}): void {
+  const { isActive = true } = options;
+  const handlerRef = useRef(handler);
+  const handlerIdRef = useRef<string | null>(null);
+
+  // Keep handler ref up to date
+  handlerRef.current = handler;
+
+  useEffect(() => {
+    if (!isActive) {
+      // If we have a registered handler but are now inactive, unregister it
+      if (handlerIdRef.current) {
+        unregisterGlobalInputHandler(handlerIdRef.current);
+        handlerIdRef.current = null;
+      }
+      return;
+    }
+
+    // Register a wrapper that calls the current handler ref
+    const wrappedHandler: InputHandler = (input, key) => {
+      handlerRef.current(input, key);
+    };
+
+    handlerIdRef.current = registerGlobalInputHandler(wrappedHandler);
+
+    return () => {
+      if (handlerIdRef.current) {
+        unregisterGlobalInputHandler(handlerIdRef.current);
+        handlerIdRef.current = null;
+      }
+    };
+  }, [isActive]);
+}
 
 /**
  * Hook for managing input component state
