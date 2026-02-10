@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Get PR info
         id: pr-info
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             // Get the PR from the workflow run
@@ -43,7 +43,7 @@ jobs:
 
       - name: Add version label
         if: steps.pr-info.outputs.found == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           PR_TITLE: ${{ steps.pr-info.outputs.title }}
           PR_NUMBER: ${{ steps.pr-info.outputs.number }}

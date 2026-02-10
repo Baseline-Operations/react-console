@@ -655,7 +655,7 @@ Identify missing features that a comprehensive terminal UI library should have.
 > **Audit Finding**: Confirmed missing - no Spacer component exists.
 
 **Priority**: High  
-**Status**: [ ] Not started
+**Status**: [x] Complete
 
 A flexible spacing component that expands to fill available space in flex containers. Essential for common layout patterns like pushing items to opposite ends.
 
@@ -714,11 +714,11 @@ A flexible spacing component that expands to fill available space in flex contai
 
 **Tasks**:
 
-- [ ] Create component file with TypeScript types
-- [ ] Implement flex-based spacing logic
-- [ ] Add fixed width/height support
-- [ ] Export from `src/components/layout/index.ts`
-- [ ] Export from main index and layout entry point
+- [x] Create component file with TypeScript types
+- [x] Implement flex-based spacing logic
+- [x] Add fixed width/height support
+- [x] Export from `src/components/layout/index.ts`
+- [x] Export from main index and layout entry point
 - [ ] Add unit tests
 - [ ] Add example file `examples/spacer.tsx`
 - [ ] Update documentation
@@ -728,7 +728,7 @@ A flexible spacing component that expands to fill available space in flex contai
 ### 2.2 `<Newline>` / `<LineBreak>` Multiple Lines Prop
 
 **Priority**: Medium  
-**Status**: [ ] Not started
+**Status**: [x] Complete
 
 Enhance the existing `LineBreak` component to support adding multiple line breaks with a single prop.
 
@@ -764,10 +764,10 @@ export function LineBreak() {
 
 **Tasks**:
 
-- [ ] Update `LineBreakProps` interface with `count?: number`
-- [ ] Implement rendering logic for multiple lines
-- [ ] Update `Newline` component (deprecated but maintain parity)
-- [ ] Update renderer to handle `count` on newline nodes
+- [x] Update `LineBreakProps` interface with `count?: number`
+- [x] Implement rendering logic for multiple lines
+- [x] Update `Newline` component (deprecated but maintain parity)
+- [x] Update renderer to handle `count` on newline nodes
 - [ ] Add tests for edge cases (count=0, negative, undefined)
 - [ ] Update documentation
 
@@ -778,7 +778,7 @@ export function LineBreak() {
 > **Audit Finding**: Identified as missing during gap analysis.
 
 **Priority**: Medium  
-**Status**: [ ] Not started
+**Status**: [x] Complete
 
 A horizontal or vertical line separator for visual grouping.
 
@@ -812,12 +812,12 @@ A horizontal or vertical line separator for visual grouping.
 
 **Tasks**:
 
-- [ ] Create component file with TypeScript types
-- [ ] Implement horizontal divider
-- [ ] Implement vertical divider
-- [ ] Add style variants (solid, dashed, dotted, double)
-- [ ] Add label support
-- [ ] Export from layout entry point
+- [x] Create component file with TypeScript types
+- [x] Implement horizontal divider
+- [x] Implement vertical divider
+- [x] Add style variants (solid, dashed, dotted, double)
+- [x] Add label support
+- [x] Export from layout entry point
 - [ ] Add unit tests
 - [ ] Add example
 - [ ] Update documentation
@@ -829,7 +829,7 @@ A horizontal or vertical line separator for visual grouping.
 > **Audit Finding**: Missing for React Native compatibility.
 
 **Priority**: Low  
-**Status**: [ ] Not started
+**Status**: [x] Complete
 
 Add React Native compatibility aliases for Pressable.
 
@@ -843,8 +843,8 @@ export const TouchableHighlight = Pressable;
 
 **Tasks**:
 
-- [ ] Add re-exports in components/interactive/
-- [ ] Export from main index
+- [x] Add re-exports in components/interactive/
+- [x] Export from main index
 - [ ] Document as aliases for Pressable
 
 ---
@@ -2572,10 +2572,10 @@ Use this checklist to track overall progress. **All items must be completed befo
 
 **Phase 1: Core Components** (Foundation)
 
-- [ ] 2.1 Spacer component
-- [ ] 2.2 LineBreak count prop
-- [ ] 2.3 Divider component
-- [ ] 2.4 TouchableOpacity/TouchableHighlight aliases
+- [x] 2.1 Spacer component
+- [x] 2.2 LineBreak count prop
+- [x] 2.3 Divider component
+- [x] 2.4 TouchableOpacity/TouchableHighlight aliases
 - [ ] 3.1 Text transform verification
 - [ ] 3.2 Inline text styling (nested Text / alias decision)
 - [ ] 3.3 Link component (terminal hyperlinks)
@@ -2661,10 +2661,11 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 
 ### v0.1.4 - Core Layout Components
 
-- [ ] 2.1 Spacer component
-- [ ] 2.2 LineBreak count prop
-- [ ] 2.3 Divider component
-- [ ] 2.4 TouchableOpacity/TouchableHighlight aliases
+- [x] Dependency updates (GitHub Actions + npm production/dev dependencies)
+- [x] 2.1 Spacer component
+- [x] 2.2 LineBreak count prop
+- [x] 2.3 Divider component
+- [x] 2.4 TouchableOpacity/TouchableHighlight aliases
 
 ### v0.1.5 - Text Components & Styling
 
