@@ -40,6 +40,7 @@ interface RenderableNode {
 interface TextInstance {
   text: string;
   parentNode: Node | null;
+  childNode?: Node; // Reference to created TextNode child for updates
 }
 
 // Priority tracking for react-reconciler
@@ -179,31 +180,30 @@ export function createHostConfig(): any {
   };
 
   const appendInitialChild = (parentInstance: Node, child: Node | string | TextInstance): void => {
-    // Handle TextInstance objects
+    // Handle TextInstance objects (raw text like {'Status: '})
     if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
       const textInstance = child as TextInstance;
       textInstance.parentNode = parentInstance;
 
-      // If parent is a TextNode, set its content
-      if (parentInstance.type === 'text') {
-        parentInstance.setContent(textInstance.text);
-      } else {
-        // Otherwise create a TextNode child
-        const textElement = {
+      // Create a child TextNode to preserve ordering with siblings
+      // Enables nested Text: <Text>{'foo'}<Text>bar</Text>{'baz'}</Text>
+      // Each part becomes a child so collectTextSegments() can gather them in order
+      const textNode = NodeFactory.createNode(
+        {
           type: 'Text',
           props: { children: textInstance.text },
-        } as import('react').ReactElement;
-        const textNode = NodeFactory.createNode(textElement, parentInstance);
-        parentInstance.appendChild(textNode);
-      }
+        } as import('react').ReactElement,
+        parentInstance
+      );
+      parentInstance.appendChild(textNode);
+
+      // Store reference to child node for updates via commitTextUpdate
+      textInstance.childNode = textNode;
       return;
     }
 
     if (typeof child === 'string') {
-      // Legacy string handling (shouldn't happen with new TextInstance)
-      if (parentInstance.type === 'text') {
-        return;
-      }
+      // Legacy string handling
       const textElement = {
         type: 'Text',
         props: { children: child },
@@ -211,7 +211,7 @@ export function createHostConfig(): any {
       const textNode = NodeFactory.createNode(textElement, parentInstance);
       parentInstance.appendChild(textNode);
     } else {
-      // child is a Node at this point (TextInstance was handled above)
+      // child is a Node
       const nodeChild = child as Node;
       nodeChild.parent = parentInstance;
       parentInstance.appendChild(nodeChild);
@@ -269,9 +269,36 @@ export function createHostConfig(): any {
 
   const insertBefore = (
     parentInstance: Node,
-    child: Node | string,
+    child: Node | string | TextInstance,
     beforeChild: Node | string
   ): void => {
+    // Handle TextInstance objects (raw text like {'Status: '})
+    if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
+      const textInstance = child as TextInstance;
+      textInstance.parentNode = parentInstance;
+
+      // Create a child TextNode wrapper
+      const textNode = NodeFactory.createNode(
+        {
+          type: 'Text',
+          props: { children: textInstance.text },
+        } as import('react').ReactElement,
+        parentInstance
+      );
+
+      // Store reference to child node for updates via commitTextUpdate
+      textInstance.childNode = textNode;
+
+      // Insert the wrapper node
+      const beforeIndex = parentInstance.children.indexOf(beforeChild as Node);
+      if (beforeIndex >= 0) {
+        parentInstance.children.splice(beforeIndex, 0, textNode);
+      } else {
+        parentInstance.appendChild(textNode);
+      }
+      return;
+    }
+
     if (typeof child === 'string') {
       const textElement = {
         type: 'Text',
@@ -303,17 +330,32 @@ export function createHostConfig(): any {
     insertBefore(container, child, beforeChild);
   };
 
-  const removeChild = (parentInstance: Node, child: Node | string): void => {
+  const removeChild = (parentInstance: Node, child: Node | string | TextInstance): void => {
+    // Handle TextInstance objects - remove the wrapper node referenced by childNode
+    if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
+      const textInstance = child as TextInstance;
+      if (textInstance.childNode) {
+        const index = parentInstance.children.indexOf(textInstance.childNode);
+        if (index >= 0) {
+          parentInstance.children.splice(index, 1);
+          textInstance.childNode.parent = null;
+        }
+        textInstance.childNode = undefined;
+      }
+      textInstance.parentNode = null;
+      return;
+    }
+
     if (typeof child === 'string') {
       const index = parentInstance.children.findIndex((c) => c.content === child);
       if (index >= 0) {
         parentInstance.children.splice(index, 1);
       }
     } else {
-      const index = parentInstance.children.indexOf(child);
+      const index = parentInstance.children.indexOf(child as Node);
       if (index >= 0) {
         parentInstance.children.splice(index, 1);
-        child.parent = null;
+        (child as Node).parent = null;
       }
     }
   };
@@ -328,8 +370,12 @@ export function createHostConfig(): any {
     // Update the text instance
     textInst.text = newText;
 
-    // Update the parent node's content if it's a TextNode
-    if (textInst.parentNode && textInst.parentNode.type === 'text') {
+    // Update the child TextNode that was created in appendInitialChild
+    // This ensures collectTextSegments() sees the updated text
+    if (textInst.childNode && typeof textInst.childNode.setContent === 'function') {
+      textInst.childNode.setContent(newText);
+    } else if (textInst.parentNode && textInst.parentNode.type === 'text') {
+      // Fallback: update parent's content if no child reference
       textInst.parentNode.setContent(newText);
     }
   };

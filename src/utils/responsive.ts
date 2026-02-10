@@ -63,13 +63,25 @@ export function resolveSize(
       }
     }
 
-    // Parse viewport units (e.g., "80vw", "50vh") - treat as percentage
-    if (trimmed.endsWith('vw') || trimmed.endsWith('vh')) {
+    // Parse viewport units (e.g., "80vw", "50vh")
+    // Note: vh always uses rows, vw always uses columns (based on unit, not dimension param)
+    // For viewport units, always use actual terminal dimensions (not static mode override)
+    if (trimmed.endsWith('vw')) {
       const percent = parseFloat(trimmed.slice(0, -2));
       if (!isNaN(percent)) {
-        const dims = getTerminalDimensions();
-        const baseSize = dimension === 'width' ? dims.columns : dims.rows;
-        const calculated = Math.floor((percent / 100) * baseSize);
+        // Use actual terminal columns, not getTerminalDimensions which may return static mode values
+        const columns = process.stdout.columns ?? 80;
+        const calculated = Math.floor((percent / 100) * columns);
+        return maxSize !== undefined ? Math.min(calculated, maxSize) : calculated;
+      }
+    }
+
+    if (trimmed.endsWith('vh')) {
+      const percent = parseFloat(trimmed.slice(0, -2));
+      if (!isNaN(percent)) {
+        // Use actual terminal rows, not getTerminalDimensions which may return static mode values
+        const rows = process.stdout.rows ?? 24;
+        const calculated = Math.floor((percent / 100) * rows);
         return maxSize !== undefined ? Math.min(calculated, maxSize) : calculated;
       }
     }

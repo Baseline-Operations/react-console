@@ -5,13 +5,16 @@
  * Useful for loading async data, promises, and context values.
  */
 
-import { use } from 'react';
+import { use, useState, useEffect, useRef } from 'react';
 
 /**
  * Hook for async data loading in terminal applications
  *
  * Wraps React 19's `use` hook for loading async data in terminal context.
  * Useful for loading data from storage, network requests, or other async operations.
+ *
+ * Note: This hook suspends the component until the promise resolves.
+ * Wrap your component in a Suspense boundary to handle the loading state.
  *
  * @template T - Type of the promise result
  * @param promise - Promise to unwrap
@@ -29,6 +32,11 @@ import { use } from 'react';
  *     </View>
  *   );
  * }
+ *
+ * // Usage with Suspense:
+ * <Suspense fallback={<Text>Loading...</Text>}>
+ *   <DataComponent />
+ * </Suspense>
  * ```
  */
 export function useAsync<T>(promise: Promise<T>): T {
@@ -36,20 +44,22 @@ export function useAsync<T>(promise: Promise<T>): T {
 }
 
 /**
- * Hook for async data loading with error handling
+ * Hook for async data loading with fallback value
  *
- * Wraps `use` hook with error boundary support for better error handling.
+ * Unlike useAsync, this hook does NOT suspend. It returns the fallback value
+ * immediately and updates to the resolved value when the promise completes.
+ * This is useful when you want to show a default value while loading.
  *
  * @template T - Type of the promise result
- * @param promise - Promise to unwrap
- * @param fallback - Fallback value if promise rejects
- * @returns Resolved value from promise or fallback if rejected
+ * @param promise - Promise to resolve
+ * @param fallback - Initial/fallback value while promise is pending or on error
+ * @returns Current value (fallback while loading, resolved value when complete)
  *
  * @example
  * ```tsx
  * function DataComponent() {
  *   const dataPromise = useMemo(() => loadDataFromStorage(), []);
- *   const data = useAsyncWithFallback(dataPromise, { name: 'Default' });
+ *   const data = useAsyncWithFallback(dataPromise, { name: 'Loading...' });
  *
  *   return (
  *     <View>
@@ -60,9 +70,39 @@ export function useAsync<T>(promise: Promise<T>): T {
  * ```
  */
 export function useAsyncWithFallback<T>(promise: Promise<T>, fallback: T): T {
-  try {
-    return use(promise);
-  } catch {
-    return fallback;
-  }
+  const [value, setValue] = useState<T>(fallback);
+  const promiseRef = useRef(promise);
+  const fallbackRef = useRef(fallback);
+
+  // Keep fallback ref updated
+  fallbackRef.current = fallback;
+
+  useEffect(() => {
+    // Track if effect is still mounted
+    let cancelled = false;
+
+    // If promise changed, reset to fallback
+    if (promiseRef.current !== promise) {
+      promiseRef.current = promise;
+      setValue(fallbackRef.current);
+    }
+
+    // Resolve promise and update state
+    promise
+      .then((result) => {
+        if (!cancelled) {
+          setValue(result);
+        }
+      })
+      .catch(() => {
+        // On error, keep the fallback value
+        // Optionally could add error state here
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [promise]); // Remove fallback from deps - use ref instead
+
+  return value;
 }

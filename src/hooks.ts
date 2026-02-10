@@ -19,7 +19,7 @@ export { useAsync, useAsyncWithFallback } from './hooks/async';
 export { useTerminalDimensions, useFocus, useTerminalConfig } from './hooks/terminal';
 
 // Input State Hooks
-export { useInputState } from './hooks/input';
+export { useInputState, useInput } from './hooks/input';
 
 // Lifecycle Events
 export { onAppStart, onAppExit } from './hooks/lifecycle';

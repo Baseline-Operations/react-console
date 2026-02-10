@@ -37,6 +37,7 @@ export const BorderStyle = {
   THICK: 'thick',
   DASHED: 'dashed',
   DOTTED: 'dotted',
+  ASCII: 'ascii',
 } as const;
 
 export type BorderStyle = (typeof BorderStyle)[keyof typeof BorderStyle];

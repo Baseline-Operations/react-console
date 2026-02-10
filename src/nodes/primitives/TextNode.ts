@@ -34,6 +34,14 @@ interface TextMetrics {
   visibleWidth: number;
 }
 
+/**
+ * A segment of text with its associated style
+ */
+interface TextSegment {
+  text: string;
+  style: ComputedStyle;
+}
+
 // Create the mixed-in base class with proper type handling
 const TextNodeBase = Stylable(
   Renderable(Layoutable(Node as unknown as import('../base/types').Constructor<Node>))
@@ -66,11 +74,51 @@ export class TextNode extends TextNodeBase {
   declare applyStyleMixin: (name: string) => void;
 
   private wrappedLines: string[] = [];
+  private textSegments: TextSegment[] = [];
+
+  /**
+   * TextNode handles its own children rendering via collectTextSegments()
+   * This prevents BufferRenderer from rendering nested Text children separately
+   */
+  get handlesOwnChildren(): boolean {
+    return this.children.length > 0;
+  }
 
   constructor(id?: string) {
     super(id);
     // Apply text style mixin
     this.applyStyleMixin('TextStyle');
+  }
+
+  /**
+   * Collect all text segments from this node and its children
+   * This enables nested Text components like: <Text>Hello <Text style={{bold: true}}>World</Text></Text>
+   */
+  private collectTextSegments(): TextSegment[] {
+    const segments: TextSegment[] = [];
+    const style = this.computeStyle();
+
+    // If this node has children, collect from them (they include any text content)
+    // If no children, use this node's content directly
+    // This avoids double-counting when NodeFactory sets content AND reconciler adds child
+    if (this.children.length > 0) {
+      // Collect from children only - they represent the actual content structure
+      for (const child of this.children) {
+        if (child.getNodeType && child.getNodeType() === 'text') {
+          const textChild = child as TextNode;
+          const childSegments = textChild.collectTextSegments();
+          segments.push(...childSegments);
+        } else if (child.content) {
+          // Raw text node or other node with content
+          segments.push({ text: child.content, style });
+        }
+      }
+    } else if (this.content) {
+      // Leaf text node - use its own content
+      segments.push({ text: this.content, style });
+    }
+
+    return segments;
   }
 
   getNodeType(): string {
@@ -85,18 +133,21 @@ export class TextNode extends TextNodeBase {
 
   computeLayout(constraints: LayoutConstraints): LayoutResult {
     const style = this.computeStyle();
-    const content = this.content || '';
+
+    // Collect text segments from this node and all children
+    this.textSegments = this.collectTextSegments();
+    const fullContent = this.textSegments.map((s) => s.text).join('');
 
     // Always recalculate wrapped lines (they depend on constraints which may change)
     let metrics: { width: number };
-    if (!content) {
+    if (!fullContent) {
       this.wrappedLines = [''];
       metrics = { width: 0 };
     } else {
       // Ensure maxWidth is at least 1 to avoid issues with text measurement
       const safeMaxWidth = Math.max(1, constraints.maxWidth ?? Infinity);
-      metrics = this.measureText(content, style, { ...constraints, maxWidth: safeMaxWidth });
-      this.wrappedLines = this.wrapText(content, style, safeMaxWidth);
+      metrics = this.measureText(fullContent, style, { ...constraints, maxWidth: safeMaxWidth });
+      this.wrappedLines = this.wrapText(fullContent, style, safeMaxWidth);
     }
 
     const borderWidth = this.border.width;
@@ -166,52 +217,58 @@ export class TextNode extends TextNodeBase {
     this.contentArea = this.calculateContentArea();
 
     // 1. Render background
-    // For TextNode children of BoxNode, the parent BoxNode already renders its background
-    // So we skip rendering TextNode's background to avoid overwriting the parent's background
-    // Only render if TextNode has an explicit background that's different from parent
     const bgColor = style.getBackgroundColor();
-
-    // Render background if TextNode has an explicit background
-    // For items with backgroundColor, we should render it (like HTML/CSS)
-    // The parent BoxNode's background is rendered separately, but TextNode's background should also render
     if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
       this.renderBackground(buffer, style, context);
     }
 
-    // 2. Render text content
-    // wrappedLines is calculated in computeLayout, but ensure we have content
-    const content = this.content || '';
-    // For TextNode, context.x/y from parent BoxNode is the content area position
-    // Use it directly for text rendering
+    // 2. Render text content with segments
     let currentY = context.y;
-    if (content) {
-      // Ensure we have wrappedLines (should be set by computeLayout)
-      if (!this.wrappedLines || this.wrappedLines.length === 0) {
-        // Fallback: wrap the content if wrappedLines is missing
-        const safeMaxWidth = Math.max(1, context.constraints.maxWidth ?? Infinity);
-        this.wrappedLines = this.wrapText(content, style, safeMaxWidth);
-      }
+    const hasContent = this.textSegments.length > 0 || this.content;
 
+    if (hasContent) {
       // Get text alignment and available width for alignment calculation
       const textAlign = style.getTextAlign?.() || 'left';
       const availableWidth = context.constraints.maxWidth ?? this.bounds?.width ?? 80;
 
-      // Render all non-empty lines
-      for (const line of this.wrappedLines) {
-        if (line && line.trim().length > 0) {
-          // Calculate X position based on text alignment
-          const lineWidth = measureText(line);
-          let lineX = context.x;
+      // Render using segments if we have them (supports nested Text)
+      if (this.textSegments.length > 0) {
+        // Render all wrapped lines with proper segment styling
+        for (let lineIndex = 0; lineIndex < this.wrappedLines.length; lineIndex++) {
+          const line = this.wrappedLines[lineIndex];
+          // Preserve whitespace-only lines for vertical spacing
+          if (line && line.length > 0) {
+            const lineWidth = measureText(line);
+            let lineX = context.x;
 
-          if (textAlign === 'center') {
-            lineX = context.x + Math.floor((availableWidth - lineWidth) / 2);
-          } else if (textAlign === 'right') {
-            lineX = context.x + availableWidth - lineWidth;
+            if (textAlign === 'center') {
+              lineX = context.x + Math.floor((availableWidth - lineWidth) / 2);
+            } else if (textAlign === 'right') {
+              lineX = context.x + availableWidth - lineWidth;
+            }
+
+            // Render the line with segment styling, passing lineIndex for correct offset
+            this.renderLineWithSegments(buffer, line, lineX, currentY, context, lineIndex);
+            currentY++;
           }
-          // 'left' is default, no adjustment needed
+        }
+      } else if (this.content) {
+        // Fallback for simple content without segments
+        for (const line of this.wrappedLines) {
+          // Preserve whitespace-only lines for vertical spacing
+          if (line && line.length > 0) {
+            const lineWidth = measureText(line);
+            let lineX = context.x;
 
-          this.renderLine(buffer, line, style, lineX, currentY, context);
-          currentY++;
+            if (textAlign === 'center') {
+              lineX = context.x + Math.floor((availableWidth - lineWidth) / 2);
+            } else if (textAlign === 'right') {
+              lineX = context.x + availableWidth - lineWidth;
+            }
+
+            this.renderLine(buffer, line, style, lineX, currentY, context);
+            currentY++;
+          }
         }
       }
     }
@@ -263,6 +320,139 @@ export class TextNode extends TextNodeBase {
     // Don't apply styles here - styling is done in renderLine
     // Applying styles here causes double-styling (once here, once in renderLine)
     return wrapText(content, maxWidth);
+  }
+
+  /**
+   * Render a line with segment-specific styling
+   * Maps positions in the line back to their original segments to apply correct styles
+   * @param lineIndex - The index of this line in wrappedLines (used to calculate offset)
+   */
+  private renderLineWithSegments(
+    buffer: OutputBuffer,
+    line: string,
+    x: number,
+    y: number,
+    _context: RenderContext,
+    lineIndex: number
+  ): void {
+    while (buffer.lines.length <= y) {
+      buffer.lines.push('');
+    }
+
+    const currentLine = buffer.lines[y] || '';
+
+    // Build a styled string by tracking position in the full text
+    // and applying the appropriate segment's style
+
+    // Calculate where this line starts in the full text using index (not value equality)
+    // This correctly handles identical lines at different positions
+    // Also accounts for newlines that wrapText strips
+    const fullContent = this.textSegments.map((s) => s.text).join('');
+    let lineStartInFull = 0;
+    for (let i = 0; i < lineIndex && i < this.wrappedLines.length; i++) {
+      const wrappedLine = this.wrappedLines[i];
+      if (wrappedLine) {
+        lineStartInFull += wrappedLine.length;
+        // Check if there was a newline after this line in the original text
+        // wrapText splits on \n first, so we need to account for stripped newlines
+        if (lineStartInFull < fullContent.length && fullContent[lineStartInFull] === '\n') {
+          lineStartInFull++; // Skip the newline
+        }
+      }
+    }
+
+    // Build styled output by accumulating runs of same-styled characters
+    // This reduces ANSI sequence count by styling runs instead of individual chars
+    let styledOutput = '';
+    let charIndex = 0;
+    let currentRun = '';
+    let currentRunStyle: ComputedStyle | null = null;
+
+    // Helper to get style for a position
+    const getStyleAtPos = (posInFull: number): ComputedStyle | null => {
+      let segmentStart = 0;
+      for (const segment of this.textSegments) {
+        const segmentEnd = segmentStart + segment.text.length;
+        if (posInFull >= segmentStart && posInFull < segmentEnd) {
+          return segment.style;
+        }
+        segmentStart = segmentEnd;
+      }
+      return null;
+    };
+
+    // Helper to flush current run with styling
+    const flushRun = () => {
+      if (currentRun.length === 0) return;
+      if (currentRunStyle) {
+        styledOutput += applyStyles(currentRun, {
+          color: currentRunStyle.getColor() ?? undefined,
+          backgroundColor: currentRunStyle.getBackgroundColor() ?? undefined,
+          bold: currentRunStyle.getBold(),
+          dim: currentRunStyle.getDim(),
+          italic: currentRunStyle.getItalic(),
+          underline: currentRunStyle.getUnderline(),
+          strikethrough: currentRunStyle.getStrikethrough(),
+          inverse: currentRunStyle.getInverse(),
+        });
+      } else {
+        styledOutput += currentRun;
+      }
+      currentRun = '';
+    };
+
+    for (const char of line) {
+      const posInFull = lineStartInFull + charIndex;
+      const segmentStyle = getStyleAtPos(posInFull);
+
+      // Check if style changed (compare by reference since styles are cached)
+      if (segmentStyle !== currentRunStyle) {
+        // Flush previous run and start new one
+        flushRun();
+        currentRunStyle = segmentStyle;
+      }
+
+      currentRun += char;
+      charIndex++;
+    }
+
+    // Flush final run
+    flushRun();
+
+    // Ink-style replace-in-range
+    const lineWidth = measureText(line);
+    const before = padToVisibleColumn(substringToVisibleColumn(currentLine, x), x);
+    let after = substringFromVisibleColumn(currentLine, x + lineWidth);
+
+    // Re-apply parent's background color to the "after" portion if needed
+    if (after) {
+      interface StylableParent {
+        computeStyle(): ComputedStyle;
+        parent?: Node | null;
+      }
+      let current: Node | null = this.parent;
+      let parentBgColor: string | null = null;
+      while (current) {
+        if ('computeStyle' in current) {
+          const pStyle = (current as unknown as StylableParent).computeStyle();
+          const bgColor = pStyle.getBackgroundColor();
+          if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
+            parentBgColor = bgColor;
+            break;
+          }
+        }
+        current = current.parent || null;
+      }
+      if (parentBgColor) {
+        const { getBackgroundColorCode } = require('../../renderer/ansi');
+        const parentBgCode = getBackgroundColorCode(parentBgColor);
+        if (parentBgCode) {
+          after = parentBgCode + after;
+        }
+      }
+    }
+
+    buffer.lines[y] = before + styledOutput + after;
   }
 
   private renderLine(
@@ -347,33 +537,41 @@ export class TextNode extends TextNodeBase {
     const style = this.computeStyle();
     const { buffer, x, y, maxWidth, maxHeight, layerId, nodeId, zIndex } = context;
 
-    // Get colors from style
-    const foreground = style.getColor() || context.foreground;
+    // Get default colors from style
+    const defaultForeground = style.getColor() || context.foreground;
     const background = style.getBackgroundColor() || context.background;
 
-    // Get text styles
-    const bold = style.getBold();
-    const dim = style.getDim();
-    const italic = style.getItalic();
-    const underline = style.getUnderline();
-    const strikethrough = style.getStrikethrough();
-    const inverse = style.getInverse();
+    // Get default text styles
+    const defaultBold = style.getBold();
+    const defaultDim = style.getDim();
+    const defaultItalic = style.getItalic();
+    const defaultUnderline = style.getUnderline();
+    const defaultStrikethrough = style.getStrikethrough();
+    const defaultInverse = style.getInverse();
 
     // Render background if set
     if (background && background !== 'inherit' && background !== 'transparent') {
       buffer.fillBackground(x, y, maxWidth, maxHeight, background, layerId, nodeId, zIndex);
     }
 
-    // Render text content
-    const content = this.content || '';
-    if (!content) return;
+    // Collect text segments from this node and children
+    const segments = this.collectTextSegments();
+    if (segments.length === 0) return;
+
+    // Build full text for wrapping
+    const fullContent = segments.map((s) => s.text).join('');
+    if (!fullContent) return;
 
     // Get text alignment
     const textAlign = style.getTextAlign?.() || 'left';
 
     // Wrap text if needed
-    const wrappedLines = wrapText(content, maxWidth);
+    const wrappedLines = wrapText(fullContent, maxWidth);
     let cy = y;
+
+    // Calculate where each line starts in the full text
+    // (needed because wrapText may split differently than segment boundaries)
+    let lineStartInFull = 0;
 
     for (const line of wrappedLines) {
       if (cy >= y + maxHeight) break;
@@ -390,31 +588,60 @@ export class TextNode extends TextNodeBase {
       // 'left' is default, no adjustment needed
 
       let cx = lineStartX;
+      let charIndexInLine = 0;
+
       for (const char of line) {
         if (cx >= x + maxWidth) break;
         if (cx < x) {
           cx++;
+          charIndexInLine++;
           continue; // Skip characters that would be before the content area
         }
 
+        // Find which segment this character belongs to
+        const posInFull = lineStartInFull + charIndexInLine;
+        let segmentStart = 0;
+        let segmentStyle: ComputedStyle | null = null;
+
+        for (const segment of segments) {
+          const segmentEnd = segmentStart + segment.text.length;
+          if (posInFull >= segmentStart && posInFull < segmentEnd) {
+            segmentStyle = segment.style;
+            break;
+          }
+          segmentStart = segmentEnd;
+        }
+
+        // Use segment style if found, otherwise use defaults
+        const charForeground = segmentStyle?.getColor() || defaultForeground;
+        const charBold = segmentStyle?.getBold() ?? defaultBold;
+        const charDim = segmentStyle?.getDim() ?? defaultDim;
+        const charItalic = segmentStyle?.getItalic() ?? defaultItalic;
+        const charUnderline = segmentStyle?.getUnderline() ?? defaultUnderline;
+        const charStrikethrough = segmentStyle?.getStrikethrough() ?? defaultStrikethrough;
+        const charInverse = segmentStyle?.getInverse() ?? defaultInverse;
+
         buffer.setCell(cx, cy, {
           char,
-          foreground,
+          foreground: charForeground,
           background,
-          bold,
-          dim,
-          italic,
-          underline,
-          strikethrough,
-          inverse,
+          bold: charBold,
+          dim: charDim,
+          italic: charItalic,
+          underline: charUnderline,
+          strikethrough: charStrikethrough,
+          inverse: charInverse,
           layerId,
           nodeId,
           zIndex,
         });
 
         cx++;
+        charIndexInLine++;
       }
 
+      // Move to next line in full text
+      lineStartInFull += line.length;
       cy++;
     }
   }

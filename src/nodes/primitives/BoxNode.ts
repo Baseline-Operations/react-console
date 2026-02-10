@@ -414,6 +414,15 @@ export class BoxNode extends BoxNodeBase {
    * Used when a node is repositioned after its children have already computed their bounds
    */
   private updateDescendantBounds(node: Node, deltaX: number, deltaY: number): void {
+    // Check if this node handles its own children (like ScrollView)
+    // If so, don't update its children's bounds - they use relative positioning
+    interface HandlesOwnChildrenNode {
+      handlesOwnChildren?: boolean;
+    }
+    if ((node as HandlesOwnChildrenNode).handlesOwnChildren) {
+      return;
+    }
+
     for (const child of node.children) {
       if (child.bounds) {
         child.bounds = {

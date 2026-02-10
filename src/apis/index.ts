@@ -64,8 +64,16 @@ export type {
 } from './Alert';
 
 // Bell - Terminal audio feedback (beeps/alerts)
-export { Bell, useBell } from './Bell';
-export type { BellPattern, BellOptions } from './Bell';
+// Note: consumePendingBells and isSpeakerAvailable are internal APIs used by DisplayBuffer
+export { Bell, useBell, consumePendingBells, isSpeakerAvailable } from './Bell';
+export type {
+  BellTone,
+  BellPattern,
+  BellOptions,
+  BellAudioConfig,
+  WaveformType,
+  PanPosition,
+} from './Bell';
 
 // Dimensions - Terminal/window dimensions
 export { Dimensions, useWindowDimensions } from './Dimensions';

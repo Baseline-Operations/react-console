@@ -38,6 +38,7 @@ export interface ButtonProps extends StyleProps, ComponentEventHandlers {
   disabled?: boolean;
   label?: string; // Alternative to children for simple text buttons
   tabIndex?: number; // Tab order (auto-assigned if not set)
+  onPress?: (event?: unknown) => void; // Alias for onClick (React Native style)
   // State-specific styles (override default styles for each state)
   disabledStyle?: ViewStyle; // Style when disabled
   focusedStyle?: ViewStyle; // Style when focused
@@ -75,6 +76,7 @@ function ButtonComponent({
   disabled = false,
   tabIndex,
   onClick,
+  onPress,
   disabledStyle,
   focusedStyle,
   pressedStyle,
@@ -88,6 +90,9 @@ function ButtonComponent({
 
   // Merge className with style prop and legacy style props
   const mergedStyle = mergeClassNameAndStyle(className, style, styleProps);
+
+  // Support both onClick and onPress (React Native style alias)
+  const clickHandler = onClick || onPress;
 
   // This component is handled by the reconciler
   // The reconciler will call onClick when Enter/Space is pressed while focused
@@ -104,7 +109,7 @@ function ButtonComponent({
     focusedStyle,
     pressedStyle,
     hoveredStyle,
-    onClick: disabled ? undefined : onClick,
+    onClick: disabled ? undefined : clickHandler,
   });
 }
 
