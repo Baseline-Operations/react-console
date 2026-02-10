@@ -3,16 +3,26 @@
  * Verifies the complete rendering pipeline works end-to-end
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { BufferRenderer, getBufferRenderer, resetBufferRenderer } from '../index';
 import { CellBuffer } from '../CellBuffer';
 import { CompositeBuffer } from '../CompositeBuffer';
 import { DisplayBuffer } from '../DisplayBuffer';
 import { ANSIGenerator } from '../ANSIGenerator';
+import { setRenderMode } from '../../utils/terminal';
 
 describe('Multi-Buffer Rendering Integration', () => {
   beforeEach(() => {
+    // Use interactive mode so BufferRenderer allocates buffers sized to the
+    // real terminal (e.g. 24 rows) instead of static mode's 10000 rows,
+    // which is extremely slow under CI coverage instrumentation
+    setRenderMode('interactive');
     resetBufferRenderer();
+  });
+
+  afterEach(() => {
+    resetBufferRenderer();
+    setRenderMode('static');
   });
 
   describe('BufferRenderer', () => {
@@ -30,7 +40,7 @@ describe('Multi-Buffer Rendering Integration', () => {
       const renderer2 = getBufferRenderer();
 
       expect(renderer1).not.toBe(renderer2);
-    }, 30000);
+    });
   });
 
   describe('CellBuffer rendering', () => {

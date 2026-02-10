@@ -114,10 +114,10 @@ export class BoxNode extends BoxNodeBase {
     // So we subtract border and padding from available space
     // Ensure we don't get negative values, and ensure at least 1 for text nodes
     // CRITICAL: Use terminal width as maximum constraint, not Infinity
-    const { getTerminalDimensions } = require('../../utils/terminal');
+    const { getTerminalDimensions, getLayoutMaxHeight } = require('../../utils/terminal');
     const terminalDims = getTerminalDimensions();
     const maxTerminalWidth = terminalDims.columns;
-    const maxTerminalHeight = terminalDims.rows;
+    const maxTerminalHeight = getLayoutMaxHeight();
 
     const totalHorizontalSpace =
       borderWidth.left + borderWidth.right + this.padding.left + this.padding.right;

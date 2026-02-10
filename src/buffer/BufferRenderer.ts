@@ -13,7 +13,7 @@ import { DisplayBuffer } from './DisplayBuffer';
 import { CellBuffer } from './CellBuffer';
 import { BoundingBox, BufferRenderOptions } from './types';
 import type { Node } from '../nodes/base/Node';
-import { getTerminalDimensions } from '../utils/terminal';
+import { getTerminalDimensions, getLayoutMaxHeight } from '../utils/terminal';
 import { componentBoundsRegistry, createComponentBounds } from '../renderer/utils/componentBounds';
 import type { ConsoleNode } from '../types';
 
@@ -83,8 +83,9 @@ export class BufferRenderer {
 
   constructor() {
     const dims = getTerminalDimensions();
-    this.compositeBuffer = new CompositeBuffer(dims.columns, dims.rows);
-    this.displayBuffer = new DisplayBuffer(dims.columns, dims.rows);
+    const bufferHeight = getLayoutMaxHeight();
+    this.compositeBuffer = new CompositeBuffer(dims.columns, bufferHeight);
+    this.displayBuffer = new DisplayBuffer(dims.columns, bufferHeight);
   }
 
   /**
@@ -275,10 +276,11 @@ export class BufferRenderer {
    */
   private checkAndHandleResize(): void {
     const dims = getTerminalDimensions();
+    const bufferHeight = getLayoutMaxHeight();
 
-    if (dims.columns !== this.compositeBuffer.width || dims.rows !== this.compositeBuffer.height) {
-      this.compositeBuffer.resize(dims.columns, dims.rows);
-      this.displayBuffer.resize(dims.columns, dims.rows);
+    if (dims.columns !== this.compositeBuffer.width || bufferHeight !== this.compositeBuffer.height) {
+      this.compositeBuffer.resize(dims.columns, bufferHeight);
+      this.displayBuffer.resize(dims.columns, bufferHeight);
       this.isFirstRender = true; // Force full redraw after resize
     }
   }
@@ -288,6 +290,7 @@ export class BufferRenderer {
    */
   private createLayers(node: Node): void {
     const dims = getTerminalDimensions();
+    const layerHeight = getLayoutMaxHeight();
 
     // Root node always gets its own layer
     if (!node.parent) {
@@ -298,7 +301,7 @@ export class BufferRenderer {
           x: 0,
           y: 0,
           width: dims.columns,
-          height: dims.rows,
+          height: layerHeight,
         },
         node.id
       );
@@ -330,11 +333,12 @@ export class BufferRenderer {
     // Calculate from layout if available
     if ('computeLayout' in node) {
       const dims = getTerminalDimensions();
+      const layoutMaxHeight = getLayoutMaxHeight();
       const layout = (node as LayoutableNode).computeLayout({
         maxWidth: dims.columns,
-        maxHeight: dims.rows,
+        maxHeight: layoutMaxHeight,
         availableWidth: dims.columns,
-        availableHeight: dims.rows,
+        availableHeight: layoutMaxHeight,
       });
       return layout.bounds || { x: 0, y: 0, width: 0, height: 0 };
     }

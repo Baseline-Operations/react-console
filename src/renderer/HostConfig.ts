@@ -461,6 +461,39 @@ export function createHostConfig(): any {
       extInstance.setLabel(newProps.label as string);
     }
 
+    // Update ScrollView props (maxHeight, maxWidth, scrollTop, etc.)
+    if ('maxHeight' in newProps) {
+      (instance as unknown as { maxHeight: number | null }).maxHeight =
+        newProps.maxHeight != null ? (newProps.maxHeight as number) : null;
+    }
+    if ('maxWidth' in newProps) {
+      (instance as unknown as { maxWidth: number | null }).maxWidth =
+        newProps.maxWidth != null ? (newProps.maxWidth as number) : null;
+    }
+    if ('scrollTop' in newProps) {
+      (instance as unknown as { scrollTop: number }).scrollTop = newProps.scrollTop as number;
+    }
+    if ('scrollLeft' in newProps) {
+      (instance as unknown as { scrollLeft: number }).scrollLeft = newProps.scrollLeft as number;
+    }
+    if ('horizontal' in newProps) {
+      (instance as unknown as { horizontal: boolean }).horizontal = Boolean(newProps.horizontal);
+    }
+    if ('showsVerticalScrollIndicator' in newProps) {
+      (instance as unknown as { showsVerticalScrollIndicator: boolean }).showsVerticalScrollIndicator =
+        Boolean(newProps.showsVerticalScrollIndicator);
+    }
+    if ('showsHorizontalScrollIndicator' in newProps) {
+      (instance as unknown as { showsHorizontalScrollIndicator: boolean }).showsHorizontalScrollIndicator =
+        Boolean(newProps.showsHorizontalScrollIndicator);
+    }
+    if ('scrollbarStyle' in newProps && newProps.scrollbarStyle) {
+      (instance as unknown as { scrollbarStyle: unknown }).scrollbarStyle = newProps.scrollbarStyle;
+    }
+    if ('onScroll' in newProps) {
+      (instance as unknown as { onScroll: unknown }).onScroll = newProps.onScroll;
+    }
+
     // Update state-specific styles for buttons
     if ('disabledStyle' in newProps) {
       extInstance.disabledStyle = newProps.disabledStyle as ViewStyle | TextStyle | undefined;
@@ -539,5 +572,29 @@ export function createHostConfig(): any {
     suspendInstance: () => {},
     waitForCommitToBeReady: () => null,
     NotPendingTransition: null,
+    // react-reconciler 0.33+ required methods
+    trackSchedulerEvent: () => {},
+    resolveEventType: () => null,
+    resolveEventTimeStamp: () => -1.1,
+    shouldAttemptEagerTransition: () => false,
+    maySuspendCommitOnUpdate: () => false,
+    maySuspendCommitInSyncRender: () => false,
+    getSuspendedCommitReason: () => null,
+    HostTransitionContext: null,
+    resetFormInstance: () => {},
+    bindToConsole: (
+      _methodName: string,
+      fn: (...args: unknown[]) => unknown,
+      _errorCode: unknown
+    ) => fn,
+    supportsMicrotasks: true,
+    scheduleMicrotask:
+      typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : (fn: () => void) => setTimeout(fn, 0),
+    supportsTestSelectors: false,
+    commitMount: () => {},
+    resetTextContent: () => {},
+    requestPostPaintCallback: () => {},
   };
 }

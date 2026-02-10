@@ -127,6 +127,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
   // Scrollbar bounds for mouse interaction
   protected _scrollbarBounds: ScrollbarBounds | null = null;
 
+  // Effective visible height - accounts for both maxHeight prop AND parent layout constraints
+  // Updated during computeLayout, used for all scroll calculations
+  protected _effectiveVisibleHeight: number = 0;
+
   // Actual screen position (updated during rendering, accounts for parent scroll)
   protected _screenX: number = 0;
   protected _screenY: number = 0;
@@ -214,7 +218,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     return this._scrollTop;
   }
   set scrollTop(value: number) {
-    const maxScroll = Math.max(0, this._contentHeight - (this.maxHeight || this._contentHeight));
+    const viewHeight = this._effectiveVisibleHeight > 0
+      ? this._effectiveVisibleHeight
+      : (this.maxHeight || this._contentHeight);
+    const maxScroll = Math.max(0, this._contentHeight - viewHeight);
     this._scrollTop = Math.max(0, Math.min(value, maxScroll));
   }
 
@@ -222,6 +229,8 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     return this._scrollLeft;
   }
   set scrollLeft(value: number) {
+    // Note: horizontal scrolling doesn't have _effectiveVisibleWidth yet,
+    // but maxWidth prop is the primary control for horizontal
     const maxScroll = Math.max(0, this._contentWidth - (this.maxWidth || this._contentWidth));
     this._scrollLeft = Math.max(0, Math.min(value, maxScroll));
   }
@@ -233,6 +242,15 @@ export class ScrollViewNode extends ScrollViewNodeBase {
   }
   get contentWidth(): number {
     return this._contentWidth;
+  }
+
+  /**
+   * The effective visible height, considering both maxHeight prop and parent layout constraints.
+   * This is the actual viewport height used for all scroll calculations.
+   * Updated during computeLayout.
+   */
+  get effectiveVisibleHeight(): number {
+    return this._effectiveVisibleHeight;
   }
 
   get showsVerticalScrollIndicator(): boolean {
@@ -306,7 +324,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
    * Check if scroll is at or near the bottom
    */
   get isAtBottom(): boolean {
-    const maxScroll = Math.max(0, this._contentHeight - (this.maxHeight || this._contentHeight));
+    const viewHeight = this._effectiveVisibleHeight > 0
+      ? this._effectiveVisibleHeight
+      : (this.maxHeight || this._contentHeight);
+    const maxScroll = Math.max(0, this._contentHeight - viewHeight);
     return this._scrollTop >= maxScroll - 1; // Allow 1 row tolerance
   }
 
@@ -314,6 +335,12 @@ export class ScrollViewNode extends ScrollViewNodeBase {
    * Check if content overflows and scrolling is needed
    */
   get canScrollVertically(): boolean {
+    // Use effective visible height (set during computeLayout) which considers both
+    // the maxHeight prop AND parent layout constraints
+    if (this._effectiveVisibleHeight > 0) {
+      return this._contentHeight > this._effectiveVisibleHeight;
+    }
+    // Fallback: use maxHeight prop if computeLayout hasn't run yet
     return this.maxHeight !== null && this._contentHeight > this.maxHeight;
   }
 
@@ -358,29 +385,47 @@ export class ScrollViewNode extends ScrollViewNodeBase {
    * Returns the Y position within the scroll content, or -1 if not found
    */
   getContentPositionOf(targetNode: Node): number {
-    let position = 0;
-
-    const findNode = (node: Node, currentY: number): number => {
+    const findNodeRecursive = (node: Node, baseY: number): number => {
       if (node === targetNode) {
-        return currentY;
+        return baseY;
       }
 
-      // Check children
-      if (!(node as unknown as RenderableNode).handlesOwnChildren && node.children.length > 0) {
-        let childY = currentY;
-        for (const child of node.children) {
-          const result = findNode(child, childY);
-          if (result >= 0) return result;
-          childY += child.bounds?.height || 1;
+      // Search children recursively
+      if (node.children.length > 0) {
+        // Check if this node has computed child layouts (e.g., it's a box with flex)
+        const layoutable = node as unknown as { _childLayouts?: ChildLayout[] };
+        if (layoutable._childLayouts && layoutable._childLayouts.length > 0) {
+          for (const childLayout of layoutable._childLayouts) {
+            const result = findNodeRecursive(childLayout.node, baseY + childLayout.bounds.y);
+            if (result >= 0) return result;
+          }
+        } else {
+          // Fallback: simple vertical stacking using bounds
+          let childY = baseY;
+          for (const child of node.children) {
+            const result = findNodeRecursive(child, childY);
+            if (result >= 0) return result;
+            childY += child.bounds?.height || 1;
+          }
         }
       }
 
       return -1;
     };
 
-    // Search through direct children
+    // Use _childLayouts from computeLayout for accurate positions (respects flex/margins)
+    if (this._childLayouts.length > 0) {
+      for (const childLayout of this._childLayouts) {
+        const result = findNodeRecursive(childLayout.node, childLayout.bounds.y);
+        if (result >= 0) return result;
+      }
+      return -1;
+    }
+
+    // Fallback: simple vertical stacking through direct children
+    let position = 0;
     for (const child of this.children) {
-      const result = findNode(child, position);
+      const result = findNodeRecursive(child, position);
       if (result >= 0) return result;
       position += child.bounds?.height || 1;
     }
@@ -396,7 +441,9 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     if (contentY < 0) return;
 
     const nodeHeight = node.bounds?.height || 1;
-    const visibleHeight = this.maxHeight || this._contentHeight;
+    const visibleHeight = this._effectiveVisibleHeight > 0
+      ? this._effectiveVisibleHeight
+      : (this.maxHeight || this._contentHeight);
 
     // Check if node is above visible area
     if (contentY < this._scrollTop) {
@@ -432,12 +479,12 @@ export class ScrollViewNode extends ScrollViewNodeBase {
 
     // Click above thumb - page up
     if (relativeY < thumbStart) {
-      const pageSize = (this.maxHeight || 10) - 1;
+      const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
       this.scrollBy(-pageSize, 0);
     }
     // Click below thumb - page down
     else if (relativeY >= thumbEnd) {
-      const pageSize = (this.maxHeight || 10) - 1;
+      const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
       this.scrollBy(pageSize, 0);
     }
     // Click on thumb - do nothing (drag will handle it)
@@ -464,7 +511,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     const scrollRatio = Math.max(0, Math.min(1, (thumbCenter - thumbHeight / 2) / trackHeight));
 
     // Calculate target scroll position
-    const maxScroll = Math.max(0, this._contentHeight - (this.maxHeight || this._contentHeight));
+    const viewHeight = this._effectiveVisibleHeight > 0
+      ? this._effectiveVisibleHeight
+      : (this.maxHeight || this._contentHeight);
+    const maxScroll = Math.max(0, this._contentHeight - viewHeight);
     const targetScroll = Math.round(scrollRatio * maxScroll);
 
     this.scrollTo(targetScroll, 0);
@@ -529,11 +579,11 @@ export class ScrollViewNode extends ScrollViewNodeBase {
         this.scrollBy(this._scrollStep, 0);
         event.preventDefault?.();
       } else if (key.pageUp) {
-        const pageSize = (this.maxHeight || 10) - 1;
+        const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
         this.scrollBy(-pageSize, 0);
         event.preventDefault?.();
       } else if (key.pageDown) {
-        const pageSize = (this.maxHeight || 10) - 1;
+        const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
         this.scrollBy(pageSize, 0);
         event.preventDefault?.();
       } else if (key.home) {
@@ -648,20 +698,39 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     this._contentWidth = contentWidth;
     this._contentHeight = contentHeight;
 
+    // Calculate effective visible height considering BOTH:
+    // 1. The maxHeight prop (explicit constraint from user)
+    // 2. The parent layout constraints (available space from terminal/parent container)
+    let effectiveMaxHeight = this._contentHeight;
+    if (this.maxHeight !== null) {
+      effectiveMaxHeight = Math.min(effectiveMaxHeight, this.maxHeight);
+    }
+    if (constraints.maxHeight !== undefined && constraints.maxHeight > 0) {
+      effectiveMaxHeight = Math.min(effectiveMaxHeight, constraints.maxHeight);
+    }
+    if (constraints.availableHeight !== undefined && constraints.availableHeight > 0) {
+      effectiveMaxHeight = Math.min(effectiveMaxHeight, constraints.availableHeight);
+    }
+    const visibleHeight = Math.max(1, effectiveMaxHeight);
+
+    // Store effective visible height for use in scroll calculations outside computeLayout
+    this._effectiveVisibleHeight = visibleHeight;
+
+    // Clamp scroll position to valid range (visible area may have shrunk due to terminal resize)
+    const maxScrollAfterResize = Math.max(0, this._contentHeight - visibleHeight);
+    if (this._scrollTop > maxScrollAfterResize) {
+      this._scrollTop = maxScrollAfterResize;
+    }
+
     // Auto-scroll to bottom if content grew and we were at bottom
     if (this._autoScrollToBottom && wasAtBottom && contentHeight > oldContentHeight) {
-      const maxScroll = Math.max(0, contentHeight - (this.maxHeight || contentHeight));
+      const maxScroll = Math.max(0, contentHeight - visibleHeight);
       this._scrollTop = maxScroll;
     }
 
-    // Calculate visible dimensions
-    // Height: use maxHeight if set, otherwise content height
-    const visibleHeight =
-      this.maxHeight !== null ? Math.min(this.maxHeight, this._contentHeight) : this._contentHeight;
-
-    // Recalculate scrollbar visibility based on actual content
+    // Recalculate scrollbar visibility based on actual content vs effective visible height
     const actualShowScrollbar =
-      this._showsVerticalScrollIndicator && this._contentHeight > (this.maxHeight || Infinity);
+      this._showsVerticalScrollIndicator && this._contentHeight > visibleHeight;
     const actualScrollbarWidth = actualShowScrollbar ? this._scrollbarStyle.width || 1 : 0;
 
     // Calculate content area width using actual scrollbar presence (not speculative)
@@ -726,8 +795,11 @@ export class ScrollViewNode extends ScrollViewNodeBase {
   }): void {
     const { buffer, x, y, maxWidth, maxHeight, layerId, nodeId, zIndex } = context;
 
-    // Calculate visible dimensions - use maxHeight from props
-    const visibleHeight = this.maxHeight !== null ? Math.min(this.maxHeight, maxHeight) : maxHeight;
+    // Calculate visible dimensions - prefer _effectiveVisibleHeight (set during computeLayout)
+    // which already considers both maxHeight prop AND parent constraints
+    const visibleHeight = this._effectiveVisibleHeight > 0
+      ? Math.min(this._effectiveVisibleHeight, maxHeight)
+      : (this.maxHeight !== null ? Math.min(this.maxHeight, maxHeight) : maxHeight);
     const visibleWidth = this.maxWidth !== null ? Math.min(this.maxWidth, maxWidth) : maxWidth;
 
     // Store actual screen position for hit testing
@@ -1034,7 +1106,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     // Calculate thumb position and size
     const scrollRatio = this._contentHeight > 0 ? height / this._contentHeight : 1;
     const thumbHeight = Math.max(1, Math.floor(height * scrollRatio));
-    const maxScroll = Math.max(1, this._contentHeight - (this.maxHeight || this._contentHeight));
+    const viewHeight = this._effectiveVisibleHeight > 0
+      ? this._effectiveVisibleHeight
+      : (this.maxHeight || this._contentHeight);
+    const maxScroll = Math.max(1, this._contentHeight - viewHeight);
     const thumbPosition =
       maxScroll > 0 ? Math.floor((this._scrollTop / maxScroll) * (height - thumbHeight)) : 0;
 

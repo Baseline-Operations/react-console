@@ -5,6 +5,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   getTerminalDimensions,
+  getLayoutMaxHeight,
+  STATIC_LAYOUT_MAX_HEIGHT,
   supportsColor,
   enterRawMode,
   exitRawMode,
@@ -81,13 +83,33 @@ describe('terminal utilities', () => {
       expect(dims.rows).toBe(24);
     });
 
-    it('should return large row count in static mode', () => {
+    it('should return actual rows in static mode', () => {
       setRenderMode('static');
       process.stdout.columns = 80;
       process.stdout.rows = 24;
       const dims = getTerminalDimensions();
       expect(dims.columns).toBe(80);
-      expect(dims.rows).toBe(10000); // Static mode allows unlimited height
+      expect(dims.rows).toBe(24); // Always returns real terminal dimensions
+    });
+  });
+
+  describe('getLayoutMaxHeight', () => {
+    it('should return large value in static mode for unconstrained layout', () => {
+      setRenderMode('static');
+      process.stdout.rows = 24;
+      expect(getLayoutMaxHeight()).toBe(STATIC_LAYOUT_MAX_HEIGHT);
+    });
+
+    it('should return actual terminal rows in interactive mode', () => {
+      setRenderMode('interactive');
+      process.stdout.rows = 40;
+      expect(getLayoutMaxHeight()).toBe(40);
+    });
+
+    it('should return fallback in interactive mode when rows not available', () => {
+      setRenderMode('interactive');
+      process.stdout.rows = undefined;
+      expect(getLayoutMaxHeight()).toBe(24);
     });
   });
 

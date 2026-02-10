@@ -195,10 +195,10 @@ export class LayoutEngine {
 
     // Step 2: Calculate total size and available space
     // CRITICAL: Use terminal width as maximum constraint, not Infinity
-    const { getTerminalDimensions } = require('../utils/terminal');
+    const { getTerminalDimensions, getLayoutMaxHeight } = require('../utils/terminal');
     const terminalDims = getTerminalDimensions();
     const maxTerminalWidth = terminalDims.columns;
-    const maxTerminalHeight = terminalDims.rows;
+    const maxTerminalHeight = getLayoutMaxHeight();
 
     const totalMainSize = isRow
       ? childData.reduce((sum, item) => sum + item.width, 0)
