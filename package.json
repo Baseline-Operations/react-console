@@ -151,7 +151,7 @@
   "dependencies": {
     "ansi-escapes": "^7.2.0",
     "cli-cursor": "^5.0.0",
-    "react-reconciler": "^0.31.0"
+    "react-reconciler": "^0.33.0"
   },
   "optionalDependencies": {
     "@mastra/node-speaker": "^0.1.0"
@@ -167,7 +167,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "^22.10.1",
     "@types/react": "^19.0.0",
-    "@types/react-reconciler": "^0.28.5",
+    "@types/react-reconciler": "^0.33.0",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "@vitest/coverage-v8": "^2.1.8",
