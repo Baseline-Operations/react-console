@@ -22,8 +22,8 @@ const DIVIDER_CHARS: Record<DividerStyle, { horizontal: string; vertical: string
   double: { horizontal: '═', vertical: '║' },
 };
 
-/** Default character repeat count when width is not a fixed number */
-const DEFAULT_REPEAT_COUNT = 200;
+/** Default character repeat count when width is not a fixed number (supports ultra-wide terminals) */
+const DEFAULT_REPEAT_COUNT = 500;
 
 /**
  * Props for the Divider component
@@ -103,7 +103,7 @@ export function Divider({
     };
 
     return createConsoleNode('text', {
-      content,
+      children: content,
       style: verticalStyle,
     });
   }
@@ -166,7 +166,7 @@ export function Divider({
   // Generate enough characters for the layout engine to clip via overflow
   const repeatCount = typeof width === 'number' ? width : DEFAULT_REPEAT_COUNT;
   return createConsoleNode('text', {
-    content: chars.horizontal.repeat(repeatCount),
+    children: chars.horizontal.repeat(repeatCount),
     style: {
       ...horizontalStyle,
       overflow: 'hidden',

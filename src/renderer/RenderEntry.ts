@@ -179,14 +179,23 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       false,
       false,
       '',
-      (error: Error) => {
-        reportError(error, ErrorType.RENDER, { severity: 'uncaught' });
+      (error: Error, errorInfo?: { componentStack?: string }) => {
+        reportError(error, ErrorType.RENDER, {
+          severity: 'uncaught',
+          componentStack: errorInfo?.componentStack,
+        });
       },
-      (error: Error) => {
-        reportError(error, ErrorType.RENDER, { severity: 'caught' });
+      (error: Error, errorInfo?: { componentStack?: string }) => {
+        reportError(error, ErrorType.RENDER, {
+          severity: 'caught',
+          componentStack: errorInfo?.componentStack,
+        });
       },
-      (error: Error) => {
-        reportError(error, ErrorType.RENDER, { severity: 'recoverable' });
+      (error: Error, errorInfo?: { componentStack?: string }) => {
+        reportError(error, ErrorType.RENDER, {
+          severity: 'recoverable',
+          componentStack: errorInfo?.componentStack,
+        });
       },
       () => {
         // Default transition indicator - no-op for terminal

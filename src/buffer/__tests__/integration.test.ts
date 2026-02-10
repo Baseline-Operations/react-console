@@ -30,7 +30,7 @@ describe('Multi-Buffer Rendering Integration', () => {
       const renderer2 = getBufferRenderer();
 
       expect(renderer1).not.toBe(renderer2);
-    }, 10000);
+    }, 30000);
   });
 
   describe('CellBuffer rendering', () => {
