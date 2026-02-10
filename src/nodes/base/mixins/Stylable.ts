@@ -347,7 +347,13 @@ export function Stylable<TBase extends Constructor<Node> | AbstractConstructor<N
         this.padding.bottom = paddingVertical;
       }
 
-      if (style.border !== undefined) {
+      if (
+        style.border !== undefined ||
+        style.borderTop !== undefined ||
+        style.borderRight !== undefined ||
+        style.borderBottom !== undefined ||
+        style.borderLeft !== undefined
+      ) {
         this.border = this.normalizeBorder(style);
       }
 

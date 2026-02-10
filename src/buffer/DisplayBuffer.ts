@@ -11,7 +11,7 @@ import { CellBuffer } from './CellBuffer';
 import { Cell, CellDiff, cellsEqual, cloneCell } from './types';
 import { ANSIGenerator } from './ANSIGenerator';
 import { debug } from '../utils/debug';
-import { consumePendingBells } from '../apis/Bell';
+import { consumePendingBells, isSpeakerAvailable } from '../apis/Bell';
 
 // Flag to force a visual change - toggled character to force buffer diff
 let bellDirtyToggle = false;
@@ -169,46 +169,50 @@ export class DisplayBuffer {
       output += cursorHide;
     }
 
-    // Toggle a character on EVERY render to ensure output is always different
-    // This prevents the terminal from optimizing away "identical" output
-    bellDirtyToggle = !bellDirtyToggle;
-    const lastX = this._width - 1;
-    const lastY = this._height - 1;
-    const cell = this.pending.getCell(lastX, lastY);
-    if (cell) {
-      cell.char = bellDirtyToggle ? '.' : ' ';
-    }
+    // Check for pending bell sounds - only process terminal bells when speaker is unavailable
+    const bellCount = consumePendingBells();
+    const needsTerminalBells = bellCount > 0 && !isSpeakerAvailable();
 
-    // Regenerate the last line with the toggled character
-    if (lastContentLine >= lastY) {
-      outputLines[lastY] = this.generateLineOutput(lastY);
-      // Rebuild output with updated line
-      const updatedLinesToOutput = outputLines.slice(0, lastContentLine + 1);
-      output = cursorHide + eraseScreen + cursorHome + updatedLinesToOutput.join('\n');
-      if (finalCursorPos && finalCursorPos.x >= 0) {
-        output += cursorTo(finalCursorPos.x, finalCursorPos.y);
-        output += cursorHide;
-      } else {
-        output += cursorHide;
+    // Only toggle dirty character when we need terminal bells (forces buffer diff)
+    // This prevents unnecessary output changes when speaker handles audio
+    if (needsTerminalBells) {
+      bellDirtyToggle = !bellDirtyToggle;
+      const lastX = this._width - 1;
+      const lastY = this._height - 1;
+      const cell = this.pending.getCell(lastX, lastY);
+      if (cell) {
+        cell.char = bellDirtyToggle ? '.' : ' ';
       }
-    }
 
-    // Check for pending bell sounds
-    const bellCountFull = consumePendingBells();
-    if (bellCountFull > 0) {
+      // Regenerate the last line with the toggled character
+      if (lastContentLine >= lastY) {
+        outputLines[lastY] = this.generateLineOutput(lastY);
+        // Rebuild output with updated line
+        const updatedLinesToOutput = outputLines.slice(0, lastContentLine + 1);
+        output = cursorHide + eraseScreen + cursorHome + updatedLinesToOutput.join('\n');
+        if (finalCursorPos && finalCursorPos.x >= 0) {
+          output += cursorTo(finalCursorPos.x, finalCursorPos.y);
+          output += cursorHide;
+        } else {
+          output += cursorHide;
+        }
+      }
+
       // Append bell characters to the output with spacing
       // Use cursor save/restore sequences between bells to add processing time
       // This encourages the terminal to play bells as distinct sounds
       const bellWithPadding = '\u0007\x1b7\x1b8'; // bell + cursor save + cursor restore
-      output += bellWithPadding.repeat(bellCountFull);
-      debug('[DisplayBuffer.flush] Writing with bells', {
-        bellCount: bellCountFull,
+      output += bellWithPadding.repeat(bellCount);
+      debug('[DisplayBuffer.flush] Writing with terminal bells (speaker unavailable)', {
+        bellCount,
         outputLength: output.length,
         time: Date.now(),
       });
     } else {
-      debug('[DisplayBuffer.flush] Writing without bells', {
+      debug('[DisplayBuffer.flush] Writing', {
         outputLength: output.length,
+        bellCount,
+        speakerAvailable: isSpeakerAvailable(),
         time: Date.now(),
       });
     }

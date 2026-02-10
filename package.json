@@ -149,10 +149,12 @@
     "react": "^19.0.0"
   },
   "dependencies": {
-    "@mastra/node-speaker": "^0.1.0",
     "ansi-escapes": "^7.2.0",
     "cli-cursor": "^5.0.0",
     "react-reconciler": "^0.31.0"
+  },
+  "optionalDependencies": {
+    "@mastra/node-speaker": "^0.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.25.0",

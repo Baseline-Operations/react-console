@@ -226,7 +226,7 @@ BELL/DSR returns almost immediately with minimal synchronous work.
 
 ## Key observation from latest log:
 
-```
+```text
 676284: First Enter
 676286: beep(3) - queues all 3 bells
 676292: flush writes 410 bytes with 3 bells

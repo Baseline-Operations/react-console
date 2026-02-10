@@ -15,6 +15,7 @@ const SPEAKER_LOADED_KEY = '__reactConsoleSpeakerLoaded__';
 const BELL_CONFIG_KEY = '__reactConsoleBellConfig__';
 const CONTINUOUS_SPEAKER_KEY = '__reactConsoleContinuousSpeaker__';
 const ACTIVE_SPEAKERS_KEY = '__reactConsoleActiveSpeakers__';
+const FALLBACK_TIMEOUTS_KEY = '__reactConsoleFallbackTimeouts__';
 
 // Counter for generating unique audio IDs
 let audioIdCounter = 0;
@@ -37,6 +38,47 @@ function getActiveSpeakers(): Map<string, { speaker: unknown; stopped: boolean }
     string,
     { speaker: unknown; stopped: boolean }
   >;
+}
+
+/**
+ * Get the fallback timeouts map (for terminal bell fallback)
+ */
+function getFallbackTimeouts(): Map<string, NodeJS.Timeout[]> {
+  if (!(globalThis as Record<string, unknown>)[FALLBACK_TIMEOUTS_KEY]) {
+    (globalThis as Record<string, unknown>)[FALLBACK_TIMEOUTS_KEY] = new Map();
+  }
+  return (globalThis as Record<string, unknown>)[FALLBACK_TIMEOUTS_KEY] as Map<
+    string,
+    NodeJS.Timeout[]
+  >;
+}
+
+/**
+ * Register fallback timeouts for an audio ID
+ */
+function registerFallbackTimeouts(audioId: string, timeouts: NodeJS.Timeout[]): void {
+  const map = getFallbackTimeouts();
+  map.set(audioId, timeouts);
+}
+
+/**
+ * Clear and remove fallback timeouts for an audio ID
+ */
+function clearFallbackTimeouts(audioId?: string): void {
+  const map = getFallbackTimeouts();
+  if (audioId) {
+    const timeouts = map.get(audioId);
+    if (timeouts) {
+      timeouts.forEach((t) => clearTimeout(t));
+      map.delete(audioId);
+    }
+  } else {
+    // Clear all
+    for (const timeouts of map.values()) {
+      timeouts.forEach((t) => clearTimeout(t));
+    }
+    map.clear();
+  }
 }
 
 /**
@@ -161,6 +203,8 @@ function stopActiveSpeaker(audioId?: string): void {
         stopSpeaker(entry);
         speakers.delete(audioId);
       }
+      // Also clear any fallback timeouts for this audio ID
+      clearFallbackTimeouts(audioId);
     } else {
       // Stop all audio - collect entries first to avoid mutation during iteration
       const entries = Array.from(speakers.entries());
@@ -168,6 +212,8 @@ function stopActiveSpeaker(audioId?: string): void {
       for (const [, entry] of entries) {
         stopSpeaker(entry);
       }
+      // Also clear all fallback timeouts
+      clearFallbackTimeouts();
     }
   } catch {
     // Ignore all errors during stop - we don't want stop to crash
@@ -226,6 +272,15 @@ function getSpeaker(): typeof import('@mastra/node-speaker') | null {
 }
 
 /**
+ * Check if the speaker module is available for audio playback.
+ * When speaker is available, Bell.ts plays audio directly, so terminal bell
+ * sequences should not be written by DisplayBuffer.
+ */
+export function isSpeakerAvailable(): boolean {
+  return getSpeaker() !== null;
+}
+
+/**
  * Generate waveform sample at time t
  */
 function generateWaveformSample(
@@ -273,7 +328,8 @@ function generateToneBuffer(
   const bitDepth = config.bitDepth;
   const channels = config.channels;
   const wave = waveform ?? config.waveform;
-  const vol = volume ?? config.defaultVolume;
+  // Clamp volume to valid range [0, 1] to prevent PCM overflow
+  const vol = Math.max(0, Math.min(1, volume ?? config.defaultVolume));
   const fadeDuration = config.fadeDuration;
 
   // Ensure minimum duration to prevent buffer underflow
@@ -411,7 +467,9 @@ function playBeepWithSpeaker(
     // Combine all buffers
     const combinedBuffer = Buffer.concat([buffer, trailingSilence]);
 
-    speaker.on('error', () => {});
+    speaker.on('error', (err: Error) => {
+      debug('[Bell] Speaker error during beep playback', { audioId, error: String(err) });
+    });
 
     speaker.on('close', () => {
       unregisterActiveSpeaker(audioId);
@@ -472,15 +530,24 @@ function playSequenceWithSpeaker(tones: BellTone[]): string {
 
   if (!speaker) {
     debug('[Bell] No Speaker available, using terminal bells for sequence');
+    const timeoutIds: NodeJS.Timeout[] = [];
     let totalDelay = 0;
     tones.forEach((tone, index) => {
       const delay = index === 0 ? 0 : (tone.delay ?? 50);
       totalDelay += delay;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         process.stdout.write('\u0007');
       }, totalDelay);
+      timeoutIds.push(timeoutId);
       totalDelay += tone.duration ?? 150;
     });
+    // Track these timeouts so they can be cancelled
+    registerFallbackTimeouts(audioId, timeoutIds);
+    // Clean up after the last timeout completes
+    const cleanupTimeout = setTimeout(() => {
+      clearFallbackTimeouts(audioId);
+    }, totalDelay + 100);
+    timeoutIds.push(cleanupTimeout);
     return audioId;
   }
 
@@ -520,7 +587,9 @@ function playSequenceWithSpeaker(tones: BellTone[]): string {
     const totalLength = buffers.reduce((sum, buf) => sum + buf.length, 0);
     const combinedBuffer = Buffer.concat(buffers, totalLength);
 
-    speaker.on('error', () => {});
+    speaker.on('error', (err: Error) => {
+      debug('[Bell] Speaker error during sequence playback', { audioId, error: String(err) });
+    });
 
     speaker.on('close', () => {
       unregisterActiveSpeaker(audioId);
@@ -630,7 +699,6 @@ const BELL_STATE_KEY = '__reactConsoleBellState__';
 
 interface BellState {
   enabled: boolean;
-  sequenceTimeout: NodeJS.Timeout | null;
   pendingBells: number;
   bellsWaitingForDsr: number;
 }
@@ -639,7 +707,6 @@ function getBellState(): BellState {
   if (!(globalThis as Record<string, unknown>)[BELL_STATE_KEY]) {
     (globalThis as Record<string, unknown>)[BELL_STATE_KEY] = {
       enabled: true,
-      sequenceTimeout: null,
       pendingBells: 0,
       bellsWaitingForDsr: 0,
     };
@@ -859,9 +926,8 @@ class BellModule {
     const state = getBellState();
     if (!state.enabled) return;
 
-    // Stop any existing continuous tone and active audio
+    // Stop any existing continuous tone (but not other audio like beeps/sequences)
     this.stopTone();
-    stopActiveSpeaker();
 
     const Speaker = getSpeaker();
     if (!Speaker) {
@@ -887,15 +953,26 @@ class BellModule {
 
       debug('[Bell.startTone] Starting continuous tone', { frequency, volume, waveform, pan });
 
-      // Generate and write chunks continuously
+      // Generate and write chunks continuously with back-pressure handling
       const writeChunk = () => {
         const currentSpeaker = (globalThis as Record<string, unknown>)[CONTINUOUS_SPEAKER_KEY];
-        if (currentSpeaker === speaker) {
-          // Generate 100ms of audio at a time
-          const buffer = generateToneBuffer(frequency, 100, volume, waveform, pan);
-          speaker.write(buffer);
-          // Schedule next chunk
-          setTimeout(writeChunk, 80); // Slightly less than 100ms to prevent gaps
+        if (currentSpeaker !== speaker) {
+          return; // Speaker was stopped or replaced
+        }
+        // Generate 100ms of audio at a time
+        const buffer = generateToneBuffer(frequency, 100, volume, waveform, pan);
+        const canContinue = speaker.write(buffer);
+        if (canContinue) {
+          // Buffer has space, schedule next chunk slightly early to prevent gaps
+          setTimeout(writeChunk, 80);
+        } else {
+          // Back-pressure: wait for drain event before writing more
+          speaker.once('drain', () => {
+            // Re-check if still active after drain
+            if ((globalThis as Record<string, unknown>)[CONTINUOUS_SPEAKER_KEY] === speaker) {
+              writeChunk();
+            }
+          });
         }
       };
 
@@ -1068,11 +1145,6 @@ class BellModule {
    * @param audioId - Optional ID to stop specific audio, or undefined to stop all
    */
   cancel(audioId?: string): void {
-    const state = getBellState();
-    if (!audioId && state.sequenceTimeout) {
-      clearTimeout(state.sequenceTimeout);
-      state.sequenceTimeout = null;
-    }
     // Stop audio (specific or all)
     stopActiveSpeaker(audioId);
     if (!audioId) {

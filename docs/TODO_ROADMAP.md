@@ -105,9 +105,9 @@ ReferenceError: require is not defined in ES module scope
 
 **Tasks**:
 
-- [ ] Update all 10 affected example files
-- [ ] Test each example runs correctly
-- [ ] Consider adding ESM utility helper if pattern is common
+- [x] Update all 10 affected example files
+- [x] Test each example runs correctly
+- [x] Consider adding ESM utility helper if pattern is common
 
 ---
 
@@ -189,11 +189,11 @@ export function useAsyncWithFallback<T>(promise: Promise<T>, fallback: T): T {
 
 **Tasks**:
 
-- [ ] Decide on solution approach
-- [ ] Implement fix
-- [ ] Update example in `state-hooks.tsx`
-- [ ] Add/update tests
-- [ ] Update documentation
+- [x] Decide on solution approach
+- [x] Implement fix
+- [x] Update example in `state-hooks.tsx`
+- [x] Add/update tests
+- [x] Update documentation
 
 ---
 

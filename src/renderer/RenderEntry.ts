@@ -442,6 +442,9 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       renderState.isInteractive = true;
       renderState.wasInteractiveMode = true;
 
+      // CRITICAL: Register the commit callback so state updates trigger performRender
+      setOnCommitCallback(performRender);
+
       // Register SIGINT handler for proper cleanup (since we're now interactive)
       process.removeAllListeners('SIGINT');
       process.on('SIGINT', () => {
@@ -452,7 +455,9 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       resetBufferRenderer();
 
       // Re-render the tree with correct interactive mode dimensions
-      reconciler.updateContainer(element, renderState.rootFiber, null, () => {});
+      reconciler.updateContainer(element, renderState.rootFiber, null, () => {
+        performRender();
+      });
     } else {
       // No interactive components, return static output
       return outputResult;

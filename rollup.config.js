@@ -24,7 +24,7 @@ const external = [
   'react-reconciler',
   'ansi-escapes',
   'cli-cursor',
-  'speaker',
+  '@mastra/node-speaker',
   /^node:/,
 ];
 

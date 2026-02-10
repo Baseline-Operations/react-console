@@ -234,8 +234,10 @@ export class TextNode extends TextNodeBase {
       // Render using segments if we have them (supports nested Text)
       if (this.textSegments.length > 0) {
         // Render all wrapped lines with proper segment styling
-        for (const line of this.wrappedLines) {
-          if (line && line.trim().length > 0) {
+        for (let lineIndex = 0; lineIndex < this.wrappedLines.length; lineIndex++) {
+          const line = this.wrappedLines[lineIndex];
+          // Preserve whitespace-only lines for vertical spacing
+          if (line && line.length > 0) {
             const lineWidth = measureText(line);
             let lineX = context.x;
 
@@ -245,15 +247,16 @@ export class TextNode extends TextNodeBase {
               lineX = context.x + availableWidth - lineWidth;
             }
 
-            // Render the line with segment styling
-            this.renderLineWithSegments(buffer, line, lineX, currentY, context);
+            // Render the line with segment styling, passing lineIndex for correct offset
+            this.renderLineWithSegments(buffer, line, lineX, currentY, context, lineIndex);
             currentY++;
           }
         }
       } else if (this.content) {
         // Fallback for simple content without segments
         for (const line of this.wrappedLines) {
-          if (line && line.trim().length > 0) {
+          // Preserve whitespace-only lines for vertical spacing
+          if (line && line.length > 0) {
             const lineWidth = measureText(line);
             let lineX = context.x;
 
@@ -322,13 +325,15 @@ export class TextNode extends TextNodeBase {
   /**
    * Render a line with segment-specific styling
    * Maps positions in the line back to their original segments to apply correct styles
+   * @param lineIndex - The index of this line in wrappedLines (used to calculate offset)
    */
   private renderLineWithSegments(
     buffer: OutputBuffer,
     line: string,
     x: number,
     y: number,
-    _context: RenderContext
+    _context: RenderContext,
+    lineIndex: number
   ): void {
     while (buffer.lines.length <= y) {
       buffer.lines.push('');
@@ -339,52 +344,73 @@ export class TextNode extends TextNodeBase {
     // Build a styled string by tracking position in the full text
     // and applying the appropriate segment's style
 
-    // Find where this line starts in the full text
-    const allLines = this.wrappedLines;
+    // Calculate where this line starts in the full text using index (not value equality)
+    // This correctly handles identical lines at different positions
     let lineStartInFull = 0;
-    for (const prevLine of allLines) {
-      if (prevLine === line) break;
-      lineStartInFull += prevLine.length;
+    for (let i = 0; i < lineIndex && i < this.wrappedLines.length; i++) {
+      const wrappedLine = this.wrappedLines[i];
+      if (wrappedLine) {
+        lineStartInFull += wrappedLine.length;
+      }
     }
 
-    // Build styled output by matching each character to its segment
+    // Build styled output by accumulating runs of same-styled characters
+    // This reduces ANSI sequence count by styling runs instead of individual chars
     let styledOutput = '';
     let charIndex = 0;
+    let currentRun = '';
+    let currentRunStyle: ComputedStyle | null = null;
 
-    for (const char of line) {
-      const posInFull = lineStartInFull + charIndex;
-
-      // Find which segment this position belongs to
+    // Helper to get style for a position
+    const getStyleAtPos = (posInFull: number): ComputedStyle | null => {
       let segmentStart = 0;
-      let segmentStyle: ComputedStyle | null = null;
-
       for (const segment of this.textSegments) {
         const segmentEnd = segmentStart + segment.text.length;
         if (posInFull >= segmentStart && posInFull < segmentEnd) {
-          segmentStyle = segment.style;
-          break;
+          return segment.style;
         }
         segmentStart = segmentEnd;
       }
+      return null;
+    };
 
-      // Apply the segment's style to this character
-      if (segmentStyle) {
-        styledOutput += applyStyles(char, {
-          color: segmentStyle.getColor() ?? undefined,
-          backgroundColor: segmentStyle.getBackgroundColor() ?? undefined,
-          bold: segmentStyle.getBold(),
-          dim: segmentStyle.getDim(),
-          italic: segmentStyle.getItalic(),
-          underline: segmentStyle.getUnderline(),
-          strikethrough: segmentStyle.getStrikethrough(),
-          inverse: segmentStyle.getInverse(),
+    // Helper to flush current run with styling
+    const flushRun = () => {
+      if (currentRun.length === 0) return;
+      if (currentRunStyle) {
+        styledOutput += applyStyles(currentRun, {
+          color: currentRunStyle.getColor() ?? undefined,
+          backgroundColor: currentRunStyle.getBackgroundColor() ?? undefined,
+          bold: currentRunStyle.getBold(),
+          dim: currentRunStyle.getDim(),
+          italic: currentRunStyle.getItalic(),
+          underline: currentRunStyle.getUnderline(),
+          strikethrough: currentRunStyle.getStrikethrough(),
+          inverse: currentRunStyle.getInverse(),
         });
       } else {
-        styledOutput += char;
+        styledOutput += currentRun;
+      }
+      currentRun = '';
+    };
+
+    for (const char of line) {
+      const posInFull = lineStartInFull + charIndex;
+      const segmentStyle = getStyleAtPos(posInFull);
+
+      // Check if style changed (compare by reference since styles are cached)
+      if (segmentStyle !== currentRunStyle) {
+        // Flush previous run and start new one
+        flushRun();
+        currentRunStyle = segmentStyle;
       }
 
+      currentRun += char;
       charIndex++;
     }
+
+    // Flush final run
+    flushRun();
 
     // Ink-style replace-in-range
     const lineWidth = measureText(line);

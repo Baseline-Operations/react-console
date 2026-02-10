@@ -644,14 +644,22 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     // Height: use maxHeight if set, otherwise content height
     const visibleHeight =
       this.maxHeight !== null ? Math.min(this.maxHeight, this._contentHeight) : this._contentHeight;
-    // Width: fill available space by default (like a block element)
-    const visibleWidth =
-      this.maxWidth !== null ? Math.min(this.maxWidth, availableWidth) : availableWidth;
 
     // Recalculate scrollbar visibility based on actual content
     const actualShowScrollbar =
       this._showsVerticalScrollIndicator && this._contentHeight > (this.maxHeight || Infinity);
     const actualScrollbarWidth = actualShowScrollbar ? this._scrollbarStyle.width || 1 : 0;
+
+    // Calculate content area width using actual scrollbar presence (not speculative)
+    // This ensures consistent width math without overflow
+    const actualContentAreaWidth = availableWidth - actualScrollbarWidth;
+
+    // Width: fill available space by default (like a block element)
+    // Use contentAreaWidth (excluding scrollbar) for the content portion
+    const visibleWidth =
+      this.maxWidth !== null
+        ? Math.min(this.maxWidth, actualContentAreaWidth)
+        : actualContentAreaWidth;
 
     const dimensions: Dimensions = {
       width: visibleWidth + actualScrollbarWidth,

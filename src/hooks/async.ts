@@ -72,6 +72,10 @@ export function useAsync<T>(promise: Promise<T>): T {
 export function useAsyncWithFallback<T>(promise: Promise<T>, fallback: T): T {
   const [value, setValue] = useState<T>(fallback);
   const promiseRef = useRef(promise);
+  const fallbackRef = useRef(fallback);
+
+  // Keep fallback ref updated
+  fallbackRef.current = fallback;
 
   useEffect(() => {
     // Track if effect is still mounted
@@ -80,7 +84,7 @@ export function useAsyncWithFallback<T>(promise: Promise<T>, fallback: T): T {
     // If promise changed, reset to fallback
     if (promiseRef.current !== promise) {
       promiseRef.current = promise;
-      setValue(fallback);
+      setValue(fallbackRef.current);
     }
 
     // Resolve promise and update state
@@ -98,7 +102,7 @@ export function useAsyncWithFallback<T>(promise: Promise<T>, fallback: T): T {
     return () => {
       cancelled = true;
     };
-  }, [promise, fallback]);
+  }, [promise]); // Remove fallback from deps - use ref instead
 
   return value;
 }

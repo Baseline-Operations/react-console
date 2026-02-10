@@ -40,6 +40,7 @@ interface RenderableNode {
 interface TextInstance {
   text: string;
   parentNode: Node | null;
+  childNode?: Node; // Reference to created TextNode child for updates
 }
 
 // Priority tracking for react-reconciler
@@ -184,28 +185,20 @@ export function createHostConfig(): any {
       const textInstance = child as TextInstance;
       textInstance.parentNode = parentInstance;
 
-      // For Text parents: create a child TextNode to preserve order with other children
-      // This enables nested Text: <Text>{'foo'}<Text>bar</Text>{'baz'}</Text>
+      // Create a child TextNode to preserve ordering with siblings
+      // Enables nested Text: <Text>{'foo'}<Text>bar</Text>{'baz'}</Text>
       // Each part becomes a child so collectTextSegments() can gather them in order
-      if (parentInstance.type === 'text') {
-        // Create a simple text node as child
-        const textNode = NodeFactory.createNode(
-          {
-            type: 'Text',
-            props: { children: textInstance.text },
-          } as import('react').ReactElement,
-          parentInstance
-        );
-        parentInstance.appendChild(textNode);
-      } else {
-        // For non-Text parents, create a TextNode child
-        const textElement = {
+      const textNode = NodeFactory.createNode(
+        {
           type: 'Text',
           props: { children: textInstance.text },
-        } as import('react').ReactElement;
-        const textNode = NodeFactory.createNode(textElement, parentInstance);
-        parentInstance.appendChild(textNode);
-      }
+        } as import('react').ReactElement,
+        parentInstance
+      );
+      parentInstance.appendChild(textNode);
+
+      // Store reference to child node for updates via commitTextUpdate
+      textInstance.childNode = textNode;
       return;
     }
 
@@ -335,8 +328,12 @@ export function createHostConfig(): any {
     // Update the text instance
     textInst.text = newText;
 
-    // Update the parent node's content if it's a TextNode
-    if (textInst.parentNode && textInst.parentNode.type === 'text') {
+    // Update the child TextNode that was created in appendInitialChild
+    // This ensures collectTextSegments() sees the updated text
+    if (textInst.childNode && typeof textInst.childNode.setContent === 'function') {
+      textInst.childNode.setContent(newText);
+    } else if (textInst.parentNode && textInst.parentNode.type === 'text') {
+      // Fallback: update parent's content if no child reference
       textInst.parentNode.setContent(newText);
     }
   };
