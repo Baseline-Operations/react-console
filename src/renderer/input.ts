@@ -4,6 +4,8 @@
 
 import { createRequire } from 'node:module';
 import { enterRawMode, exitRawMode } from '../utils/terminal';
+import { debug } from '../utils/debug';
+import { onDsrResponse } from '../apis/Bell';
 
 // Create require function for ESM compatibility
 const require = createRequire(import.meta.url);
@@ -349,6 +351,16 @@ export function startInputListener(
 
   // Set up input handling
   process.stdin.on('data', (chunk: Buffer) => {
+    // Track stdout state when stdin event fires
+    const handle = (
+      process.stdout as NodeJS.WriteStream & { _handle?: { writeQueueSize?: number } }
+    )._handle;
+    debug('[STDIN] Data received', {
+      time: Date.now(),
+      length: chunk.length,
+      stdoutQueueSize: handle?.writeQueueSize ?? -1,
+      stdoutWritableLength: process.stdout.writableLength,
+    });
     const str = chunk.toString();
 
     // Accumulate input buffer for multi-byte sequences
@@ -390,6 +402,42 @@ export function startInputListener(
     // Check for arrow keys or other escape sequences
     if (inputBuffer.startsWith('\x1b[')) {
       // Escape sequence - check if complete
+
+      // Check for DSR (cursor position) response FIRST: ESC [ row ; col R
+      // This is sent by terminal in response to our cursor position query
+      const dsrMatch = inputBuffer.match(/^\x1b\[(\d+);(\d+)R$/);
+      if (dsrMatch) {
+        debug('[STDIN] DSR response received, triggering bell and input flow', {
+          row: dsrMatch[1],
+          col: dsrMatch[2],
+        });
+
+        // CRITICAL: Trigger any bells waiting for DSR response
+        // This makes the bell write happen as part of stdin processing,
+        // which may bypass terminal rate limiting
+        onDsrResponse();
+
+        if (inputListener) {
+          const noOpKey: KeyPress = {
+            ctrl: false,
+            meta: false,
+            shift: false,
+            return: false,
+            escape: false,
+            tab: false,
+            backspace: false,
+            delete: false,
+            upArrow: false,
+            downArrow: false,
+            leftArrow: false,
+            rightArrow: false,
+            _dsrResponse: true,
+          } as KeyPress & { _dsrResponse?: boolean };
+          inputListener(inputBuffer, noOpKey, null);
+        }
+        inputBuffer = '';
+        return;
+      }
 
       if (inputBuffer.match(/^\x1b\[[ABCDZ]/)) {
         // Complete arrow key sequence or Shift+Tab (Z)

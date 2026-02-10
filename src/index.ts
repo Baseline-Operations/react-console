@@ -403,6 +403,12 @@ export type {
   KeyboardEvent as KeyboardAPIEvent,
   AlertButton,
   AlertOptions,
+  BellTone,
+  BellPattern,
+  BellOptions,
+  BellAudioConfig,
+  WaveformType,
+  PanPosition,
 } from './apis';
 
 // Multi-Buffer Rendering System

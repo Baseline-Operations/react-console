@@ -84,50 +84,15 @@ export class NodeFactory {
       case 'text':
       case 'Text':
         node = new TextNode() as unknown as Node;
-        // Extract text content from children
-        // React may pass children as a string, number, array, or React element
+        // Only set content for simple string/number children
+        // For arrays or React elements, let appendInitialChild handle them
+        // This preserves nested Text styling (e.g., <Text>foo<Text style={...}>bar</Text></Text>)
         if (props.children !== undefined && props.children !== null) {
           if (typeof props.children === 'string' || typeof props.children === 'number') {
             node.setContent(String(props.children));
-          } else if (Array.isArray(props.children)) {
-            // Concatenate all string/number children, ignore React elements
-            const textParts: string[] = [];
-            for (const child of props.children) {
-              if (typeof child === 'string' || typeof child === 'number') {
-                textParts.push(String(child));
-              } else if (
-                child &&
-                typeof child === 'object' &&
-                'props' in child &&
-                (child as { props?: { children?: unknown } }).props &&
-                'children' in (child as { props: { children?: unknown } }).props
-              ) {
-                // Nested Text element - extract its children
-                const nestedChildren = (child as { props: { children: unknown } }).props.children;
-                if (typeof nestedChildren === 'string' || typeof nestedChildren === 'number') {
-                  textParts.push(String(nestedChildren));
-                }
-              }
-            }
-            if (textParts.length > 0) {
-              node.setContent(textParts.join(''));
-            }
-          } else if (
-            props.children &&
-            typeof props.children === 'object' &&
-            'props' in (props.children as object)
-          ) {
-            // Single React element child - try to extract text
-            const childProps = (props.children as { props?: { children?: unknown } }).props;
-            if (childProps && childProps.children) {
-              if (
-                typeof childProps.children === 'string' ||
-                typeof childProps.children === 'number'
-              ) {
-                node.setContent(String(childProps.children));
-              }
-            }
           }
+          // Arrays and React element children are handled by appendInitialChild
+          // which creates proper child nodes that TextNode.collectTextSegments() can gather
         }
         break;
 

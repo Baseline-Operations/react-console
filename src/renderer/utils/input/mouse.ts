@@ -569,16 +569,20 @@ export function handleMouseEvent(
     isPressed?: boolean;
   }
   if (target !== hoveredComponent) {
+    let needsUpdate = false;
+
     // Mouse left previous component
     if (hoveredComponent) {
       const hoverableComp = hoveredComponent as HoverableNode;
       if (hoverableComp.onMouseLeave) {
         hoverableComp.onMouseLeave();
+        needsUpdate = true;
       }
       // Reset hover/pressed state on ButtonNodes
       if ('isHovered' in hoverableComp) {
         hoverableComp.isHovered = false;
         hoverableComp.isPressed = false;
+        needsUpdate = true;
       }
     }
 
@@ -587,15 +591,21 @@ export function handleMouseEvent(
       const hoverableTarget = target as HoverableNode;
       if (hoverableTarget.onMouseEnter) {
         hoverableTarget.onMouseEnter();
+        needsUpdate = true;
       }
       // Set hover state on ButtonNodes
       if ('isHovered' in hoverableTarget) {
         hoverableTarget.isHovered = true;
+        needsUpdate = true;
       }
     }
 
     hoveredComponent = target;
-    scheduleUpdate();
+
+    // Only schedule update if there's an actual visual change
+    if (needsUpdate) {
+      scheduleUpdate();
+    }
   }
 
   // Handle drag events (mouse move while button is pressed)
@@ -869,21 +879,19 @@ export function handleMouseEvent(
       console.error('Error in click handler:', error);
     }
 
-    // Reset pressed state after a short delay (visual feedback)
-    setTimeout(() => {
-      try {
-        if ('isPressed' in target) {
+    // Reset pressed state immediately after click processing
+    // The visual feedback is provided by the immediate scheduleUpdate below
+    if ('isPressed' in target) {
+      // Use setImmediate to reset after the current event processing
+      setImmediate(() => {
+        try {
           focusableTarget.isPressed = false;
+          scheduleUpdate();
+        } catch {
+          // Ignore errors during cleanup
         }
-        // Flush the pressed state change
-        if (reconciler?.flushSyncFromReconciler) {
-          reconciler.flushSyncFromReconciler(() => {});
-        }
-        scheduleUpdate();
-      } catch {
-        // Ignore errors during cleanup
-      }
-    }, 100);
+      });
+    }
 
     scheduleUpdate();
   }

@@ -179,16 +179,26 @@ export function createHostConfig(): any {
   };
 
   const appendInitialChild = (parentInstance: Node, child: Node | string | TextInstance): void => {
-    // Handle TextInstance objects
+    // Handle TextInstance objects (raw text like {'Status: '})
     if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
       const textInstance = child as TextInstance;
       textInstance.parentNode = parentInstance;
 
-      // If parent is a TextNode, set its content
+      // For Text parents: create a child TextNode to preserve order with other children
+      // This enables nested Text: <Text>{'foo'}<Text>bar</Text>{'baz'}</Text>
+      // Each part becomes a child so collectTextSegments() can gather them in order
       if (parentInstance.type === 'text') {
-        parentInstance.setContent(textInstance.text);
+        // Create a simple text node as child
+        const textNode = NodeFactory.createNode(
+          {
+            type: 'Text',
+            props: { children: textInstance.text },
+          } as import('react').ReactElement,
+          parentInstance
+        );
+        parentInstance.appendChild(textNode);
       } else {
-        // Otherwise create a TextNode child
+        // For non-Text parents, create a TextNode child
         const textElement = {
           type: 'Text',
           props: { children: textInstance.text },
@@ -200,10 +210,7 @@ export function createHostConfig(): any {
     }
 
     if (typeof child === 'string') {
-      // Legacy string handling (shouldn't happen with new TextInstance)
-      if (parentInstance.type === 'text') {
-        return;
-      }
+      // Legacy string handling
       const textElement = {
         type: 'Text',
         props: { children: child },
@@ -211,7 +218,7 @@ export function createHostConfig(): any {
       const textNode = NodeFactory.createNode(textElement, parentInstance);
       parentInstance.appendChild(textNode);
     } else {
-      // child is a Node at this point (TextInstance was handled above)
+      // child is a Node
       const nodeChild = child as Node;
       nodeChild.parent = parentInstance;
       parentInstance.appendChild(nodeChild);

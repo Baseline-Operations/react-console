@@ -11,6 +11,10 @@ import { CellBuffer } from './CellBuffer';
 import { Cell, CellDiff, cellsEqual, cloneCell } from './types';
 import { ANSIGenerator } from './ANSIGenerator';
 import { debug } from '../utils/debug';
+import { consumePendingBells } from '../apis/Bell';
+
+// Flag to force a visual change - toggled character to force buffer diff
+let bellDirtyToggle = false;
 
 // ANSI escape sequences (same as ansi-escapes library)
 const ESC = '\u001B[';
@@ -121,6 +125,7 @@ export class DisplayBuffer {
     _clearFirst: boolean = true,
     finalCursorPos?: { x: number; y: number }
   ): void {
+    debug('[DisplayBuffer.flush] START', { time: Date.now() });
     // Build output lines
     const outputLines: string[] = [];
     let lastContentLine = 0;
@@ -164,8 +169,74 @@ export class DisplayBuffer {
       output += cursorHide;
     }
 
+    // Toggle a character on EVERY render to ensure output is always different
+    // This prevents the terminal from optimizing away "identical" output
+    bellDirtyToggle = !bellDirtyToggle;
+    const lastX = this._width - 1;
+    const lastY = this._height - 1;
+    const cell = this.pending.getCell(lastX, lastY);
+    if (cell) {
+      cell.char = bellDirtyToggle ? '.' : ' ';
+    }
+
+    // Regenerate the last line with the toggled character
+    if (lastContentLine >= lastY) {
+      outputLines[lastY] = this.generateLineOutput(lastY);
+      // Rebuild output with updated line
+      const updatedLinesToOutput = outputLines.slice(0, lastContentLine + 1);
+      output = cursorHide + eraseScreen + cursorHome + updatedLinesToOutput.join('\n');
+      if (finalCursorPos && finalCursorPos.x >= 0) {
+        output += cursorTo(finalCursorPos.x, finalCursorPos.y);
+        output += cursorHide;
+      } else {
+        output += cursorHide;
+      }
+    }
+
+    // Check for pending bell sounds
+    const bellCountFull = consumePendingBells();
+    if (bellCountFull > 0) {
+      // Append bell characters to the output with spacing
+      // Use cursor save/restore sequences between bells to add processing time
+      // This encourages the terminal to play bells as distinct sounds
+      const bellWithPadding = '\u0007\x1b7\x1b8'; // bell + cursor save + cursor restore
+      output += bellWithPadding.repeat(bellCountFull);
+      debug('[DisplayBuffer.flush] Writing with bells', {
+        bellCount: bellCountFull,
+        outputLength: output.length,
+        time: Date.now(),
+      });
+    } else {
+      debug('[DisplayBuffer.flush] Writing without bells', {
+        outputLength: output.length,
+        time: Date.now(),
+      });
+    }
+
     // Write everything in one operation
-    stream.write(output);
+    // Track stdout handle state to understand buffering
+    const handle = (stream as NodeJS.WriteStream & { _handle?: { writeQueueSize?: number } })
+      ._handle;
+    const queueSizeBefore = handle?.writeQueueSize ?? -1;
+
+    debug('[DisplayBuffer.flush] Calling stream.write', {
+      time: Date.now(),
+      outputLength: output.length,
+      queueSizeBefore,
+      writableLength: stream.writableLength,
+      writableHighWaterMark: stream.writableHighWaterMark,
+    });
+
+    const writeResult = stream.write(output);
+
+    const queueSizeAfter = handle?.writeQueueSize ?? -1;
+    debug('[DisplayBuffer.flush] stream.write returned', {
+      time: Date.now(),
+      result: writeResult,
+      buffered: !writeResult,
+      queueSizeAfter,
+      writableLengthAfter: stream.writableLength,
+    });
 
     // Sync current with pending
     this.syncCurrentWithPending();
@@ -177,8 +248,46 @@ export class DisplayBuffer {
   flushDiff(stream: typeof process.stdout): void {
     const diffs = this.getDiff();
 
-    if (diffs.length === 0) {
-      return; // Nothing changed
+    // Check for pending bells even if no visual changes
+    const bellCount = consumePendingBells();
+
+    if (diffs.length === 0 && bellCount === 0) {
+      return; // Nothing changed and no bells
+    }
+
+    // If only bells (no visual changes), force a visual change by toggling a character
+    // This ensures the terminal receives substantial output, not just the bell
+    if (diffs.length === 0 && bellCount > 0) {
+      // Toggle a space/dot in the bottom-right corner to force a diff
+      bellDirtyToggle = !bellDirtyToggle;
+      const dirtyChar = bellDirtyToggle ? '.' : ' ';
+      const lastX = this._width - 1;
+      const lastY = this._height - 1;
+
+      // Create a minimal cell for the diff
+      const baseCell: Cell = {
+        char: '',
+        foreground: null,
+        background: null,
+        bold: false,
+        dim: false,
+        italic: false,
+        underline: false,
+        strikethrough: false,
+        inverse: false,
+        zIndex: 0,
+        layerId: '',
+        nodeId: null,
+        dirty: false,
+      };
+
+      // Create a fake diff for the corner cell
+      diffs.push({
+        x: lastX,
+        y: lastY,
+        oldCell: { ...baseCell, char: bellDirtyToggle ? ' ' : '.' },
+        newCell: { ...baseCell, char: dirtyChar },
+      });
     }
 
     // If more than 50% of cells changed, do full redraw
@@ -223,6 +332,11 @@ export class DisplayBuffer {
 
     // Keep cursor hidden - we use cell-based cursor highlighting
     output += '\x1b[?25l';
+
+    // Append any pending bells
+    if (bellCount > 0) {
+      output += '\u0007'.repeat(bellCount);
+    }
 
     // Write to stream
     stream.write(output);

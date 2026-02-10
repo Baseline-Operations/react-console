@@ -10,6 +10,7 @@ import type { ReactElement } from 'react';
 import type { Reconciler as ReconcilerType, FiberRoot } from 'react-reconciler';
 import { renderState, setOnCommitCallback, resetRenderState } from './RenderState';
 import { debug } from '../utils/debug';
+import { setBellRenderCallback, setBellFlushSyncCallback } from '../apis/Bell';
 
 // Global state for ESM/CJS dual loading (mirrors Node.ts pattern)
 // This is accessed via globalThis to survive module reloading
@@ -91,7 +92,11 @@ export function render(element: ReactElement, options?: RenderOptions): string |
   } = require('../utils/terminal');
   const { reportError, ErrorType } = require('../utils/errors');
   const { initializeStorage } = require('../utils/storage');
-  const { scheduleBatchedUpdate, flushBatchedUpdatesSync } = require('./batching');
+  const {
+    scheduleBatchedUpdate,
+    flushBatchedUpdatesSync,
+    hasBatchedUpdates,
+  } = require('./batching');
   const { BoxNode } = require('../nodes/primitives/BoxNode');
   const {
     collectInteractiveComponents,
@@ -212,8 +217,20 @@ export function render(element: ReactElement, options?: RenderOptions): string |
     }
   };
 
+  // Helper to get stdout state
+  const getStdoutState = () => {
+    const handle = (
+      process.stdout as NodeJS.WriteStream & { _handle?: { writeQueueSize?: number } }
+    )._handle;
+    return {
+      queueSize: handle?.writeQueueSize ?? -1,
+      writableLength: process.stdout.writableLength,
+    };
+  };
+
   // Update through React reconciliation
   const performRender = (): string | void => {
+    debug('[performRender] START', { time: Date.now(), stdout: getStdoutState() });
     if (renderState.rootContainer) {
       try {
         const dims = getTerminalDimensions();
@@ -350,6 +367,7 @@ export function render(element: ReactElement, options?: RenderOptions): string |
         }
 
         isFirstRender = false;
+        debug('[performRender] END', { time: Date.now(), stdout: getStdoutState() });
 
         if (renderState.renderCallback) {
           renderState.renderCallback();
@@ -414,6 +432,11 @@ export function render(element: ReactElement, options?: RenderOptions): string |
         count: interactiveComponents.length,
         types: interactiveComponents.map((c: NodeLike) => c.type),
       });
+
+      // CRITICAL: Set render mode to interactive for proper terminal dimensions
+      setRenderMode('interactive');
+      updateTerminalDimensions();
+
       globalState.isInteractive = true;
       globalState.wasInteractiveMode = true;
       renderState.isInteractive = true;
@@ -424,6 +447,12 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       process.on('SIGINT', () => {
         exit(0);
       });
+
+      // Reset buffer and force a re-render with correct dimensions
+      resetBufferRenderer();
+
+      // Re-render the tree with correct interactive mode dimensions
+      reconciler.updateContainer(element, renderState.rootFiber, null, () => {});
     } else {
       // No interactive components, return static output
       return outputResult;
@@ -447,16 +476,27 @@ export function render(element: ReactElement, options?: RenderOptions): string |
 
   // Schedule update function
   const scheduleUpdate = (): void => {
-    debug('scheduleUpdate called');
+    debug('scheduleUpdate called', { stdout: getStdoutState() });
 
+    debug('[scheduleUpdate] Scheduling batch', { time: Date.now(), stdout: getStdoutState() });
     scheduleBatchedUpdate(() => {
-      debug('scheduleBatchedUpdate callback - calling performRender');
+      debug('[scheduleUpdate] Batch callback executing, calling performRender', {
+        time: Date.now(),
+        stdout: getStdoutState(),
+      });
       performRender();
+      debug('[scheduleUpdate] performRender done', { time: Date.now(), stdout: getStdoutState() });
     });
   };
 
   // Flush all pending React updates synchronously
+  // Defined first so we can pass it to bell callbacks
   const flushSyncReactUpdates = (): void => {
+    // Only do work if there are pending batched updates
+    if (!hasBatchedUpdates()) {
+      return;
+    }
+
     flushBatchedUpdatesSync();
 
     if (renderState.currentElement && renderState.rootFiber) {
@@ -492,6 +532,22 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       performRender();
     }
   };
+
+  // Register the bell render callback so bells can trigger screen flush
+  setBellRenderCallback(() => {
+    debug('[BELL] Callback starting', { time: Date.now(), stdout: getStdoutState() });
+    debug('[BELL] Calling performRender directly', { stdout: getStdoutState() });
+    performRender();
+    debug('[BELL] performRender done', { time: Date.now(), stdout: getStdoutState() });
+    debug('[BELL] Callback complete', { stdout: getStdoutState() });
+  });
+
+  // Register the flushSync callback so DSR responses can do sync work like TAB
+  setBellFlushSyncCallback(() => {
+    debug('[BELL] flushSync callback - doing sync work like TAB', { time: Date.now() });
+    flushSyncReactUpdates();
+    debug('[BELL] flushSync callback done', { time: Date.now() });
+  });
 
   // Setup input handling for interactive components
   const setupInputHandling = (root: NodeLike): void => {
@@ -570,7 +626,22 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       button: number;
     }
     startInputListener((_chunk: string, key: KeyEvent | null, mouse: MouseEventData | null) => {
+      debug('[INPUT] Listener callback', {
+        time: Date.now(),
+        hasKey: !!key,
+        hasMouse: !!mouse,
+        keyTab: key?.tab,
+      });
       try {
+        // Handle DSR (cursor position) responses
+        // The bell's onDsrResponse() already schedules a render via setImmediate,
+        // so we just need to return early here to avoid duplicate processing
+        const keyWithDsr = key as KeyEvent & { _dsrResponse?: boolean };
+        if (keyWithDsr?._dsrResponse) {
+          debug('[INPUT] DSR response - letting onDsrResponse handle it', { time: Date.now() });
+          return;
+        }
+
         const currentRoot = renderState.rootContainer || root;
         const currentComponents = getInteractiveComponents(currentRoot);
         applyFocusState(currentComponents);
@@ -582,17 +653,32 @@ export function render(element: ReactElement, options?: RenderOptions): string |
 
         if (key) {
           if (key.tab) {
-            debug('[input] Tab key received', { shift: key.shift });
+            debug('[TAB] Starting tab handler', {
+              time: Date.now(),
+              shift: key.shift,
+              stdout: getStdoutState(),
+            });
+            debug('[TAB] Calling flushSyncReactUpdates');
             flushSyncReactUpdates();
+            debug('[TAB] flushSyncReactUpdates done', { stdout: getStdoutState() });
 
             const freshRoot = renderState.rootContainer || root;
             const freshComponents = getInteractiveComponents(freshRoot);
+            debug('[TAB] Got components', {
+              count: freshComponents.length,
+              stdout: getStdoutState(),
+            });
             applyFocusState(freshComponents);
+            debug('[TAB] Applied focus state', { stdout: getStdoutState() });
 
             handleTabNavigation(freshComponents, key.shift, scheduleUpdate, freshRoot);
+            debug('[TAB] handleTabNavigation done', { stdout: getStdoutState() });
             const newFocused = freshComponents.find((comp) => (comp as FocusableNode).focused);
             terminal.focusedNodeId = newFocused?.id || null;
-            debug('[input] Tab handled, new focused:', { id: terminal.focusedNodeId });
+            debug('[TAB] Handler complete', {
+              focused: terminal.focusedNodeId,
+              stdout: getStdoutState(),
+            });
             return;
           }
 

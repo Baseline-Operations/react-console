@@ -6,6 +6,7 @@
 import type { Constructor, AbstractConstructor, MouseButton, MouseAction } from '../types';
 import { MouseButton as MouseButtonEnum, MouseAction as MouseActionEnum } from '../types';
 import { Node } from '../Node';
+import { debug } from '../../../utils/debug';
 
 /**
  * Keyboard event type
@@ -110,9 +111,16 @@ export function Interactive<TBase extends Constructor<Node> | AbstractConstructo
      * Handle click event
      */
     handleClick(event: MouseEvent): void {
+      debug('[Interactive.handleClick] START', { time: Date.now(), disabled: this.disabled });
       if (this.disabled) return;
+      debug('[Interactive.handleClick] Calling onClick/onPress', {
+        time: Date.now(),
+        hasOnClick: !!this.onClick,
+        hasOnPress: !!this.onPress,
+      });
       this.onClick?.(event);
       this.onPress?.(event);
+      debug('[Interactive.handleClick] END', { time: Date.now() });
     }
 
     /**

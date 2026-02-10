@@ -14,14 +14,18 @@ import {
   type KeyboardEvent,
   type LayoutConstraints,
   type LayoutResult,
+  type ChildLayout,
 } from '../base/mixins';
-import type { StyleMap, Dimensions } from '../base/types';
+import type { StyleMap, Dimensions, DisplayMode } from '../base/types';
+import { DisplayMode as DisplayModeEnum } from '../base/types';
 import {
   componentBoundsRegistry,
   createComponentBounds,
 } from '../../renderer/utils/componentBounds';
 import { StyleMixinRegistry } from '../../style/mixins/registry';
 import type { CellBuffer } from '../../buffer/CellBuffer';
+import { LayoutEngine } from '../../layout/LayoutEngine';
+import { resolveHeight } from '../../utils/responsive';
 
 /**
  * Scrollbar style configuration
@@ -85,6 +89,8 @@ export class ScrollViewNode extends ScrollViewNodeBase {
   // Note: handleKeyboardEvent is overridden in this class, so no declare needed
   declare focused: boolean;
   declare disabled: boolean;
+  declare display: DisplayMode;
+  declare inlineStyle: StyleMap;
 
   // Flag to tell BufferRenderer that this node handles its own children rendering
   readonly handlesOwnChildren = true;
@@ -97,6 +103,12 @@ export class ScrollViewNode extends ScrollViewNodeBase {
   // Content dimensions (calculated during layout)
   protected _contentHeight!: number;
   protected _contentWidth!: number;
+
+  // Child layouts from computeLayout (for flex support)
+  protected _childLayouts: ChildLayout[] = [];
+
+  // Original style height for percentage parsing
+  protected _styleHeight: string | number | undefined;
 
   // Scroll indicators
   protected _showsVerticalScrollIndicator!: boolean;
@@ -160,6 +172,41 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     const baseStyle = StyleMixinRegistry.get('BaseStyle')?.getDefaultStyle() || {};
     const boxStyle = StyleMixinRegistry.get('BoxStyle')?.getDefaultStyle() || {};
     return { ...baseStyle, ...boxStyle };
+  }
+
+  /**
+   * Override setStyle to handle percentage heights for ScrollView
+   * Percentage heights like '100%' or '50vh' are resolved to maxHeight
+   */
+  setStyle(style: StyleMap): void {
+    // Store original height for percentage resolution
+    if (style.height !== undefined) {
+      this._styleHeight = style.height as string | number;
+    }
+
+    // Call parent setStyle (from Stylable mixin)
+    // This will set this.inlineStyle and call updateBoxModelFromStyle
+    const proto = Object.getPrototypeOf(Object.getPrototypeOf(this));
+    if (proto && proto.setStyle) {
+      proto.setStyle.call(this, style);
+    } else {
+      // Fallback: directly update inline style
+      this.inlineStyle = { ...this.inlineStyle, ...style };
+    }
+
+    // Resolve percentage height to maxHeight
+    if (this._styleHeight !== undefined) {
+      if (typeof this._styleHeight === 'number') {
+        // Numeric height - use directly as maxHeight
+        this.maxHeight = this._styleHeight;
+      } else if (typeof this._styleHeight === 'string') {
+        // String height (percentage, vh, etc.) - resolve it
+        const resolved = resolveHeight(this._styleHeight);
+        if (resolved !== undefined) {
+          this.maxHeight = resolved;
+        }
+      }
+    }
   }
 
   // Getters and setters
@@ -510,26 +557,78 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     const wasAtBottom = this.isAtBottom;
     const oldContentHeight = this._contentHeight;
 
-    // Calculate content dimensions by laying out children
-    // Don't modify child bounds - they use absolute coordinates set by their own computeLayout
-    // renderToCellBuffer converts absolute to relative using ScrollView's position
+    // Get computed style to check for flex display
+    const style = this.computeStyle();
+    this.display = style.getDisplay() as DisplayMode;
+
+    // Calculate available content width (excluding scrollbar space)
+    const availableWidth = constraints.maxWidth || constraints.availableWidth || 80;
+    const showScrollbar = this._showsVerticalScrollIndicator;
+    const scrollbarWidth = showScrollbar ? this._scrollbarStyle.width || 1 : 0;
+    const contentAreaWidth = availableWidth - scrollbarWidth;
+
+    // Content constraints for children - no height limit (content can be taller than viewport)
+    const contentConstraints: LayoutConstraints = {
+      maxWidth: contentAreaWidth,
+      maxHeight: undefined, // No height limit for scrollable content
+      availableWidth: contentAreaWidth,
+      availableHeight: undefined,
+    };
+
+    // Use LayoutEngine for proper flex/block layout
+    const layoutEngine = new LayoutEngine();
+    let childLayouts: ChildLayout[] = [];
+
+    if (this.display === DisplayModeEnum.FLEX) {
+      // Use flexbox layout
+      childLayouts = layoutEngine.layoutFlexbox(this as unknown as Node, contentConstraints);
+    } else if (this.display === DisplayModeEnum.GRID) {
+      // Use grid layout
+      childLayouts = layoutEngine.layoutGrid(this as unknown as Node, contentConstraints);
+    } else {
+      // Default block layout (vertical stacking)
+      childLayouts = layoutEngine.layoutBlock(this as unknown as Node, contentConstraints);
+    }
+
+    // Store child layouts for use in renderToCellBuffer
+    // NOTE: We don't update child.bounds here because that would affect
+    // how children calculate their own nested positions. Instead, we use
+    // _childLayouts directly for positioning during rendering.
+    this._childLayouts = childLayouts;
+
+    // Calculate content dimensions from laid out children
     let contentWidth = 0;
     let contentHeight = 0;
 
-    for (const child of this.children) {
-      if ('computeLayout' in child) {
-        const childLayout = (child as unknown as RenderableNode).computeLayout!({
-          ...constraints,
-          // Don't limit maxHeight for children - they can be taller than visible area
-          maxHeight: undefined,
-        });
+    for (const childLayout of childLayouts) {
+      const childRight = childLayout.bounds.x + childLayout.bounds.width;
+      const childBottom = childLayout.bounds.y + childLayout.bounds.height;
+      contentWidth = Math.max(contentWidth, childRight);
+      contentHeight = Math.max(contentHeight, childBottom);
+    }
 
-        const childWidth = childLayout.dimensions?.width || 0;
-        const childHeight = childLayout.dimensions?.height || 0;
+    // Fallback: if no layouts returned, compute children manually
+    if (childLayouts.length === 0 && this.children.length > 0) {
+      let currentY = 0;
+      for (const child of this.children) {
+        if ('computeLayout' in child) {
+          const childLayout = (child as unknown as RenderableNode).computeLayout!(
+            contentConstraints
+          );
+          const childWidth = childLayout.dimensions?.width || 0;
+          const childHeight = childLayout.dimensions?.height || 0;
 
-        contentWidth = Math.max(contentWidth, childWidth);
-        contentHeight += childHeight;
+          // Store layout for rendering
+          this._childLayouts.push({
+            node: child,
+            bounds: { x: 0, y: currentY, width: childWidth, height: childHeight },
+          });
+
+          contentWidth = Math.max(contentWidth, childWidth);
+          currentY += childHeight;
+        }
       }
+      contentHeight = currentY;
     }
 
     this._contentWidth = contentWidth;
@@ -546,17 +645,16 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     const visibleHeight =
       this.maxHeight !== null ? Math.min(this.maxHeight, this._contentHeight) : this._contentHeight;
     // Width: fill available space by default (like a block element)
-    const availableWidth = constraints.maxWidth || constraints.availableWidth || contentWidth;
     const visibleWidth =
       this.maxWidth !== null ? Math.min(this.maxWidth, availableWidth) : availableWidth;
 
-    // Add scrollbar width if content overflows
-    const showScrollbar =
+    // Recalculate scrollbar visibility based on actual content
+    const actualShowScrollbar =
       this._showsVerticalScrollIndicator && this._contentHeight > (this.maxHeight || Infinity);
-    const scrollbarWidth = showScrollbar ? this._scrollbarStyle.width || 1 : 0;
+    const actualScrollbarWidth = actualShowScrollbar ? this._scrollbarStyle.width || 1 : 0;
 
     const dimensions: Dimensions = {
-      width: visibleWidth + scrollbarWidth,
+      width: visibleWidth + actualScrollbarWidth,
       height: visibleHeight,
       contentWidth: visibleWidth,
       contentHeight: visibleHeight,
@@ -573,6 +671,7 @@ export class ScrollViewNode extends ScrollViewNodeBase {
       dimensions,
       layout: {},
       bounds: this.bounds,
+      children: this._childLayouts,
     };
   }
 
@@ -619,23 +718,40 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     const scrollbarWidth = showScrollbar ? this._scrollbarStyle.width || 1 : 0;
     const contentAreaWidth = visibleWidth - scrollbarWidth;
 
-    // Track current content Y position as we render children
-    let contentY = 0;
-
-    // Render children with scroll offset and clipping
-    for (const child of this.children) {
-      const childHeight = this.renderChildWithScroll(
-        child,
-        buffer,
-        x, // viewport screen X
-        y, // viewport screen Y
-        contentAreaWidth,
-        visibleHeight,
-        contentY, // Y position in content area
-        layerId,
-        zIndex
-      );
-      contentY += childHeight;
+    // Use stored child layouts from computeLayout (respects flex positioning)
+    if (this._childLayouts.length > 0) {
+      // Render children using their computed layout positions
+      for (const childLayout of this._childLayouts) {
+        this.renderChildWithLayout(
+          childLayout.node,
+          childLayout.bounds,
+          buffer,
+          x, // viewport screen X
+          y, // viewport screen Y
+          contentAreaWidth,
+          visibleHeight,
+          layerId,
+          zIndex
+        );
+      }
+    } else {
+      // Fallback: render children with simple vertical stacking
+      let contentY = 0;
+      for (const child of this.children) {
+        const childHeight = this.renderChildWithScroll(
+          child,
+          buffer,
+          x, // viewport screen X
+          y, // viewport screen Y
+          contentAreaWidth,
+          visibleHeight,
+          contentY, // Y position in content area
+          0, // X position (default left)
+          layerId,
+          zIndex
+        );
+        contentY += childHeight;
+      }
     }
 
     // Render scrollbar if needed
@@ -654,7 +770,125 @@ export class ScrollViewNode extends ScrollViewNodeBase {
   }
 
   /**
-   * Render a child with scroll offset, returns height consumed
+   * Render a child using its computed layout bounds (for flex support)
+   * Recursively renders all descendants since BoxNode.renderToCellBuffer doesn't render children
+   */
+  private renderChildWithLayout(
+    node: Node,
+    bounds: { x: number; y: number; width: number; height: number },
+    buffer: CellBuffer,
+    viewportX: number,
+    viewportY: number,
+    viewportWidth: number,
+    viewportHeight: number,
+    layerId: string,
+    zIndex: number
+  ): void {
+    const nodeWidth = bounds.width;
+    const nodeHeight = bounds.height;
+    const contentX = bounds.x;
+    const contentY = bounds.y;
+
+    // Apply scroll offset to get position in visible viewport
+    const scrolledY = contentY - this._scrollTop;
+    const scrolledX = contentX - this._scrollLeft;
+
+    // Check if node is visible in viewport
+    if (scrolledY + nodeHeight <= 0 || scrolledY >= viewportHeight) {
+      return; // Node is outside visible area
+    }
+    if (scrolledX + nodeWidth <= 0 || scrolledX >= viewportWidth) {
+      return; // Node is outside visible area horizontally
+    }
+
+    // Calculate clipped render position and size
+    const clipTop = scrolledY < 0 ? -scrolledY : 0;
+    const clipLeft = scrolledX < 0 ? -scrolledX : 0;
+    const renderY = viewportY + Math.max(0, scrolledY);
+    const renderX = viewportX + Math.max(0, scrolledX);
+    const renderHeight = Math.min(nodeHeight - clipTop, viewportHeight - Math.max(0, scrolledY));
+    const renderWidth = Math.min(nodeWidth - clipLeft, viewportWidth - Math.max(0, scrolledX));
+
+    if (renderHeight <= 0 || renderWidth <= 0) return;
+
+    // Render the node's own content (background, border, text)
+    const renderableNode = node as unknown as RenderableNode;
+
+    if (renderableNode.renderToCellBuffer) {
+      renderableNode.renderToCellBuffer({
+        buffer,
+        x: renderX,
+        y: renderY,
+        maxWidth: renderWidth,
+        maxHeight: renderHeight,
+        clipRegion: {
+          x: renderX,
+          y: renderY,
+          width: renderWidth,
+          height: renderHeight,
+        },
+      });
+    }
+
+    // Register interactive components for mouse event handling
+    const isInteractive =
+      renderableNode.onClick ||
+      renderableNode.onPress ||
+      node.type === 'button' ||
+      node.type === 'input' ||
+      node.type === 'checkbox' ||
+      node.type === 'radio' ||
+      node.type === 'dropdown' ||
+      node.type === 'select';
+
+    if (isInteractive) {
+      componentBoundsRegistry.register(
+        createComponentBounds(
+          node as unknown as import('../../types').ConsoleNode,
+          renderX,
+          renderY,
+          renderWidth,
+          renderHeight
+        )
+      );
+    }
+
+    // Recursively render children - this is needed because BoxNode.renderToCellBuffer
+    // doesn't render its children (it normally relies on BufferRenderer to walk the tree)
+    if (!renderableNode.handlesOwnChildren && node.children.length > 0) {
+      // Get node's content area offset (border + padding)
+      const nodeContentOffsetX = (node.padding?.left || 0) + (node.border?.width?.left || 0);
+      const nodeContentOffsetY = (node.padding?.top || 0) + (node.border?.width?.top || 0);
+
+      for (const child of node.children) {
+        // Use child's computed bounds (relative to parent's content area)
+        const childBounds = child.bounds;
+        if (childBounds) {
+          // Child bounds are relative to parent's (0,0).
+          // We need to add the parent's position (contentX, contentY) to get absolute position.
+          this.renderChildWithLayout(
+            child,
+            {
+              x: contentX + nodeContentOffsetX + childBounds.x,
+              y: contentY + nodeContentOffsetY + childBounds.y,
+              width: childBounds.width,
+              height: childBounds.height,
+            },
+            buffer,
+            viewportX,
+            viewportY,
+            viewportWidth,
+            viewportHeight,
+            layerId,
+            zIndex
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Render a child with scroll offset, returns height consumed (legacy fallback)
    */
   private renderChildWithScroll(
     node: Node,
@@ -664,6 +898,7 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     viewportWidth: number,
     viewportHeight: number,
     contentY: number,
+    contentX: number,
     layerId: string,
     zIndex: number
   ): number {
@@ -674,6 +909,7 @@ export class ScrollViewNode extends ScrollViewNodeBase {
 
     // Apply scroll offset to get position in visible viewport
     const scrolledY = contentY - this._scrollTop;
+    const scrolledX = contentX - this._scrollLeft;
 
     // Check if node is visible in viewport
     if (scrolledY + nodeHeight <= 0 || scrolledY >= viewportHeight) {
@@ -684,8 +920,11 @@ export class ScrollViewNode extends ScrollViewNodeBase {
 
     // Calculate clipped render position and size
     const clipTop = scrolledY < 0 ? -scrolledY : 0;
+    const clipLeft = scrolledX < 0 ? -scrolledX : 0;
     const renderY = viewportY + Math.max(0, scrolledY);
+    const renderX = viewportX + Math.max(0, scrolledX);
     const renderHeight = Math.min(nodeHeight - clipTop, viewportHeight - Math.max(0, scrolledY));
+    const renderWidth = Math.min(nodeWidth - clipLeft, viewportWidth - Math.max(0, scrolledX));
 
     if (renderHeight <= 0) return nodeHeight;
 
@@ -694,14 +933,14 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     if (renderableNode.renderToCellBuffer) {
       renderableNode.renderToCellBuffer({
         buffer,
-        x: viewportX,
+        x: renderX,
         y: renderY,
-        maxWidth: Math.min(nodeWidth, viewportWidth),
+        maxWidth: renderWidth,
         maxHeight: renderHeight,
         clipRegion: {
-          x: viewportX,
+          x: renderX,
           y: renderY,
-          width: Math.min(nodeWidth, viewportWidth),
+          width: renderWidth,
           height: renderHeight,
         },
       });
@@ -724,9 +963,9 @@ export class ScrollViewNode extends ScrollViewNodeBase {
       componentBoundsRegistry.register(
         createComponentBounds(
           node as unknown as import('../../types').ConsoleNode,
-          viewportX,
+          renderX,
           renderY,
-          Math.min(nodeWidth, viewportWidth),
+          renderWidth,
           renderHeight
         )
       );
@@ -744,6 +983,7 @@ export class ScrollViewNode extends ScrollViewNodeBase {
           viewportWidth,
           viewportHeight,
           nestedY,
+          contentX,
           layerId,
           zIndex
         );
