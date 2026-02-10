@@ -480,12 +480,14 @@ export function createHostConfig(): any {
       (instance as unknown as { horizontal: boolean }).horizontal = Boolean(newProps.horizontal);
     }
     if ('showsVerticalScrollIndicator' in newProps) {
-      (instance as unknown as { showsVerticalScrollIndicator: boolean }).showsVerticalScrollIndicator =
-        Boolean(newProps.showsVerticalScrollIndicator);
+      (
+        instance as unknown as { showsVerticalScrollIndicator: boolean }
+      ).showsVerticalScrollIndicator = Boolean(newProps.showsVerticalScrollIndicator);
     }
     if ('showsHorizontalScrollIndicator' in newProps) {
-      (instance as unknown as { showsHorizontalScrollIndicator: boolean }).showsHorizontalScrollIndicator =
-        Boolean(newProps.showsHorizontalScrollIndicator);
+      (
+        instance as unknown as { showsHorizontalScrollIndicator: boolean }
+      ).showsHorizontalScrollIndicator = Boolean(newProps.showsHorizontalScrollIndicator);
     }
     if ('scrollbarStyle' in newProps && newProps.scrollbarStyle) {
       (instance as unknown as { scrollbarStyle: unknown }).scrollbarStyle = newProps.scrollbarStyle;
@@ -589,9 +591,7 @@ export function createHostConfig(): any {
     ) => fn,
     supportsMicrotasks: true,
     scheduleMicrotask:
-      typeof queueMicrotask === 'function'
-        ? queueMicrotask
-        : (fn: () => void) => setTimeout(fn, 0),
+      typeof queueMicrotask === 'function' ? queueMicrotask : (fn: () => void) => setTimeout(fn, 0),
     supportsTestSelectors: false,
     commitMount: () => {},
     resetTextContent: () => {},

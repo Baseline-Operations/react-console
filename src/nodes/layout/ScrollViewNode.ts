@@ -218,9 +218,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     return this._scrollTop;
   }
   set scrollTop(value: number) {
-    const viewHeight = this._effectiveVisibleHeight > 0
-      ? this._effectiveVisibleHeight
-      : (this.maxHeight || this._contentHeight);
+    const viewHeight =
+      this._effectiveVisibleHeight > 0
+        ? this._effectiveVisibleHeight
+        : this.maxHeight || this._contentHeight;
     const maxScroll = Math.max(0, this._contentHeight - viewHeight);
     this._scrollTop = Math.max(0, Math.min(value, maxScroll));
   }
@@ -324,9 +325,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
    * Check if scroll is at or near the bottom
    */
   get isAtBottom(): boolean {
-    const viewHeight = this._effectiveVisibleHeight > 0
-      ? this._effectiveVisibleHeight
-      : (this.maxHeight || this._contentHeight);
+    const viewHeight =
+      this._effectiveVisibleHeight > 0
+        ? this._effectiveVisibleHeight
+        : this.maxHeight || this._contentHeight;
     const maxScroll = Math.max(0, this._contentHeight - viewHeight);
     return this._scrollTop >= maxScroll - 1; // Allow 1 row tolerance
   }
@@ -441,9 +443,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     if (contentY < 0) return;
 
     const nodeHeight = node.bounds?.height || 1;
-    const visibleHeight = this._effectiveVisibleHeight > 0
-      ? this._effectiveVisibleHeight
-      : (this.maxHeight || this._contentHeight);
+    const visibleHeight =
+      this._effectiveVisibleHeight > 0
+        ? this._effectiveVisibleHeight
+        : this.maxHeight || this._contentHeight;
 
     // Check if node is above visible area
     if (contentY < this._scrollTop) {
@@ -479,12 +482,16 @@ export class ScrollViewNode extends ScrollViewNodeBase {
 
     // Click above thumb - page up
     if (relativeY < thumbStart) {
-      const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
+      const pageSize =
+        (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : this.maxHeight || 10) -
+        1;
       this.scrollBy(-pageSize, 0);
     }
     // Click below thumb - page down
     else if (relativeY >= thumbEnd) {
-      const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
+      const pageSize =
+        (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : this.maxHeight || 10) -
+        1;
       this.scrollBy(pageSize, 0);
     }
     // Click on thumb - do nothing (drag will handle it)
@@ -511,9 +518,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     const scrollRatio = Math.max(0, Math.min(1, (thumbCenter - thumbHeight / 2) / trackHeight));
 
     // Calculate target scroll position
-    const viewHeight = this._effectiveVisibleHeight > 0
-      ? this._effectiveVisibleHeight
-      : (this.maxHeight || this._contentHeight);
+    const viewHeight =
+      this._effectiveVisibleHeight > 0
+        ? this._effectiveVisibleHeight
+        : this.maxHeight || this._contentHeight;
     const maxScroll = Math.max(0, this._contentHeight - viewHeight);
     const targetScroll = Math.round(scrollRatio * maxScroll);
 
@@ -579,11 +587,15 @@ export class ScrollViewNode extends ScrollViewNodeBase {
         this.scrollBy(this._scrollStep, 0);
         event.preventDefault?.();
       } else if (key.pageUp) {
-        const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
+        const pageSize =
+          (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : this.maxHeight || 10) -
+          1;
         this.scrollBy(-pageSize, 0);
         event.preventDefault?.();
       } else if (key.pageDown) {
-        const pageSize = (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : (this.maxHeight || 10)) - 1;
+        const pageSize =
+          (this._effectiveVisibleHeight > 0 ? this._effectiveVisibleHeight : this.maxHeight || 10) -
+          1;
         this.scrollBy(pageSize, 0);
         event.preventDefault?.();
       } else if (key.home) {
@@ -797,9 +809,12 @@ export class ScrollViewNode extends ScrollViewNodeBase {
 
     // Calculate visible dimensions - prefer _effectiveVisibleHeight (set during computeLayout)
     // which already considers both maxHeight prop AND parent constraints
-    const visibleHeight = this._effectiveVisibleHeight > 0
-      ? Math.min(this._effectiveVisibleHeight, maxHeight)
-      : (this.maxHeight !== null ? Math.min(this.maxHeight, maxHeight) : maxHeight);
+    const visibleHeight =
+      this._effectiveVisibleHeight > 0
+        ? Math.min(this._effectiveVisibleHeight, maxHeight)
+        : this.maxHeight !== null
+          ? Math.min(this.maxHeight, maxHeight)
+          : maxHeight;
     const visibleWidth = this.maxWidth !== null ? Math.min(this.maxWidth, maxWidth) : maxWidth;
 
     // Store actual screen position for hit testing
@@ -1106,9 +1121,10 @@ export class ScrollViewNode extends ScrollViewNodeBase {
     // Calculate thumb position and size
     const scrollRatio = this._contentHeight > 0 ? height / this._contentHeight : 1;
     const thumbHeight = Math.max(1, Math.floor(height * scrollRatio));
-    const viewHeight = this._effectiveVisibleHeight > 0
-      ? this._effectiveVisibleHeight
-      : (this.maxHeight || this._contentHeight);
+    const viewHeight =
+      this._effectiveVisibleHeight > 0
+        ? this._effectiveVisibleHeight
+        : this.maxHeight || this._contentHeight;
     const maxScroll = Math.max(1, this._contentHeight - viewHeight);
     const thumbPosition =
       maxScroll > 0 ? Math.floor((this._scrollTop / maxScroll) * (height - thumbHeight)) : 0;

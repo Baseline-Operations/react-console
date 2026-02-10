@@ -278,7 +278,10 @@ export class BufferRenderer {
     const dims = getTerminalDimensions();
     const bufferHeight = getLayoutMaxHeight();
 
-    if (dims.columns !== this.compositeBuffer.width || bufferHeight !== this.compositeBuffer.height) {
+    if (
+      dims.columns !== this.compositeBuffer.width ||
+      bufferHeight !== this.compositeBuffer.height
+    ) {
       this.compositeBuffer.resize(dims.columns, bufferHeight);
       this.displayBuffer.resize(dims.columns, bufferHeight);
       this.isFirstRender = true; // Force full redraw after resize
