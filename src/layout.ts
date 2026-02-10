@@ -19,3 +19,7 @@ export { Row } from './components/layout/Row';
 export type { RowProps } from './components/layout/Row';
 export { Column } from './components/layout/Column';
 export type { ColumnProps } from './components/layout/Column';
+export { Spacer } from './components/layout/Spacer';
+export type { SpacerProps } from './components/layout/Spacer';
+export { Divider } from './components/layout/Divider';
+export type { DividerProps, DividerStyle, DividerOrientation } from './components/layout/Divider';

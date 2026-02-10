@@ -109,11 +109,14 @@ export class NodeFactory {
         break;
 
       case 'linebreak':
-      case 'LineBreak':
-        // LineBreak is just a text node with a newline
+      case 'LineBreak': {
+        // LineBreak is just a text node with newline(s)
         node = new TextNode() as unknown as Node;
-        node.setContent('\n');
+        const lineBreakCount =
+          typeof props.count === 'number' && props.count > 0 ? Math.floor(props.count) : 1;
+        node.setContent('\n'.repeat(lineBreakCount));
         break;
+      }
 
       case 'textinput':
       case 'TextInput':

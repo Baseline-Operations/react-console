@@ -3,7 +3,17 @@
  */
 
 import React, { useState } from 'react';
-import { render, View, Text, Button, ScrollView, Bell, useBell, StyleSheet } from '../src/index';
+import {
+  render,
+  View,
+  Text,
+  Button,
+  ScrollView,
+  Bell,
+  useBell,
+  StyleSheet,
+  useTerminalDimensions,
+} from '../src/index';
 
 // Register patterns
 Bell.registerPattern('mario', [
@@ -103,6 +113,7 @@ function BellExample() {
   const [lastPlayed, setLastPlayed] = useState<string>('');
   const [isTonePlaying, setIsTonePlaying] = useState(false);
   const bell = useBell();
+  const dims = useTerminalDimensions();
 
   const play = (name: string, fn: () => void) => {
     setLastPlayed(name);
@@ -143,7 +154,7 @@ function BellExample() {
       </View>
 
       <ScrollView
-        maxHeight={process.stdout.rows ? process.stdout.rows - 5 : 20}
+        maxHeight={Math.max(5, dims.rows - 5)}
         showsVerticalScrollIndicator
       >
         <Text style={styles.label}>Sounds:</Text>

@@ -63,7 +63,7 @@ export function render(element: ReactElement, options?: RenderOptions): string |
 
   // Lazy imports to avoid circular dependency with reconciler
   interface ReconcilerModule {
-    reconciler: ReconcilerType<NodeLike, NodeLike, NodeLike, NodeLike, NodeLike>;
+    reconciler: ReconcilerType<NodeLike, NodeLike, NodeLike, NodeLike, NodeLike, NodeLike>;
   }
   let reconciler: ReconcilerModule['reconciler'];
   try {
@@ -179,10 +179,27 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       false,
       false,
       '',
-      (error: Error) => {
-        reportError(error, ErrorType.RENDER);
+      (error: Error, errorInfo?: { componentStack?: string }) => {
+        reportError(error, ErrorType.RENDER, {
+          severity: 'uncaught',
+          componentStack: errorInfo?.componentStack,
+        });
       },
-      null
+      (error: Error, errorInfo?: { componentStack?: string }) => {
+        reportError(error, ErrorType.RENDER, {
+          severity: 'caught',
+          componentStack: errorInfo?.componentStack,
+        });
+      },
+      (error: Error, errorInfo?: { componentStack?: string }) => {
+        reportError(error, ErrorType.RENDER, {
+          severity: 'recoverable',
+          componentStack: errorInfo?.componentStack,
+        });
+      },
+      () => {
+        // Default transition indicator - no-op for terminal
+      }
     ) as FiberRoot;
   }
 

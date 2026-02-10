@@ -533,15 +533,16 @@ export abstract class Node {
 
     // 6. Create initial render context
     const terminalDims = require('../../utils/terminal').getTerminalDimensions();
+    const layoutMaxHeight = require('../../utils/terminal').getLayoutMaxHeight();
     const context: import('./mixins/Renderable').RenderContext = {
       buffer,
       x: 0,
       y: 0,
       constraints: {
         maxWidth: terminalDims.columns,
-        maxHeight: terminalDims.rows,
+        maxHeight: layoutMaxHeight,
         availableWidth: terminalDims.columns,
-        availableHeight: terminalDims.rows,
+        availableHeight: layoutMaxHeight,
       },
       parent: null,
       theme: null,
@@ -643,11 +644,12 @@ export abstract class Node {
     const parent = this.parent;
     if (!parent) {
       const dims = require('../../utils/terminal').getTerminalDimensions();
+      const layoutMaxHeight = require('../../utils/terminal').getLayoutMaxHeight();
       return {
         maxWidth: dims.columns,
-        maxHeight: dims.rows,
+        maxHeight: layoutMaxHeight,
         availableWidth: dims.columns,
-        availableHeight: dims.rows,
+        availableHeight: layoutMaxHeight,
       };
     }
 

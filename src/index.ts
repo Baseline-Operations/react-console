@@ -18,9 +18,15 @@ export { View } from './components/primitives/View';
 export type { ViewProps } from './components/primitives/View';
 export { ScrollView } from './components/layout/ScrollView';
 export type { ScrollViewProps } from './components/layout/ScrollView';
+export { Spacer } from './components/layout/Spacer';
+export type { SpacerProps } from './components/layout/Spacer';
+export { Divider } from './components/layout/Divider';
+export type { DividerProps, DividerStyle, DividerOrientation } from './components/layout/Divider';
 export { LineBreak } from './components/primitives/LineBreak';
+export type { LineBreakProps } from './components/primitives/LineBreak';
 // Legacy support (deprecated - use LineBreak instead)
 export { Newline } from './components/primitives/Newline';
+export type { NewlineProps } from './components/primitives/Newline';
 
 // Components - Interactive
 export { TextInput, Input } from './components/interactive/TextInput';
@@ -29,6 +35,10 @@ export { Button } from './components/interactive/Button';
 export type { ButtonProps } from './components/interactive/Button';
 export { Pressable } from './components/interactive/Pressable';
 export type { PressableProps } from './components/interactive/Pressable';
+export { TouchableOpacity } from './components/interactive/TouchableOpacity';
+export type { TouchableOpacityProps } from './components/interactive/TouchableOpacity';
+export { TouchableHighlight } from './components/interactive/TouchableHighlight';
+export type { TouchableHighlightProps } from './components/interactive/TouchableHighlight';
 export { Focusable } from './components/interactive/Focusable';
 export type { FocusableProps } from './components/interactive/Focusable';
 export { Switch } from './components/interactive/Switch';

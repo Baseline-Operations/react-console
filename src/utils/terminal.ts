@@ -30,12 +30,19 @@ export function isStaticMode(): boolean {
 }
 
 /**
+ * Maximum height used for layout calculations in static mode.
+ * In static mode, content can scroll beyond the visible terminal,
+ * so layout should not be constrained to the terminal height.
+ */
+export const STATIC_LAYOUT_MAX_HEIGHT = 10000;
+
+/**
  * Get terminal dimensions (columns and rows)
  *
- * Returns the current terminal size. Falls back to 80x24 if dimensions
+ * Returns the actual terminal size. Falls back to 80x24 if dimensions
  * are not available (e.g., when not in a TTY).
  *
- * For static mode, rows is set to a large value to allow unlimited height.
+ * Always returns the real visual terminal dimensions regardless of render mode.
  *
  * @returns Terminal dimensions with columns and rows
  *
@@ -47,10 +54,24 @@ export function isStaticMode(): boolean {
  */
 export function getTerminalDimensions(): TerminalDimensions {
   const columns = process.stdout.columns ?? 80;
-  // For static mode, allow unlimited height (use large number)
-  // For interactive mode, use actual terminal rows
-  const rows = currentRenderMode === 'static' ? 10000 : (process.stdout.rows ?? 24);
+  const rows = process.stdout.rows ?? 24;
   return { columns, rows };
+}
+
+/**
+ * Get the maximum height to use for layout calculations.
+ *
+ * In static mode, returns a large value so content is not constrained
+ * to the visible terminal height (it can scroll). In interactive/fullscreen
+ * mode, returns the actual terminal rows since content must fit the viewport.
+ *
+ * @returns Maximum height for layout constraints
+ */
+export function getLayoutMaxHeight(): number {
+  if (currentRenderMode === 'static') {
+    return STATIC_LAYOUT_MAX_HEIGHT;
+  }
+  return process.stdout.rows ?? 24;
 }
 
 /**

@@ -395,6 +395,7 @@ function findInnermostScrollViewAt(
         screenY?: number;
         screenWidth?: number;
         screenHeight?: number;
+        effectiveVisibleHeight?: number;
         maxHeight?: number;
         bounds?: { x: number; y: number; width: number; height: number } | null;
       }
@@ -404,7 +405,14 @@ function findInnermostScrollViewAt(
       const screenX = sv.screenX ?? sv.bounds?.x ?? 0;
       const screenY = sv.screenY ?? sv.bounds?.y ?? 0;
       const screenWidth = sv.screenWidth ?? sv.bounds?.width ?? 0;
-      const screenHeight = sv.screenHeight ?? (sv.maxHeight || sv.bounds?.height || 0);
+      const screenHeight =
+        sv.screenHeight ??
+        (sv.effectiveVisibleHeight && sv.effectiveVisibleHeight > 0
+          ? sv.effectiveVisibleHeight
+          : null) ??
+        sv.maxHeight ??
+        sv.bounds?.height ??
+        0;
 
       if (x >= screenX && x < screenX + screenWidth && y >= screenY && y < screenY + screenHeight) {
         // Point is in this scrollview
@@ -473,6 +481,7 @@ export function handleMouseEvent(
       scrollTop?: number;
       contentHeight?: number;
       maxHeight?: number;
+      effectiveVisibleHeight?: number;
       scrollBy?(dy: number, dx: number): void;
       parent?: import('../../../nodes/base/Node').Node | null;
     }
@@ -481,10 +490,13 @@ export function handleMouseEvent(
       const oldScrollTop = sv.scrollTop ?? 0;
 
       // Check if we can scroll in this direction
-      const maxScroll = Math.max(
-        0,
-        (sv.contentHeight ?? 0) - (sv.maxHeight || sv.contentHeight || 0)
-      );
+      // Use effectiveVisibleHeight (which accounts for layout constraints from terminal size)
+      // instead of maxHeight (which is just the prop value)
+      const viewHeight =
+        sv.effectiveVisibleHeight && sv.effectiveVisibleHeight > 0
+          ? sv.effectiveVisibleHeight
+          : sv.maxHeight || sv.contentHeight || 0;
+      const maxScroll = Math.max(0, (sv.contentHeight ?? 0) - viewHeight);
       const canScrollUp = mouse.scrollDirection === 'up' && oldScrollTop > 0;
       const canScrollDown = mouse.scrollDirection === 'down' && oldScrollTop < maxScroll;
 
