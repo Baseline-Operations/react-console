@@ -9,6 +9,32 @@
 import { debug } from '../utils/debug';
 import { createRequire } from 'module';
 
+/**
+ * Speaker instance interface - matches the node-speaker API
+ * Defined here to avoid compile-time dependency on @mastra/node-speaker
+ */
+interface SpeakerInstance {
+  write(buffer: Buffer, callback?: () => void): boolean;
+  end(buffer?: Buffer): void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on(event: string, callback: (...args: any[]) => void): this;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  once(event: string, callback: (...args: any[]) => void): this;
+  destroy(error?: Error): void;
+  close?(): void;
+  cork?(): void;
+  removeAllListeners?(): void;
+  writable?: boolean;
+  destroyed?: boolean;
+}
+
+/**
+ * Speaker constructor interface
+ */
+interface SpeakerConstructor {
+  new (options: { channels: number; bitDepth: number; sampleRate: number }): SpeakerInstance;
+}
+
 // Store Speaker in globalThis to survive ESM/CJS dual loading
 const SPEAKER_KEY = '__reactConsoleSpeaker__';
 const SPEAKER_LOADED_KEY = '__reactConsoleSpeakerLoaded__';
@@ -245,12 +271,10 @@ function unregisterActiveSpeaker(audioId: string): void {
   speakers.delete(audioId);
 }
 
-function getSpeaker(): typeof import('@mastra/node-speaker') | null {
+function getSpeaker(): SpeakerConstructor | null {
   // Check if we've already tried to load
   if ((globalThis as Record<string, unknown>)[SPEAKER_LOADED_KEY]) {
-    return (globalThis as Record<string, unknown>)[SPEAKER_KEY] as
-      | typeof import('@mastra/node-speaker')
-      | null;
+    return (globalThis as Record<string, unknown>)[SPEAKER_KEY] as SpeakerConstructor | null;
   }
 
   // Mark as loaded (even if it fails)
@@ -411,7 +435,7 @@ function generateTrailingSilence(): Buffer {
 /**
  * Create a speaker instance with current config
  */
-function createSpeaker(): InstanceType<typeof import('@mastra/node-speaker')> | null {
+function createSpeaker(): SpeakerInstance | null {
   const Speaker = getSpeaker();
   if (!Speaker) return null;
 
