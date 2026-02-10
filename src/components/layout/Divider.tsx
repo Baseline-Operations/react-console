@@ -3,7 +3,6 @@
  * Visual separator for grouping content in terminal layouts
  */
 
-import React from 'react';
 import { createConsoleNode } from '../utils';
 import type { Color, ViewStyle } from '../../types';
 
@@ -22,6 +21,9 @@ const DIVIDER_CHARS: Record<DividerStyle, { horizontal: string; vertical: string
   dotted: { horizontal: '·', vertical: '·' },
   double: { horizontal: '═', vertical: '║' },
 };
+
+/** Default character repeat count when width is not a fixed number */
+const DEFAULT_REPEAT_COUNT = 200;
 
 /**
  * Props for the Divider component
@@ -130,35 +132,27 @@ export function Divider({
     };
 
     // Generate enough characters for flex children to fill available space
-    const lineRepeatCount = typeof width === 'number' ? width : 200;
+    const lineRepeatCount = typeof width === 'number' ? width : DEFAULT_REPEAT_COUNT;
     const lineContent = chars.horizontal.repeat(lineRepeatCount);
 
     // Build as a box with text children for the lines and label
-    return React.createElement(
-      'box' as string,
-      { style: containerStyle } as React.Attributes,
-      React.createElement(
-        'text' as string,
-        {
-          style: lineStyle,
-          children: lineContent,
-        } as React.Attributes
-      ),
-      React.createElement(
-        'text' as string,
-        {
-          style: labelStyle,
-          children: ` ${label} `,
-        } as React.Attributes
-      ),
-      React.createElement(
-        'text' as string,
-        {
-          style: lineStyle,
-          children: lineContent,
-        } as React.Attributes
-      )
-    );
+    const leftLine = createConsoleNode('text', {
+      style: lineStyle,
+      children: lineContent,
+    });
+    const labelElement = createConsoleNode('text', {
+      style: labelStyle,
+      children: ` ${label} `,
+    });
+    const rightLine = createConsoleNode('text', {
+      style: lineStyle,
+      children: lineContent,
+    });
+
+    return createConsoleNode('box', {
+      style: containerStyle,
+      children: [leftLine, labelElement, rightLine],
+    });
   }
 
   // Simple horizontal divider (no label)
@@ -170,7 +164,7 @@ export function Divider({
   };
 
   // Generate enough characters for the layout engine to clip via overflow
-  const repeatCount = typeof width === 'number' ? width : 200;
+  const repeatCount = typeof width === 'number' ? width : DEFAULT_REPEAT_COUNT;
   return createConsoleNode('text', {
     content: chars.horizontal.repeat(repeatCount),
     style: {

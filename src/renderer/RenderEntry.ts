@@ -180,13 +180,13 @@ export function render(element: ReactElement, options?: RenderOptions): string |
       false,
       '',
       (error: Error) => {
-        reportError(error, ErrorType.RENDER);
+        reportError(error, ErrorType.RENDER, { severity: 'uncaught' });
       },
       (error: Error) => {
-        reportError(error, ErrorType.RENDER);
+        reportError(error, ErrorType.RENDER, { severity: 'caught' });
       },
       (error: Error) => {
-        reportError(error, ErrorType.RENDER);
+        reportError(error, ErrorType.RENDER, { severity: 'recoverable' });
       },
       () => {
         // Default transition indicator - no-op for terminal
