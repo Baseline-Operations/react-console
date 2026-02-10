@@ -18,11 +18,12 @@ export const reconciler = Reconciler(
     Node, // TextInstance
     Node, // SuspenseInstance
     Node, // HydratableInstance
+    Node, // FormInstance
     Node, // PublicInstance
     object, // HostContext
-    unknown[], // UpdatePayload
     unknown, // ChildSet
     number, // TimeoutHandle
-    number // NoTimeout
+    number, // NoTimeout
+    unknown // TransitionStatus
   >
 );

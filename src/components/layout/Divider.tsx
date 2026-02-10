@@ -91,7 +91,7 @@ export function Divider({
 
   if (isVertical) {
     // Vertical divider: render a column of vertical line characters
-    const lineHeight = height ?? 1;
+    const lineHeight = Math.max(1, Math.floor(Number(height) || 1));
     const content = Array(lineHeight).fill(chars.vertical).join('\n');
 
     const verticalStyle: ViewStyle = {
@@ -121,12 +121,17 @@ export function Divider({
     // Create the line segments and label as children
     const lineStyle: ViewStyle = {
       flex: 1,
+      overflow: 'hidden',
       ...(color ? { color } : {}),
     };
 
     const labelStyle: ViewStyle = {
       ...(labelColor ? { color: labelColor } : color ? { color } : {}),
     };
+
+    // Generate enough characters for flex children to fill available space
+    const lineRepeatCount = typeof width === 'number' ? width : 200;
+    const lineContent = chars.horizontal.repeat(lineRepeatCount);
 
     // Build as a box with text children for the lines and label
     return React.createElement(
@@ -136,7 +141,7 @@ export function Divider({
         'text' as string,
         {
           style: lineStyle,
-          children: chars.horizontal.repeat(20),
+          children: lineContent,
         } as React.Attributes
       ),
       React.createElement(
@@ -150,7 +155,7 @@ export function Divider({
         'text' as string,
         {
           style: lineStyle,
-          children: chars.horizontal.repeat(20),
+          children: lineContent,
         } as React.Attributes
       )
     );
@@ -164,10 +169,10 @@ export function Divider({
     ...style,
   };
 
-  // Use a text node with repeated line character
-  // Width handling will be done by the layout engine based on the width style
+  // Generate enough characters for the layout engine to clip via overflow
+  const repeatCount = typeof width === 'number' ? width : 200;
   return createConsoleNode('text', {
-    content: chars.horizontal.repeat(200),
+    content: chars.horizontal.repeat(repeatCount),
     style: {
       ...horizontalStyle,
       overflow: 'hidden',
