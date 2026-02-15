@@ -3,6 +3,10 @@
  * React 19+ TypeScript library for building console/terminal applications using JSX
  */
 
+// Native addon required at startup (no fallback); throws if load fails
+import './native';
+export { getNativeVersion } from './native';
+
 // Renderer - integrated into Node class
 import { Node } from './nodes/base/Node';
 export const render = Node.render.bind(Node);
@@ -24,6 +28,10 @@ export { Divider } from './components/layout/Divider';
 export type { DividerProps, DividerStyle, DividerOrientation } from './components/layout/Divider';
 export { LineBreak } from './components/primitives/LineBreak';
 export type { LineBreakProps } from './components/primitives/LineBreak';
+export { Link } from './components/primitives/Link';
+export type { LinkProps } from './components/primitives/Link';
+export { Code } from './components/primitives/Code';
+export type { CodeProps } from './components/primitives/Code';
 // Legacy support (deprecated - use LineBreak instead)
 export { Newline } from './components/primitives/Newline';
 export type { NewlineProps } from './components/primitives/Newline';
@@ -312,7 +320,7 @@ export type {
 // Utilities (for advanced usage)
 export { getTerminalDimensions, supportsColor, enterRawMode, exitRawMode } from './utils/terminal';
 export { supportsMouse, enableMouseTracking, disableMouseTracking } from './utils/mouse';
-export { applyStyles, stripAnsiCodes, getVisibleLength } from './renderer/ansi';
+export { applyStyles, stripAnsiCodes, getVisibleLength, wrapHyperlink } from './renderer/ansi';
 export { measureText, wrapText, truncateText, decodeHtmlEntities } from './utils/measure';
 export { resolveSize, resolveWidth, resolveHeight } from './utils/responsive';
 export type { ResponsiveSize } from './types';

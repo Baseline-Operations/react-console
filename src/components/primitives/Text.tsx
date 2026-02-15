@@ -42,6 +42,7 @@ export interface TextProps {
   strikethrough?: TextStyle['strikethrough'];
   inverse?: TextStyle['inverse'];
   textAlign?: TextStyle['textAlign'];
+  textTransform?: TextStyle['textTransform'];
 }
 
 /**

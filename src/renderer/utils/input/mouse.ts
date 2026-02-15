@@ -856,19 +856,18 @@ export function handleMouseEvent(
       focusableTarget.isPressed = true;
     }
 
-    // Trigger mouse events for other components
-    // Wrap in discreteUpdates to ensure any state changes from handlers are committed
+    // Trigger mouse events only on press to avoid double-firing (press + release)
     const triggerEvents = () => {
       try {
         if (target.onMouseDown) {
           target.onMouseDown(mouse);
         }
-        if (target.onClick) {
-          target.onClick(mouse);
-        }
-        if (target.onPress) {
-          // onPress is alias for onClick (React Native pattern)
-          target.onPress(mouse);
+        if (mouse.eventType === 'press') {
+          if (target.onClick) {
+            target.onClick(mouse);
+          } else if (target.onPress) {
+            target.onPress(mouse);
+          }
         }
       } catch (error) {
         console.error('Error in click handler:', error);

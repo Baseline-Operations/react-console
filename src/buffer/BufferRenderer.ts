@@ -463,6 +463,7 @@ export class BufferRenderer {
       interactiveNode.onClick ||
       interactiveNode.onPress ||
       node.type === 'button' ||
+      node.type === 'link' ||
       node.type === 'input' ||
       node.type === 'checkbox' ||
       node.type === 'radio' ||
@@ -528,6 +529,46 @@ export class BufferRenderer {
           regBounds.height
         )
       );
+    }
+
+    // Register bounds for interactive children inside text (e.g. links) so mouse click hits the link, not the whole text
+    if (
+      node.type === 'text' &&
+      'getInteractiveChildRegions' in node &&
+      typeof (
+        node as {
+          getInteractiveChildRegions(): {
+            node: Node;
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          }[];
+        }
+      ).getInteractiveChildRegions === 'function'
+    ) {
+      const regions = (
+        node as {
+          getInteractiveChildRegions(): {
+            node: Node;
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          }[];
+        }
+      ).getInteractiveChildRegions();
+      for (const r of regions) {
+        componentBoundsRegistry.register(
+          createComponentBounds(
+            r.node as unknown as ConsoleNode,
+            bounds.x + r.x,
+            bounds.y + r.y,
+            r.width,
+            r.height
+          )
+        );
+      }
     }
   }
 

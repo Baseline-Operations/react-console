@@ -35,11 +35,15 @@ interface TextMetrics {
 }
 
 /**
- * A segment of text with its associated style
+ * A segment of text with its associated style.
+ * focusedLink: when true, segment is from a focused LinkNode; render with inverse (reverse fg/bg).
+ * nodeRef: when set, segment is from this node (e.g. LinkNode) for bounds registration.
  */
 interface TextSegment {
   text: string;
   style: ComputedStyle;
+  focusedLink?: boolean;
+  nodeRef?: Node;
 }
 
 // Create the mixed-in base class with proper type handling
@@ -91,31 +95,66 @@ export class TextNode extends TextNodeBase {
   }
 
   /**
+   * Apply textTransform to a string (uppercase, lowercase, capitalize).
+   */
+  private static applyTextTransform(
+    text: string,
+    transform: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+  ): string {
+    if (!text || transform === 'none') return text;
+    if (transform === 'uppercase') return text.toUpperCase();
+    if (transform === 'lowercase') return text.toLowerCase();
+    if (transform === 'capitalize') {
+      return text.replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
+    }
+    return text;
+  }
+
+  /**
    * Collect all text segments from this node and its children
    * This enables nested Text components like: <Text>Hello <Text style={{bold: true}}>World</Text></Text>
+   * Parent's textTransform is applied to child segment text when the content came from a string child
+   * (so <Text textTransform="uppercase">foo</Text> works even when "foo" is in a child TextNode).
    */
   private collectTextSegments(): TextSegment[] {
     const segments: TextSegment[] = [];
     const style = this.computeStyle();
+    const parentTransform = style.getTextTransform?.() ?? 'none';
 
     // If this node has children, collect from them (they include any text content)
     // If no children, use this node's content directly
     // This avoids double-counting when NodeFactory sets content AND reconciler adds child
     if (this.children.length > 0) {
-      // Collect from children only - they represent the actual content structure
+      // Collect from children only - they represent the actual content structure.
+      // Treat text and link children as having their own segments (shared styling path).
       for (const child of this.children) {
-        if (child.getNodeType && child.getNodeType() === 'text') {
-          const textChild = child as TextNode;
-          const childSegments = textChild.collectTextSegments();
-          segments.push(...childSegments);
+        const nodeType = child.getNodeType?.();
+        if (nodeType === 'text' || nodeType === 'link') {
+          const textLikeChild = child as TextNode;
+          const childSegments = textLikeChild.collectTextSegments();
+          const isFocusedLink =
+            nodeType === 'link' &&
+            'focused' in child &&
+            Boolean((child as { focused: boolean }).focused);
+          for (const seg of childSegments) {
+            segments.push({
+              text: TextNode.applyTextTransform(seg.text, parentTransform),
+              style: seg.style,
+              focusedLink: isFocusedLink,
+              nodeRef: nodeType === 'link' ? child : undefined,
+            });
+          }
         } else if (child.content) {
           // Raw text node or other node with content
-          segments.push({ text: child.content, style });
+          const raw = child.content;
+          const transformed = TextNode.applyTextTransform(raw, parentTransform);
+          segments.push({ text: transformed, style });
         }
       }
     } else if (this.content) {
       // Leaf text node - use its own content
-      segments.push({ text: this.content, style });
+      const transformed = TextNode.applyTextTransform(this.content, parentTransform);
+      segments.push({ text: transformed, style });
     }
 
     return segments;
@@ -129,6 +168,64 @@ export class TextNode extends TextNodeBase {
     const baseStyle = StyleMixinRegistry.get('BaseStyle')?.getDefaultStyle() || {};
     const textStyle = StyleMixinRegistry.get('TextStyle')?.getDefaultStyle() || {};
     return { ...baseStyle, ...textStyle };
+  }
+
+  /**
+   * Return regions for interactive children (e.g. links) so BufferRenderer can register their bounds for mouse hit testing.
+   * Coordinates are relative to this node's layout (x, y = column, row within the text block).
+   * One region per node (merged if segment spans multiple lines).
+   */
+  getInteractiveChildRegions(): {
+    node: Node;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[] {
+    const byNode = new Map<Node, { x: number; y: number; right: number; bottom: number }>();
+    if (this.textSegments.length === 0 || this.wrappedLines.length === 0) return [];
+    let segmentStart = 0;
+    for (const seg of this.textSegments) {
+      if (!seg.nodeRef) {
+        segmentStart += seg.text.length;
+        continue;
+      }
+      const segmentEnd = segmentStart + seg.text.length;
+      let lineStartCharIndex = 0;
+      for (let lineIndex = 0; lineIndex < this.wrappedLines.length; lineIndex++) {
+        const line = this.wrappedLines[lineIndex] ?? '';
+        const lineEndCharIndex = lineStartCharIndex + line.length;
+        if (segmentEnd <= lineStartCharIndex || segmentStart >= lineEndCharIndex) {
+          lineStartCharIndex = lineEndCharIndex;
+          continue;
+        }
+        const startInLine = Math.max(0, segmentStart - lineStartCharIndex);
+        const endInLine = Math.min(line.length, segmentEnd - lineStartCharIndex);
+        const slice = line.substring(startInLine, endInLine);
+        const x = measureText(slice) > 0 ? measureText(line.substring(0, startInLine)) : 0;
+        const width = measureText(slice);
+        const existing = byNode.get(seg.nodeRef);
+        const right = x + width;
+        const bottom = lineIndex + 1;
+        if (existing) {
+          existing.x = Math.min(existing.x, x);
+          existing.y = Math.min(existing.y, lineIndex);
+          existing.right = Math.max(existing.right, right);
+          existing.bottom = Math.max(existing.bottom, bottom);
+        } else {
+          byNode.set(seg.nodeRef, { x, y: lineIndex, right, bottom });
+        }
+        lineStartCharIndex = lineEndCharIndex;
+      }
+      segmentStart = segmentEnd;
+    }
+    return Array.from(byNode.entries()).map(([node, r]) => ({
+      node,
+      x: r.x,
+      y: r.y,
+      width: r.right - r.x,
+      height: r.bottom - r.y,
+    }));
   }
 
   computeLayout(constraints: LayoutConstraints): LayoutResult {
@@ -381,6 +478,25 @@ export class TextNode extends TextNodeBase {
       return null;
     };
 
+    // Helper to get whether position is in a focused link (for inverse highlight).
+    // Read focus from nodeRef at render time so we don't rely on cached segment.focusedLink.
+    const getFocusedLinkAtPos = (posInFull: number): boolean => {
+      let segmentStart = 0;
+      for (const segment of this.textSegments) {
+        const segmentEnd = segmentStart + segment.text.length;
+        if (posInFull >= segmentStart && posInFull < segmentEnd) {
+          if (segment.nodeRef && 'focused' in segment.nodeRef) {
+            return Boolean((segment.nodeRef as { focused: boolean }).focused);
+          }
+          return segment.focusedLink === true;
+        }
+        segmentStart = segmentEnd;
+      }
+      return false;
+    };
+
+    let currentRunFocusedLink = false;
+
     // Helper to flush current run with styling
     const flushRun = () => {
       if (currentRun.length === 0) return;
@@ -393,7 +509,7 @@ export class TextNode extends TextNodeBase {
           italic: currentRunStyle.getItalic(),
           underline: currentRunStyle.getUnderline(),
           strikethrough: currentRunStyle.getStrikethrough(),
-          inverse: currentRunStyle.getInverse(),
+          inverse: currentRunFocusedLink || currentRunStyle.getInverse(),
         });
       } else {
         styledOutput += currentRun;
@@ -404,12 +520,13 @@ export class TextNode extends TextNodeBase {
     for (const char of line) {
       const posInFull = lineStartInFull + charIndex;
       const segmentStyle = getStyleAtPos(posInFull);
+      const segmentFocusedLink = getFocusedLinkAtPos(posInFull);
 
-      // Check if style changed (compare by reference since styles are cached)
-      if (segmentStyle !== currentRunStyle) {
-        // Flush previous run and start new one
+      // Check if style or focus changed
+      if (segmentStyle !== currentRunStyle || segmentFocusedLink !== currentRunFocusedLink) {
         flushRun();
         currentRunStyle = segmentStyle;
+        currentRunFocusedLink = segmentFocusedLink;
       }
 
       currentRun += char;
@@ -452,7 +569,14 @@ export class TextNode extends TextNodeBase {
       }
     }
 
-    buffer.lines[y] = before + styledOutput + after;
+    this.setBufferLine(buffer, y, before + styledOutput + after);
+  }
+
+  /**
+   * Write line content to buffer. Overridden by LinkNode to wrap in OSC 8.
+   */
+  protected setBufferLine(buffer: OutputBuffer, y: number, content: string): void {
+    buffer.lines[y] = content;
   }
 
   private renderLine(
@@ -527,7 +651,7 @@ export class TextNode extends TextNodeBase {
       }
     }
 
-    buffer.lines[y] = before + styledLine + after;
+    this.setBufferLine(buffer, y, before + styledLine + after);
   }
 
   /**
@@ -602,29 +726,36 @@ export class TextNode extends TextNodeBase {
         const posInFull = lineStartInFull + charIndexInLine;
         let segmentStart = 0;
         let segmentStyle: ComputedStyle | null = null;
+        let matchedSegment: TextSegment | null = null;
 
         for (const segment of segments) {
           const segmentEnd = segmentStart + segment.text.length;
           if (posInFull >= segmentStart && posInFull < segmentEnd) {
             segmentStyle = segment.style;
+            matchedSegment = segment;
             break;
           }
           segmentStart = segmentEnd;
         }
 
-        // Use segment style if found, otherwise use defaults
+        // Use segment style if found, otherwise use defaults (segment background is required for Code/link styling)
         const charForeground = segmentStyle?.getColor() || defaultForeground;
+        const charBackground = segmentStyle?.getBackgroundColor() || background;
         const charBold = segmentStyle?.getBold() ?? defaultBold;
         const charDim = segmentStyle?.getDim() ?? defaultDim;
         const charItalic = segmentStyle?.getItalic() ?? defaultItalic;
         const charUnderline = segmentStyle?.getUnderline() ?? defaultUnderline;
         const charStrikethrough = segmentStyle?.getStrikethrough() ?? defaultStrikethrough;
-        const charInverse = segmentStyle?.getInverse() ?? defaultInverse;
+        const charInverse =
+          (matchedSegment?.nodeRef &&
+            'focused' in matchedSegment.nodeRef &&
+            (matchedSegment.nodeRef as { focused: boolean }).focused) ||
+          (segmentStyle?.getInverse() ?? defaultInverse);
 
         buffer.setCell(cx, cy, {
           char,
           foreground: charForeground,
-          background,
+          background: charBackground,
           bold: charBold,
           dim: charDim,
           italic: charItalic,

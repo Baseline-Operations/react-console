@@ -114,7 +114,8 @@
   ],
   "prepublishOnly": "npm run build",
   "scripts": {
-    "build": "npm run clean && npm run build:types && npm run build:js",
+    "build": "npm run build:native && npm run clean && npm run build:types && npm run build:js",
+    "build:native": "cd native && cargo build --release && node ../scripts/copy-native-addon.cjs",
     "build:types": "tsc --emitDeclarationOnly --outDir dist",
     "build:js": "rollup -c",
     "dev": "tsc --watch",

@@ -5,6 +5,7 @@
 
 import type { ReactElement } from 'react';
 import { TextNode } from './primitives/TextNode';
+import { LinkNode } from './primitives/LinkNode';
 import { BoxNode } from './primitives/BoxNode';
 import { FragmentNode } from './primitives/FragmentNode';
 import { TextInputNode } from './interactive/TextInputNode';
@@ -115,6 +116,21 @@ export class NodeFactory {
         const lineBreakCount =
           typeof props.count === 'number' && props.count > 0 ? Math.floor(props.count) : 1;
         node.setContent('\n'.repeat(lineBreakCount));
+        break;
+      }
+
+      case 'link':
+      case 'Link': {
+        const linkNode = new LinkNode() as unknown as Node;
+        if (typeof props.href === 'string') {
+          (linkNode as LinkNode).setHref(props.href);
+        }
+        if (props.children !== undefined && props.children !== null) {
+          if (typeof props.children === 'string' || typeof props.children === 'number') {
+            linkNode.setContent!(String(props.children));
+          }
+        }
+        node = linkNode;
         break;
       }
 

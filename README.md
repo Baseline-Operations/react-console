@@ -33,6 +33,15 @@ React Console allows you to build terminal/console applications using React 19+ 
 npm install @baseline-operations/react-console react@^19.0.0
 ```
 
+### Native addon (no fallback)
+
+This package **requires** a native addon. There is no TypeScript/JavaScript fallback: if the addon fails to load, the library throws with a clear error. You must either:
+
+- **Use a prebuild** (when available for your platform), or
+- **Build from source**: install [Rust](https://rustup.rs/) (stable, 1.85+), then run `npm run build:native` in the package root.
+
+**Supported platforms** (build from source): macOS (x64, arm64), Linux (x64, arm64), Windows (x64). Node 18+.
+
 ## Quick Start
 
 ```tsx

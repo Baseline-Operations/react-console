@@ -28,6 +28,7 @@ export function collectInteractiveComponents(node: Node, result: Node[], _depth:
   const isInteractive =
     node.type === 'input' ||
     node.type === 'button' ||
+    node.type === 'link' ||
     node.type === 'radio' ||
     node.type === 'checkbox' ||
     node.type === 'dropdown' ||

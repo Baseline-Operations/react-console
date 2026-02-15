@@ -92,6 +92,113 @@ export function createHostConfig(): any {
     }
   };
 
+  /** Style-like prop keys that should be applied to the node even when not under props.style */
+  const STYLE_KEYS = [
+    'color',
+    'backgroundColor',
+    'bold',
+    'dim',
+    'italic',
+    'underline',
+    'strikethrough',
+    'inverse',
+    'textAlign',
+    'textTransform',
+  ] as const;
+
+  /**
+   * Apply props to a node (style, content, href, etc.).
+   * Single path for all nodes: Text, Link, Code, Button, etc. use setStyle (Stylable) so styling is consistent.
+   * Used for both initial mount (createInstance) and updates (commitUpdate).
+   * If props.style is missing but raw props have style keys (color, underline, etc.), build style from them.
+   */
+  const applyPropsToNode = (instance: Node, newProps: Record<string, unknown>): void => {
+    const extInstance = instance as unknown as RenderableNode;
+
+    let styleToApply = newProps.style as ViewStyle | TextStyle | undefined;
+    if (!styleToApply && extInstance.setStyle) {
+      const rawStyle: Record<string, unknown> = {};
+      for (const key of STYLE_KEYS) {
+        if (key in newProps && newProps[key] !== undefined) {
+          rawStyle[key] = newProps[key];
+        }
+      }
+      if (Object.keys(rawStyle).length > 0) {
+        styleToApply = rawStyle as ViewStyle | TextStyle;
+      }
+    }
+    // Always merge raw style props (e.g. backgroundColor from <Code backgroundColor="blue">) into style so they are never dropped
+    if (
+      extInstance.setStyle &&
+      (styleToApply || STYLE_KEYS.some((k) => k in newProps && newProps[k] !== undefined))
+    ) {
+      const merged: Record<string, unknown> = { ...(styleToApply as Record<string, unknown>) };
+      for (const key of STYLE_KEYS) {
+        if (key in newProps && newProps[key] !== undefined) {
+          merged[key] = newProps[key];
+        }
+      }
+      if (Object.keys(merged).length > 0) {
+        extInstance.setStyle(merged as ViewStyle | TextStyle);
+      }
+    }
+    if ('onClick' in newProps) {
+      extInstance.onClick = newProps.onClick as ((event: unknown) => void) | undefined;
+    }
+    if ('onPress' in newProps) {
+      extInstance.onPress = newProps.onPress as ((event: unknown) => void) | undefined;
+    }
+    if ('onKeyDown' in newProps) {
+      extInstance.onKeyDown = newProps.onKeyDown as ((event: unknown) => void) | undefined;
+    }
+    if ('onChange' in newProps) {
+      extInstance.onChange = newProps.onChange as ((event: unknown) => void) | undefined;
+    }
+    if ('onFocus' in newProps) {
+      extInstance.onFocus = newProps.onFocus as (() => void) | undefined;
+    }
+    if ('onBlur' in newProps) {
+      extInstance.onBlur = newProps.onBlur as (() => void) | undefined;
+    }
+    if ('onSubmit' in newProps) {
+      extInstance.onSubmit = newProps.onSubmit as ((event: unknown) => void) | undefined;
+    }
+    if ('disabled' in newProps) {
+      extInstance.disabled = Boolean(newProps.disabled);
+    }
+    if ('tabIndex' in newProps) {
+      extInstance.tabIndex = newProps.tabIndex as number | undefined;
+    }
+    if ('autoFocus' in newProps) {
+      extInstance.autoFocus = Boolean(newProps.autoFocus);
+    }
+    if (newProps.children !== undefined && extInstance.setContent) {
+      if (Array.isArray(newProps.children)) {
+        const textParts = (newProps.children as unknown[])
+          .filter((child: unknown) => typeof child === 'string' || typeof child === 'number')
+          .map((child: unknown) => String(child));
+        extInstance.setContent(textParts.join(''));
+      } else {
+        extInstance.setContent(String(newProps.children));
+      }
+    }
+    if (newProps.value !== undefined && extInstance.setValue) {
+      extInstance.setValue(newProps.value);
+    }
+    if (
+      typeof (newProps as { href?: string }).href === 'string' &&
+      'setHref' in extInstance &&
+      typeof (extInstance as { setHref: (url: string) => void }).setHref === 'function'
+    ) {
+      (extInstance as { setHref: (url: string) => void }).setHref(
+        (newProps as { href: string }).href
+      );
+    }
+    if ('label' in newProps && extInstance.setLabel) {
+      extInstance.setLabel(newProps.label as string);
+    }
+  };
+
   const createInstance = (
     type: string | ((...args: unknown[]) => unknown),
     props: Record<string, unknown>,
@@ -159,6 +266,8 @@ export function createHostConfig(): any {
     } as unknown as import('react').ReactElement;
 
     const node = NodeFactory.createNode(element);
+    // Apply initial props (style, content, href, etc.) so new nodes get correct styling
+    applyPropsToNode(node, props);
     debug('[hostConfig] createInstance', {
       type: typeString,
       id: props.id,
@@ -179,6 +288,16 @@ export function createHostConfig(): any {
     return textInstance as unknown as Node;
   };
 
+  /** Copy parent's inline style to a child TextNode when parent is Text/Link so string children get correct styling (underline, color, etc.) */
+  const inheritParentTextStyle = (parent: Node, childNode: Node): void => {
+    const parentType = parent.getNodeType?.();
+    if (parentType !== 'text' && parentType !== 'link') return;
+    const parentStyled = parent as unknown as { inlineStyle?: Record<string, unknown> };
+    if (parentStyled.inlineStyle && typeof childNode.setStyle === 'function') {
+      childNode.setStyle(parentStyled.inlineStyle);
+    }
+  };
+
   const appendInitialChild = (parentInstance: Node, child: Node | string | TextInstance): void => {
     // Handle TextInstance objects (raw text like {'Status: '})
     if (child && typeof child === 'object' && 'text' in child && 'parentNode' in child) {
@@ -186,8 +305,6 @@ export function createHostConfig(): any {
       textInstance.parentNode = parentInstance;
 
       // Create a child TextNode to preserve ordering with siblings
-      // Enables nested Text: <Text>{'foo'}<Text>bar</Text>{'baz'}</Text>
-      // Each part becomes a child so collectTextSegments() can gather them in order
       const textNode = NodeFactory.createNode(
         {
           type: 'Text',
@@ -195,20 +312,20 @@ export function createHostConfig(): any {
         } as import('react').ReactElement,
         parentInstance
       );
+      inheritParentTextStyle(parentInstance, textNode);
       parentInstance.appendChild(textNode);
 
-      // Store reference to child node for updates via commitTextUpdate
       textInstance.childNode = textNode;
       return;
     }
 
     if (typeof child === 'string') {
-      // Legacy string handling
       const textElement = {
         type: 'Text',
         props: { children: child },
       } as import('react').ReactElement;
       const textNode = NodeFactory.createNode(textElement, parentInstance);
+      inheritParentTextStyle(parentInstance, textNode);
       parentInstance.appendChild(textNode);
     } else {
       // child is a Node
@@ -277,7 +394,6 @@ export function createHostConfig(): any {
       const textInstance = child as TextInstance;
       textInstance.parentNode = parentInstance;
 
-      // Create a child TextNode wrapper
       const textNode = NodeFactory.createNode(
         {
           type: 'Text',
@@ -285,11 +401,9 @@ export function createHostConfig(): any {
         } as import('react').ReactElement,
         parentInstance
       );
-
-      // Store reference to child node for updates via commitTextUpdate
+      inheritParentTextStyle(parentInstance, textNode);
       textInstance.childNode = textNode;
 
-      // Insert the wrapper node
       const beforeIndex = parentInstance.children.indexOf(beforeChild as Node);
       if (beforeIndex >= 0) {
         parentInstance.children.splice(beforeIndex, 0, textNode);
@@ -305,6 +419,7 @@ export function createHostConfig(): any {
         props: { children: child },
       } as import('react').ReactElement;
       const textNode = NodeFactory.createNode(textElement, parentInstance);
+      inheritParentTextStyle(parentInstance, textNode);
       const beforeIndex = parentInstance.children.indexOf(beforeChild as Node);
       if (beforeIndex >= 0) {
         parentInstance.children.splice(beforeIndex, 0, textNode);
@@ -388,9 +503,6 @@ export function createHostConfig(): any {
     newProps: Record<string, unknown>,
     _internalHandle: unknown
   ): void => {
-    // react-reconciler 0.31 passes: instance, updatePayload, type, oldProps, newProps, internalHandle
-    // updatePayload comes from prepareUpdate
-
     const extInstance = instance as unknown as RenderableNode;
     debug('[hostConfig] commitUpdate', {
       type: instance.type,
@@ -400,66 +512,7 @@ export function createHostConfig(): any {
       updatePayload,
     });
 
-    if (newProps.style && extInstance.setStyle) {
-      extInstance.setStyle(newProps.style as ViewStyle | TextStyle);
-    }
-
-    // Update event handlers
-    if ('onClick' in newProps) {
-      extInstance.onClick = newProps.onClick as ((event: unknown) => void) | undefined;
-    }
-    if ('onPress' in newProps) {
-      extInstance.onPress = newProps.onPress as ((event: unknown) => void) | undefined;
-    }
-    if ('onKeyDown' in newProps) {
-      extInstance.onKeyDown = newProps.onKeyDown as ((event: unknown) => void) | undefined;
-    }
-    if ('onChange' in newProps) {
-      extInstance.onChange = newProps.onChange as ((event: unknown) => void) | undefined;
-    }
-    if ('onFocus' in newProps) {
-      extInstance.onFocus = newProps.onFocus as (() => void) | undefined;
-    }
-    if ('onBlur' in newProps) {
-      extInstance.onBlur = newProps.onBlur as (() => void) | undefined;
-    }
-    if ('onSubmit' in newProps) {
-      extInstance.onSubmit = newProps.onSubmit as ((event: unknown) => void) | undefined;
-    }
-
-    // Update interactive properties (disabled, tabIndex, autoFocus)
-    if ('disabled' in newProps) {
-      extInstance.disabled = Boolean(newProps.disabled);
-    }
-    if ('tabIndex' in newProps) {
-      extInstance.tabIndex = newProps.tabIndex as number | undefined;
-    }
-    if ('autoFocus' in newProps) {
-      extInstance.autoFocus = Boolean(newProps.autoFocus);
-    }
-
-    // Update content for text nodes
-    if (newProps.children !== undefined && extInstance.setContent) {
-      // Handle array children (e.g., <Text>Hello, {name}!</Text> becomes ["Hello, ", name, "!"])
-      if (Array.isArray(newProps.children)) {
-        const textParts = (newProps.children as unknown[])
-          .filter((child: unknown) => typeof child === 'string' || typeof child === 'number')
-          .map((child: unknown) => String(child));
-        extInstance.setContent(textParts.join(''));
-      } else {
-        extInstance.setContent(String(newProps.children));
-      }
-    }
-
-    // Update input value
-    if (newProps.value !== undefined && extInstance.setValue) {
-      extInstance.setValue(newProps.value);
-    }
-
-    // Update label for buttons
-    if ('label' in newProps && extInstance.setLabel) {
-      extInstance.setLabel(newProps.label as string);
-    }
+    applyPropsToNode(instance, newProps);
 
     // Update ScrollView props (maxHeight, maxWidth, scrollTop, etc.)
     if ('maxHeight' in newProps) {

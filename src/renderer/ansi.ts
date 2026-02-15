@@ -419,3 +419,22 @@ export function showCursor(): string {
 export function clearLine(): string {
   return '\x1b[K';
 }
+
+/**
+ * OSC 8 hyperlink (terminal-native clickable link).
+ * Uses BEL (\x07) for broad compatibility (iTerm2, VS Code, Windows Terminal, etc.).
+ * Format: OSC 8 ;; url BEL text OSC 8 ;; BEL
+ * In iTerm2: Cmd+click to open. macOS Terminal.app does not support OSC 8.
+ *
+ * @param url - URL for the link
+ * @param text - Styled text (may include ANSI codes)
+ * @returns text wrapped in OSC 8 sequences
+ */
+const OSC8_BEL = '\x07'; // BEL – widely supported terminator for OSC 8
+
+export function wrapHyperlink(url: string, text: string): string {
+  if (!url) return text;
+  const start = '\x1b]8;;' + url + OSC8_BEL;
+  const end = '\x1b]8;;' + OSC8_BEL;
+  return start + text + end;
+}
