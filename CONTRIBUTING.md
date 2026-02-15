@@ -36,7 +36,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
    npm run build
    ```
 
-   Supported platforms for the native addon: macOS (x64, arm64), Linux (x64, arm64), Windows (x64). If the addon fails to load, the library throws; there is no fallback.
+   Supported platforms for the native addon: macOS (x64, arm64), Linux (x64, arm64), Windows (x64, arm64). If the addon fails to load, the library throws; there is no fallback.
 
 4. **Run tests:**
 

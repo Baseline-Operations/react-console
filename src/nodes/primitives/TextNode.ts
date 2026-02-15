@@ -184,6 +184,7 @@ export class TextNode extends TextNodeBase {
   }[] {
     const byNode = new Map<Node, { x: number; y: number; right: number; bottom: number }>();
     if (this.textSegments.length === 0 || this.wrappedLines.length === 0) return [];
+    const fullContent = this.textSegments.map((s) => s.text).join('');
     let segmentStart = 0;
     for (const seg of this.textSegments) {
       if (!seg.nodeRef) {
@@ -197,6 +198,9 @@ export class TextNode extends TextNodeBase {
         const lineEndCharIndex = lineStartCharIndex + line.length;
         if (segmentEnd <= lineStartCharIndex || segmentStart >= lineEndCharIndex) {
           lineStartCharIndex = lineEndCharIndex;
+          if (lineStartCharIndex < fullContent.length && fullContent[lineStartCharIndex] === '\n') {
+            lineStartCharIndex++;
+          }
           continue;
         }
         const startInLine = Math.max(0, segmentStart - lineStartCharIndex);
@@ -216,6 +220,9 @@ export class TextNode extends TextNodeBase {
           byNode.set(seg.nodeRef, { x, y: lineIndex, right, bottom });
         }
         lineStartCharIndex = lineEndCharIndex;
+        if (lineStartCharIndex < fullContent.length && fullContent[lineStartCharIndex] === '\n') {
+          lineStartCharIndex++;
+        }
       }
       segmentStart = segmentEnd;
     }

@@ -54,7 +54,8 @@ function App() {
       <Text>
         Run <Code>npm install</Code> then <Code>npm run build</Code>.
       </Text>
-      <Code block>const x = 1;\nconsole.log(x);</Code>
+      <Code block>{`const x = 1;
+console.log(x);`}</Code>
       <Text>
         File: <Code backgroundColor="blue">src/index.ts</Code>
       </Text>

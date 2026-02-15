@@ -859,10 +859,10 @@ export function handleMouseEvent(
     // Trigger mouse events only on press to avoid double-firing (press + release)
     const triggerEvents = () => {
       try {
-        if (target.onMouseDown) {
-          target.onMouseDown(mouse);
-        }
         if (mouse.eventType === 'press') {
+          if (target.onMouseDown) {
+            target.onMouseDown(mouse);
+          }
           if (target.onClick) {
             target.onClick(mouse);
           } else if (target.onPress) {

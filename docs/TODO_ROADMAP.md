@@ -854,7 +854,7 @@ export const TouchableHighlight = Pressable;
 ### 3.1 Verify `<Text>` Transform Capabilities
 
 **Priority**: Medium  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 > **Note**: Audit 1.5 should verify if this already exists before implementation.
 
@@ -901,7 +901,7 @@ interface TextProps {
 ### 3.2 Inline Text Styling Component
 
 **Priority**: High  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 > **Note**: Audit 1.5 should verify if nested Text already works correctly.
 
@@ -984,7 +984,7 @@ export function InlineText(props: TextProps) {
 > **Audit Finding**: Identified as missing during gap analysis.
 
 **Priority**: Low  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 Display clickable URLs using OSC 8 terminal hyperlinks (primary) with `open` package fallback.
 
@@ -1142,7 +1142,7 @@ The `open` package also supports:
 > **Audit Finding**: Identified as missing during gap analysis.
 
 **Priority**: Low  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 Display code with syntax highlighting in terminal.
 

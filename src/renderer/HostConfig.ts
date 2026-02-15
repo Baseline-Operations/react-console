@@ -110,7 +110,7 @@ export function createHostConfig(): any {
    * Apply props to a node (style, content, href, etc.).
    * Single path for all nodes: Text, Link, Code, Button, etc. use setStyle (Stylable) so styling is consistent.
    * Used for both initial mount (createInstance) and updates (commitUpdate).
-   * If props.style is missing but raw props have style keys (color, underline, etc.), build style from them.
+   * Merge order: props.style (or raw STYLE_KEYS) is merged with individual style props; individual props (e.g. backgroundColor="blue") override style object values when both present.
    */
   const applyPropsToNode = (instance: Node, newProps: Record<string, unknown>): void => {
     const extInstance = instance as unknown as RenderableNode;
@@ -141,6 +141,16 @@ export function createHostConfig(): any {
       if (Object.keys(merged).length > 0) {
         extInstance.setStyle(merged as ViewStyle | TextStyle);
       }
+    }
+    if (
+      'className' in newProps &&
+      'setClassName' in extInstance &&
+      typeof (extInstance as { setClassName(v: string | string[]): void }).setClassName ===
+        'function'
+    ) {
+      (extInstance as { setClassName(v: string | string[]): void }).setClassName(
+        newProps.className as string | string[]
+      );
     }
     if ('onClick' in newProps) {
       extInstance.onClick = newProps.onClick as ((event: unknown) => void) | undefined;
@@ -178,7 +188,7 @@ export function createHostConfig(): any {
           .filter((child: unknown) => typeof child === 'string' || typeof child === 'number')
           .map((child: unknown) => String(child));
         extInstance.setContent(textParts.join(''));
-      } else {
+      } else if (typeof newProps.children === 'string' || typeof newProps.children === 'number') {
         extInstance.setContent(String(newProps.children));
       }
     }

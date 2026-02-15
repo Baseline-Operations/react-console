@@ -1,27 +1,38 @@
 /**
  * Open a URL in the default browser (cross-platform).
- * Uses Node.js child_process; no external dependency.
+ * Uses Node.js child_process.spawn with argument arrays to avoid shell-escaping issues.
+ * No external dependency.
  */
 
-import { exec } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 /**
  * Open url in the default browser.
  * - macOS: open
  * - Linux: xdg-open
- * - Windows: start
+ * - Windows: cmd /d /s /c start "" "<url>"
  */
 export function openUrl(url: string): void {
-  const escaped = url.replace(/"/g, '\\"');
-  const cmd =
-    process.platform === 'darwin'
-      ? `open "${escaped}"`
-      : process.platform === 'win32'
-        ? `start "" "${escaped}"`
-        : `xdg-open "${escaped}"`;
-  exec(cmd, (err) => {
-    if (err) {
-      console.error('[react-console] Failed to open URL:', err.message);
-    }
+  let command: string;
+  let args: string[];
+
+  if (process.platform === 'darwin') {
+    command = 'open';
+    args = [url];
+  } else if (process.platform === 'win32') {
+    command = 'cmd';
+    args = ['/d', '/s', '/c', 'start', '', url];
+  } else {
+    command = 'xdg-open';
+    args = [url];
+  }
+
+  const child = spawn(command, args, {
+    stdio: 'ignore',
+    shell: false,
+  });
+
+  child.on('error', (err) => {
+    console.error('[react-console] Failed to open URL:', err.message);
   });
 }

@@ -56,6 +56,17 @@ interface InteractiveNode extends Node {
   maxLines?: number;
 }
 
+// Type for text nodes that expose interactive child regions (e.g. inline links)
+interface TextNodeWithRegions extends Node {
+  getInteractiveChildRegions(): {
+    node: Node;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[];
+}
+
 /**
  * Render context for cell-based rendering
  */
@@ -535,29 +546,9 @@ export class BufferRenderer {
     if (
       node.type === 'text' &&
       'getInteractiveChildRegions' in node &&
-      typeof (
-        node as {
-          getInteractiveChildRegions(): {
-            node: Node;
-            x: number;
-            y: number;
-            width: number;
-            height: number;
-          }[];
-        }
-      ).getInteractiveChildRegions === 'function'
+      typeof (node as TextNodeWithRegions).getInteractiveChildRegions === 'function'
     ) {
-      const regions = (
-        node as {
-          getInteractiveChildRegions(): {
-            node: Node;
-            x: number;
-            y: number;
-            width: number;
-            height: number;
-          }[];
-        }
-      ).getInteractiveChildRegions();
+      const regions = (node as TextNodeWithRegions).getInteractiveChildRegions();
       for (const r of regions) {
         componentBoundsRegistry.register(
           createComponentBounds(

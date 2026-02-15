@@ -40,7 +40,7 @@ This package **requires** a native addon. There is no TypeScript/JavaScript fall
 - **Use a prebuild** (when available for your platform), or
 - **Build from source**: install [Rust](https://rustup.rs/) (stable, 1.85+), then run `npm run build:native` in the package root.
 
-**Supported platforms** (build from source): macOS (x64, arm64), Linux (x64, arm64), Windows (x64). Node 18+.
+**Supported platforms** (build from source): macOS (x64, arm64), Linux (x64, arm64), Windows (x64). Node 20+.
 
 ## Quick Start
 

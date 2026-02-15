@@ -15,8 +15,6 @@ const ADDON_REQUIRED_MSG =
 function getPackageRoot(): string {
   const dir =
     typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
-  // Walk up to find package root: must contain package.json and native/
-  // Works from src/ (one level) or dist/esm|dist/cjs (two levels)
   let current = path.resolve(dir);
   for (let i = 0; i < 5; i++) {
     if (
@@ -29,7 +27,7 @@ function getPackageRoot(): string {
     if (parent === current) break;
     current = parent;
   }
-  return path.join(dir, '..', '..');
+  throw new Error(`Package root (directory with package.json and native/) not found from ${dir}`);
 }
 
 function loadAddon(): { getVersion: () => string } {
@@ -56,12 +54,16 @@ function loadAddon(): { getVersion: () => string } {
   }
 }
 
-// Load addon at startup (no fallback); throws if load fails
-const addon = loadAddon();
+let addon: { getVersion: () => string } | null = null;
+
+function getAddon(): { getVersion: () => string } {
+  if (!addon) addon = loadAddon();
+  return addon;
+}
 
 /**
- * Returns the native addon version (sanity check; required for no-fallback policy).
+ * Returns the native addon version. Loads the addon on first call; throws if load fails.
  */
 export function getNativeVersion(): string {
-  return addon.getVersion();
+  return getAddon().getVersion();
 }

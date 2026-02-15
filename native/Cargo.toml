@@ -15,7 +15,7 @@ napi = "2"
 napi-derive = "2"
 
 [build-dependencies]
-napi-build = "2.0"  # 2.3+ requires Rust 1.88; pin for Rust 1.85
+napi-build = ">=2.0, <2.3"  # 2.3+ requires Rust 1.88; keep Rust 1.85 compat
 
 [profile.release]
 lto = true

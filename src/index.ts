@@ -3,8 +3,7 @@
  * React 19+ TypeScript library for building console/terminal applications using JSX
  */
 
-// Native addon required at startup (no fallback); throws if load fails
-import './native';
+// Native addon loaded on first use (getNativeVersion); throws only when native is invoked
 export { getNativeVersion } from './native';
 
 // Renderer - integrated into Node class

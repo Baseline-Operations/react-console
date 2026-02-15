@@ -8,6 +8,7 @@ dist/
 build/
 *.tsbuildinfo
 native/target/
+native/prebuilds/
 *.bak
 
 # Logs

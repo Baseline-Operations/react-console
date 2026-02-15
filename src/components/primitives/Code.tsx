@@ -43,23 +43,17 @@ function CodeComponent({
   dim = true,
   backgroundColor = 'gray',
   color,
-  ...legacyProps
 }: CodeProps) {
-  // Only pass style-related keys to the node (exclude block)
   const styleOnly: TextStyle = {
     ...defaultCodeStyle,
     dim,
     backgroundColor,
     ...(color != null && { color }),
-    ...legacyProps,
   };
   const mergedStyle = mergeClassNameAndStyle(className, style, styleOnly);
 
   return createConsoleNode('text', {
     style: mergedStyle,
-    backgroundColor: mergedStyle.backgroundColor ?? backgroundColor,
-    dim: mergedStyle.dim ?? dim,
-    color: mergedStyle.color ?? color,
     children,
   });
 }
