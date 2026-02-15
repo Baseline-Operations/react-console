@@ -35,7 +35,7 @@ export class LinkNode extends InteractiveTextNodeBase {
     openUrl(this.href);
   }
 
-  override handleKeyboardEvent(event: KeyboardEvent): void {
+  handleKeyboardEvent(event: KeyboardEvent): void {
     if (this.disabled) return;
     if (event.key.return && this.href) {
       openUrl(this.href);
@@ -44,11 +44,15 @@ export class LinkNode extends InteractiveTextNodeBase {
     super.handleKeyboardEvent(event);
   }
 
-  protected override setBufferLine(buffer: OutputBuffer, y: number, content: string): void {
+  protected setBufferLine(buffer: OutputBuffer, y: number, content: string): void {
     if (this.href) {
       buffer.lines[y] = wrapHyperlink(this.href, content);
     } else {
-      super.setBufferLine(buffer, y, content);
+      (
+        TextNode.prototype as unknown as {
+          setBufferLine(b: OutputBuffer, y: number, c: string): void;
+        }
+      ).setBufferLine.call(this, buffer, y, content);
     }
   }
 }

@@ -293,8 +293,11 @@ export function createHostConfig(): any {
     const parentType = parent.getNodeType?.();
     if (parentType !== 'text' && parentType !== 'link') return;
     const parentStyled = parent as unknown as { inlineStyle?: Record<string, unknown> };
-    if (parentStyled.inlineStyle && typeof childNode.setStyle === 'function') {
-      childNode.setStyle(parentStyled.inlineStyle);
+    const childWithStyle = childNode as unknown as {
+      setStyle?(style: Record<string, unknown>): void;
+    };
+    if (parentStyled.inlineStyle && typeof childWithStyle.setStyle === 'function') {
+      childWithStyle.setStyle(parentStyled.inlineStyle);
     }
   };
 
