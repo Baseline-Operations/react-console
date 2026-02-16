@@ -2674,7 +2674,7 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 
 Rust addon is introduced and required from this version; no TS fallback. See [RUST_LIFT_PLAN_0.2.0.md](./RUST_LIFT_PLAN_0.2.0.md).
 
-**Branch**: `v0.1.5` (branch contains commits; PR may be open or merged)
+**Branch**: `v0.1.5`
 
 **Rust — Addon skeleton & build (must land first so later versions use it)**
 

@@ -178,6 +178,8 @@ export class TextNode extends TextNodeBase {
    * Return regions for interactive children (e.g. links) so BufferRenderer can register their bounds for mouse hit testing.
    * Coordinates are relative to this node's layout (x, y = column, row within the text block).
    * One region per node (merged if segment spans multiple lines).
+   * Known limitation: merged box uses min(x)/max(right) across lines, so a multi-line link can have a hit region
+   * wider than the text on any single line and may cause false-positive hits on adjacent non-link text.
    */
   getInteractiveChildRegions(): {
     node: Node;
@@ -500,6 +502,7 @@ export class TextNode extends TextNodeBase {
     let currentRun = '';
     let currentRunStyle: ComputedStyle | null = null;
 
+    // Per-line cost O(line_length × segment_count); fine for typical terminal text. Future optimization: precomputed position→segment index.
     const getSegmentInfoAtPos = (
       posInFull: number
     ): { style: ComputedStyle | null; focusedLink: boolean } => {
@@ -507,8 +510,7 @@ export class TextNode extends TextNodeBase {
       for (const segment of this.textSegments) {
         const segmentEnd = segmentStart + segment.text.length;
         if (posInFull >= segmentStart && posInFull < segmentEnd) {
-          const focused =
-            (segment.nodeRef && isNodeFocused(segment.nodeRef)) || segment.focusedLink === true;
+          const focused = segment.nodeRef ? isNodeFocused(segment.nodeRef) : false;
           return { style: segment.style, focusedLink: focused };
         }
         segmentStart = segmentEnd;
@@ -693,6 +695,7 @@ export class TextNode extends TextNodeBase {
       let cx = lineStartX;
       let charIndexInLine = 0;
 
+      // Per-character segment lookup mirrors O(n×m) in renderLineWithSegments; could share a precomputed char→segment index if needed.
       for (const char of line) {
         if (cx >= x + maxWidth) break;
         if (cx < x) {
@@ -726,7 +729,7 @@ export class TextNode extends TextNodeBase {
         const charUnderline = segmentStyle?.getUnderline() ?? defaultUnderline;
         const charStrikethrough = segmentStyle?.getStrikethrough() ?? defaultStrikethrough;
         const charInverse =
-          (matchedSegment?.nodeRef && isNodeFocused(matchedSegment.nodeRef)) ||
+          !!(matchedSegment?.nodeRef && isNodeFocused(matchedSegment.nodeRef)) ||
           (segmentStyle?.getInverse() ?? defaultInverse);
 
         buffer.setCell(cx, cy, {
