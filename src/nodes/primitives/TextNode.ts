@@ -46,6 +46,12 @@ interface TextSegment {
   nodeRef?: Node;
 }
 
+/** Returns true if the node has a focused property set to true (e.g. focused LinkNode). */
+function isNodeFocused(node: Node | undefined): boolean {
+  if (!node || !('focused' in node)) return false;
+  return Boolean((node as { focused: boolean }).focused);
+}
+
 // Create the mixed-in base class with proper type handling
 const TextNodeBase = Stylable(
   Renderable(Layoutable(Node as unknown as import('../base/types').Constructor<Node>))
@@ -132,10 +138,7 @@ export class TextNode extends TextNodeBase {
         if (nodeType === 'text' || nodeType === 'link') {
           const textLikeChild = child as TextNode;
           const childSegments = textLikeChild.collectTextSegments();
-          const isFocusedLink =
-            nodeType === 'link' &&
-            'focused' in child &&
-            Boolean((child as { focused: boolean }).focused);
+          const isFocusedLink = nodeType === 'link' && isNodeFocused(child);
           for (const seg of childSegments) {
             segments.push({
               text: TextNode.applyTextTransform(seg.text, parentTransform),
@@ -492,9 +495,7 @@ export class TextNode extends TextNodeBase {
       for (const segment of this.textSegments) {
         const segmentEnd = segmentStart + segment.text.length;
         if (posInFull >= segmentStart && posInFull < segmentEnd) {
-          if (segment.nodeRef && 'focused' in segment.nodeRef) {
-            return Boolean((segment.nodeRef as { focused: boolean }).focused);
-          }
+          if (segment.nodeRef && isNodeFocused(segment.nodeRef)) return true;
           return segment.focusedLink === true;
         }
         segmentStart = segmentEnd;
@@ -754,9 +755,7 @@ export class TextNode extends TextNodeBase {
         const charUnderline = segmentStyle?.getUnderline() ?? defaultUnderline;
         const charStrikethrough = segmentStyle?.getStrikethrough() ?? defaultStrikethrough;
         const charInverse =
-          (matchedSegment?.nodeRef &&
-            'focused' in matchedSegment.nodeRef &&
-            (matchedSegment.nodeRef as { focused: boolean }).focused) ||
+          (matchedSegment?.nodeRef && isNodeFocused(matchedSegment.nodeRef)) ||
           (segmentStyle?.getInverse() ?? defaultInverse);
 
         buffer.setCell(cx, cy, {

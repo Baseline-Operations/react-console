@@ -10,7 +10,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
+- Node.js >= 20.0.0
 - npm >= 9.0.0
 - Git
 - **Rust** (stable, 1.85+) — required to build the native addon; there is no JS/TS fallback. See [rustup](https://rustup.rs/).
@@ -30,10 +30,10 @@ By participating in this project, you agree to maintain a respectful and inclusi
    npm install
    ```
 
-3. **Build the project** (builds the native addon first, then TypeScript/JS):
+3. **Build the project** (`build:full` runs the native addon then TypeScript/JS; use `npm run build` for TS/JS only):
 
    ```bash
-   npm run build
+   npm run build:full
    ```
 
    Supported platforms for the native addon: macOS (x64, arm64), Linux (x64, arm64), Windows (x64, arm64). If the addon fails to load, the library throws; there is no fallback.

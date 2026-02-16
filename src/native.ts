@@ -55,10 +55,18 @@ function loadAddon(): { getVersion: () => string } {
 }
 
 let addon: { getVersion: () => string } | null = null;
+let loadError: Error | null = null;
 
 function getAddon(): { getVersion: () => string } {
-  if (!addon) addon = loadAddon();
-  return addon;
+  if (addon) return addon;
+  if (loadError) throw loadError;
+  try {
+    addon = loadAddon();
+    return addon;
+  } catch (e) {
+    loadError = e instanceof Error ? e : new Error(String(e));
+    throw loadError;
+  }
 }
 
 /**
