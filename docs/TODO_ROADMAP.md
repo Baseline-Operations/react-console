@@ -871,10 +871,10 @@ Confirm that the `Text` component can handle all text transformations that would
 
 **Research Tasks**:
 
-- [ ] Audit current `TextStyle` type for transform support
-- [ ] Check renderer handling of text transformations
-- [ ] Determine if `textTransform` style prop exists
-- [ ] Evaluate if custom transform function is needed
+- [x] Audit current `TextStyle` type for transform support
+- [x] Check renderer handling of text transformations
+- [x] Determine if `textTransform` style prop exists
+- [x] Evaluate if custom transform function is needed
 
 **Implementation (if needed)**:
 
@@ -889,12 +889,12 @@ interface TextProps {
 
 **Tasks**:
 
-- [ ] Audit existing Text component capabilities
-- [ ] Add `textTransform` to `TextStyle` if missing
-- [ ] Implement in renderer text processing
-- [ ] Consider adding `transform` function prop for custom transforms
-- [ ] Add examples demonstrating all transforms
-- [ ] Document capabilities
+- [x] Audit existing Text component capabilities
+- [x] Add `textTransform` to `TextStyle` if missing
+- [x] Implement in renderer text processing
+- [x] Consider adding `transform` function prop for custom transforms
+- [x] Add examples demonstrating all transforms
+- [x] Document capabilities
 
 ---
 
@@ -943,11 +943,11 @@ If we add an alias, consider naming options:
 
 **Research Tasks**:
 
-- [ ] Verify nested Text rendering works correctly (block parent, inline children)
-- [ ] Check if inline styles merge properly with parent
-- [ ] Verify ANSI codes are properly nested/reset
-- [ ] Confirm Text at root level renders as block (newline after)
-- [ ] Confirm nested Text renders inline (no newline)
+- [x] Verify nested Text rendering works correctly (block parent, inline children)
+- [x] Check if inline styles merge properly with parent
+- [x] Verify ANSI codes are properly nested/reset
+- [x] Confirm Text at root level renders as block (newline after)
+- [x] Confirm nested Text renders inline (no newline)
 
 **Implementation Notes**:
 
@@ -975,7 +975,7 @@ export function InlineText(props: TextProps) {
 - [ ] Decide on naming (Span vs InlineText vs documentation-only)
 - [ ] Implement component if needed
 - [ ] Export from primitives
-- [ ] Document inline styling patterns with clear examples
+- [x] Document inline styling patterns with clear examples
 
 ---
 
@@ -1109,23 +1109,23 @@ Links should be clickable in **static apps** too, not just interactive ones. OSC
 
 **Tasks**:
 
-- [ ] Add `open` as optional/peer dependency
-- [ ] Create OSC 8 terminal capability detection utility
-- [ ] Create `src/components/primitives/Link.tsx`
-- [ ] Implement OSC 8 escape sequence output (always emitted)
-- [ ] Implement fallback behavior with `open` package
-- [ ] Add fallback prop with all modes (true/false/'always'/function)
-- [ ] Add disabled prop with appropriate styling
-- [ ] Add tabIndex for focus order control
-- [ ] Add state-based styling support (focused, hovered, disabled)
-- [ ] Add onHover, onHoverOut, onFocus, onBlur handlers
-- [ ] Add showUrl option for accessibility
-- [ ] Add onPress handler (in addition to fallback)
-- [ ] Add accessibilityLabel prop
-- [ ] Export from primitives
-- [ ] Add unit tests
-- [ ] Add example (both static and interactive modes)
-- [ ] Document terminal support and fallback behavior
+- [x] Add `open` as optional/peer dependency
+- [x] Create OSC 8 terminal capability detection utility
+- [x] Create `src/components/primitives/Link.tsx`
+- [x] Implement OSC 8 escape sequence output (always emitted)
+- [x] Implement fallback behavior with `open` package
+- [x] Add fallback prop with all modes (true/false/'always'/function)
+- [x] Add disabled prop with appropriate styling
+- [x] Add tabIndex for focus order control
+- [x] Add state-based styling support (focused, hovered, disabled)
+- [x] Add onHover, onHoverOut, onFocus, onBlur handlers
+- [x] Add showUrl option for accessibility
+- [x] Add onPress handler (in addition to fallback)
+- [x] Add accessibilityLabel prop
+- [x] Export from primitives
+- [x] Add unit tests
+- [x] Add example (both static and interactive modes)
+- [x] Document terminal support and fallback behavior
 
 **Related Utilities** (can be added alongside):
 
@@ -1172,13 +1172,13 @@ Display code with syntax highlighting in terminal.
 
 **Tasks**:
 
-- [ ] Research lightweight syntax highlighting options
-- [ ] Create `src/components/primitives/Code.tsx`
-- [ ] Implement basic highlighting for common languages
-- [ ] Add line numbers support
-- [ ] Add line highlighting
-- [ ] Export from primitives
-- [ ] Document usage and language support
+- [x] Research lightweight syntax highlighting options
+- [x] Create `src/components/primitives/Code.tsx`
+- [x] Implement basic highlighting for common languages
+- [x] Add line numbers support
+- [x] Add line highlighting
+- [x] Export from primitives
+- [x] Document usage and language support
 
 ---
 
@@ -2576,10 +2576,10 @@ Use this checklist to track overall progress. **All items must be completed befo
 - [x] 2.2 LineBreak count prop
 - [x] 2.3 Divider component
 - [x] 2.4 TouchableOpacity/TouchableHighlight aliases
-- [ ] 3.1 Text transform verification
-- [ ] 3.2 Inline text styling (nested Text / alias decision)
-- [ ] 3.3 Link component (terminal hyperlinks)
-- [ ] 3.4 Code component (syntax highlighting)
+- [x] 3.1 Text transform verification
+- [x] 3.2 Inline text styling (nested Text / alias decision)
+- [x] 3.3 Link component (terminal hyperlinks)
+- [x] 3.4 Code component (syntax highlighting)
 
 **Phase 2: I/O & Integration** (Developer Experience)
 

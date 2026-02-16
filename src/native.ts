@@ -55,6 +55,7 @@ function loadAddon(): { getVersion: () => string } {
 }
 
 let addon: { getVersion: () => string } | null = null;
+/** Cached load failure so we don't retry or re-probe the filesystem on every getAddon() call. */
 let loadError: Error | null = null;
 
 function getAddon(): { getVersion: () => string } {

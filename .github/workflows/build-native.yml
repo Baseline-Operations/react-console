@@ -20,6 +20,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: x64
+          - os: ubuntu-24.04-arm
+            platform: linux
+            arch: arm64
           - os: macos-15-intel
             platform: darwin
             arch: x64
@@ -29,6 +32,9 @@ jobs:
           - os: windows-latest
             platform: win32
             arch: x64
+          - os: windows-11-arm
+            platform: win32
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -53,3 +59,4 @@ jobs:
           name: prebuild-${{ matrix.platform }}-${{ matrix.arch }}
           path: native/prebuilds/react_console_native.node
           retention-days: 7
+          if-no-files-found: error

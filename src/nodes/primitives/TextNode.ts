@@ -133,6 +133,7 @@ export class TextNode extends TextNodeBase {
     if (this.children.length > 0) {
       // Collect from children only - they represent the actual content structure.
       // Treat text and link children as having their own segments (shared styling path).
+      // Parent textTransform intentionally overrides child (applied to all segment text).
       for (const child of this.children) {
         const nodeType = child.getNodeType?.();
         if (nodeType === 'text' || nodeType === 'link') {
@@ -209,8 +210,8 @@ export class TextNode extends TextNodeBase {
         const startInLine = Math.max(0, segmentStart - lineStartCharIndex);
         const endInLine = Math.min(line.length, segmentEnd - lineStartCharIndex);
         const slice = line.substring(startInLine, endInLine);
-        const x = measureText(slice) > 0 ? measureText(line.substring(0, startInLine)) : 0;
         const width = measureText(slice);
+        const x = width > 0 ? measureText(line.substring(0, startInLine)) : 0;
         const existing = byNode.get(seg.nodeRef);
         const right = x + width;
         const bottom = lineIndex + 1;
@@ -475,7 +476,7 @@ export class TextNode extends TextNodeBase {
     let currentRun = '';
     let currentRunStyle: ComputedStyle | null = null;
 
-    // Helper to get style for a position
+    // Helpers share the same segment-scan logic (posInFull ∈ [segmentStart, segmentEnd)); could be merged into one lookup returning { style, focusedLink } to avoid duplicate iteration.
     const getStyleAtPos = (posInFull: number): ComputedStyle | null => {
       let segmentStart = 0;
       for (const segment of this.textSegments) {
@@ -779,6 +780,10 @@ export class TextNode extends TextNodeBase {
 
       // Move to next line in full text
       lineStartInFull += line.length;
+      // Account for stripped newlines (same logic as getInteractiveChildRegions / renderLineWithSegments)
+      if (lineStartInFull < fullContent.length && fullContent[lineStartInFull] === '\n') {
+        lineStartInFull++;
+      }
       cy++;
     }
   }

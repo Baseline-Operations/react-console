@@ -112,7 +112,7 @@ docs: update API documentation for CommandRouter
    npm run lint        # Check code style
    npm run typecheck   # Type check
    npm test            # Run tests
-   npm run build       # Ensure build succeeds
+   npm run build       # TS/JS only; use npm run build:full for native
    ```
 
 4. **Commit your changes:**
