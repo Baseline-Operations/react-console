@@ -969,12 +969,12 @@ export function InlineText(props: TextProps) {
 
 **Tasks**:
 
-- [ ] Test nested Text scenarios thoroughly
-- [ ] Verify block vs inline behavior based on nesting context
-- [ ] Fix any issues with nested text rendering
-- [ ] Decide on naming (Span vs InlineText vs documentation-only)
-- [ ] Implement component if needed
-- [ ] Export from primitives
+- [x] Test nested Text scenarios thoroughly
+- [x] Verify block vs inline behavior based on nesting context
+- [x] Fix any issues with nested text rendering
+- [x] Decide on naming (Span vs InlineText vs documentation-only)
+- [x] Implement component if needed
+- [x] Export from primitives
 - [x] Document inline styling patterns with clear examples
 
 ---
@@ -2674,7 +2674,7 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 
 Rust addon is introduced and required from this version; no TS fallback. See [RUST_LIFT_PLAN_0.2.0.md](./RUST_LIFT_PLAN_0.2.0.md).
 
-**Branch**: `v0.1.5` (created; no commit until requested)
+**Branch**: `v0.1.5` (branch contains commits; PR may be open or merged)
 
 **Rust — Addon skeleton & build (must land first so later versions use it)**
 

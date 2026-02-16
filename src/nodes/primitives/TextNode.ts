@@ -23,7 +23,7 @@ import {
   substringToVisibleColumn,
   substringFromVisibleColumn,
 } from '../../utils/measure';
-import { applyStyles } from '../../renderer/ansi';
+import { applyStyles, getBackgroundColorCode } from '../../renderer/ansi';
 
 /**
  * Text metrics
@@ -431,6 +431,30 @@ export class TextNode extends TextNodeBase {
   }
 
   /**
+   * Walk up the parent chain and return the ANSI background-color code
+   * of the nearest ancestor with an opaque backgroundColor, or null.
+   */
+  private getParentBackgroundCode(): string | null {
+    interface StylableParent {
+      computeStyle(): ComputedStyle;
+      parent?: Node | null;
+    }
+    let current: Node | null = this.parent;
+    while (current) {
+      if ('computeStyle' in current) {
+        const pStyle = (current as unknown as StylableParent).computeStyle();
+        const bgColor = pStyle.getBackgroundColor();
+        if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
+          const code = getBackgroundColorCode(bgColor);
+          return code || null;
+        }
+      }
+      current = current.parent || null;
+    }
+    return null;
+  }
+
+  /**
    * Render a line with segment-specific styling
    * Maps positions in the line back to their original segments to apply correct styles
    * @param lineIndex - The index of this line in wrappedLines (used to calculate offset)
@@ -476,32 +500,20 @@ export class TextNode extends TextNodeBase {
     let currentRun = '';
     let currentRunStyle: ComputedStyle | null = null;
 
-    // Helpers share the same segment-scan logic (posInFull ∈ [segmentStart, segmentEnd)); could be merged into one lookup returning { style, focusedLink } to avoid duplicate iteration.
-    const getStyleAtPos = (posInFull: number): ComputedStyle | null => {
+    const getSegmentInfoAtPos = (
+      posInFull: number
+    ): { style: ComputedStyle | null; focusedLink: boolean } => {
       let segmentStart = 0;
       for (const segment of this.textSegments) {
         const segmentEnd = segmentStart + segment.text.length;
         if (posInFull >= segmentStart && posInFull < segmentEnd) {
-          return segment.style;
+          const focused =
+            (segment.nodeRef && isNodeFocused(segment.nodeRef)) || segment.focusedLink === true;
+          return { style: segment.style, focusedLink: focused };
         }
         segmentStart = segmentEnd;
       }
-      return null;
-    };
-
-    // Helper to get whether position is in a focused link (for inverse highlight).
-    // Read focus from nodeRef at render time so we don't rely on cached segment.focusedLink.
-    const getFocusedLinkAtPos = (posInFull: number): boolean => {
-      let segmentStart = 0;
-      for (const segment of this.textSegments) {
-        const segmentEnd = segmentStart + segment.text.length;
-        if (posInFull >= segmentStart && posInFull < segmentEnd) {
-          if (segment.nodeRef && isNodeFocused(segment.nodeRef)) return true;
-          return segment.focusedLink === true;
-        }
-        segmentStart = segmentEnd;
-      }
-      return false;
+      return { style: null, focusedLink: false };
     };
 
     let currentRunFocusedLink = false;
@@ -528,8 +540,8 @@ export class TextNode extends TextNodeBase {
 
     for (const char of line) {
       const posInFull = lineStartInFull + charIndex;
-      const segmentStyle = getStyleAtPos(posInFull);
-      const segmentFocusedLink = getFocusedLinkAtPos(posInFull);
+      const { style: segmentStyle, focusedLink: segmentFocusedLink } =
+        getSegmentInfoAtPos(posInFull);
 
       // Check if style or focus changed
       if (segmentStyle !== currentRunStyle || segmentFocusedLink !== currentRunFocusedLink) {
@@ -552,29 +564,9 @@ export class TextNode extends TextNodeBase {
 
     // Re-apply parent's background color to the "after" portion if needed
     if (after) {
-      interface StylableParent {
-        computeStyle(): ComputedStyle;
-        parent?: Node | null;
-      }
-      let current: Node | null = this.parent;
-      let parentBgColor: string | null = null;
-      while (current) {
-        if ('computeStyle' in current) {
-          const pStyle = (current as unknown as StylableParent).computeStyle();
-          const bgColor = pStyle.getBackgroundColor();
-          if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
-            parentBgColor = bgColor;
-            break;
-          }
-        }
-        current = current.parent || null;
-      }
-      if (parentBgColor) {
-        const { getBackgroundColorCode } = require('../../renderer/ansi');
-        const parentBgCode = getBackgroundColorCode(parentBgColor);
-        if (parentBgCode) {
-          after = parentBgCode + after;
-        }
+      const parentBgCode = this.getParentBackgroundCode();
+      if (parentBgCode) {
+        after = parentBgCode + after;
       }
     }
 
@@ -631,32 +623,10 @@ export class TextNode extends TextNodeBase {
     // so it lost the background color that was set at position 0.
     // We need to restore the parent's background so gaps between children
     // maintain the parent container's background color.
-    // Walk up the node's tree parent chain to find actual effective background
-    // (not context.parent which may be 'this' for the parent node)
     if (after) {
-      interface StylableParent {
-        computeStyle(): ComputedStyle;
-        parent?: Node | null;
-      }
-      let current: Node | null = this.parent;
-      let parentBgColor: string | null = null;
-      while (current) {
-        if ('computeStyle' in current) {
-          const style = (current as unknown as StylableParent).computeStyle();
-          const bgColor = style.getBackgroundColor();
-          if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
-            parentBgColor = bgColor;
-            break;
-          }
-        }
-        current = current.parent || null;
-      }
-      if (parentBgColor) {
-        const { getBackgroundColorCode } = require('../../renderer/ansi');
-        const parentBgCode = getBackgroundColorCode(parentBgColor);
-        if (parentBgCode) {
-          after = parentBgCode + after;
-        }
+      const parentBgCode = this.getParentBackgroundCode();
+      if (parentBgCode) {
+        after = parentBgCode + after;
       }
     }
 

@@ -13,6 +13,7 @@ const ADDON_REQUIRED_MSG =
   'Run "npm run build:native" in the package root, or install a prebuild for your platform.';
 
 function getPackageRoot(): string {
+  // With "type": "module", import.meta.url is always defined; __dirname fallback is for CJS contexts only (effectively dead code in ESM).
   const dir =
     typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
   let current = path.resolve(dir);
@@ -31,6 +32,7 @@ function getPackageRoot(): string {
 }
 
 function loadAddon(): { getVersion: () => string } {
+  // With "type": "module", import.meta is always defined; __filename fallback is for CJS contexts only (effectively dead code in ESM).
   const req =
     typeof import.meta !== 'undefined' && import.meta.url
       ? createRequire(import.meta.url)
