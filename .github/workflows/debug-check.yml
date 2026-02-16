@@ -11,7 +11,7 @@ jobs:
     name: Verify Debug Flags Are Disabled
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check FILE_DEBUG_ENABLED is false
         run: |
