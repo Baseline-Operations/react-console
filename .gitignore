@@ -7,6 +7,9 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+native/target/
+native/prebuilds/
+*.bak
 
 # Logs
 *.log

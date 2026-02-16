@@ -156,6 +156,9 @@ export interface TextStyle extends StyleProps, LayoutProps {
   // Text alignment (for multi-line text)
   textAlign?: 'left' | 'center' | 'right' | 'justify';
 
+  // Text transform (CSS-like)
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+
   // Text decoration (already in StyleProps but keeping for CSS-like API)
   textDecoration?: 'none' | 'underline' | 'line-through';
 

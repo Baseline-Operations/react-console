@@ -5,6 +5,7 @@
 
 import type { ReactElement } from 'react';
 import { TextNode } from './primitives/TextNode';
+import { LinkNode } from './primitives/LinkNode';
 import { BoxNode } from './primitives/BoxNode';
 import { FragmentNode } from './primitives/FragmentNode';
 import { TextInputNode } from './interactive/TextInputNode';
@@ -115,6 +116,21 @@ export class NodeFactory {
         const lineBreakCount =
           typeof props.count === 'number' && props.count > 0 ? Math.floor(props.count) : 1;
         node.setContent('\n'.repeat(lineBreakCount));
+        break;
+      }
+
+      case 'link':
+      case 'Link': {
+        const linkNode = new LinkNode();
+        if (typeof props.href === 'string') {
+          linkNode.setHref(props.href);
+        }
+        if (props.children !== undefined && props.children !== null) {
+          if (typeof props.children === 'string' || typeof props.children === 'number') {
+            linkNode.setContent?.(String(props.children));
+          }
+        }
+        node = linkNode as unknown as Node;
         break;
       }
 
@@ -539,35 +555,8 @@ export class NodeFactory {
         node = new BoxNode() as unknown as Node;
     }
 
-    // Apply props using TSX-friendly APIs
-    const extNode = node as ExtendedNode;
-    if (props.style && 'setStyle' in node) {
-      extNode.setStyle?.(props.style as ViewStyle | TextStyle);
-    }
-
-    if (props.className && 'setClassName' in node) {
-      extNode.setClassName?.(props.className as string | string[]);
-    }
-
-    // Add event handlers
-    if (props.onClick && 'onClick' in node) {
-      extNode.onClick = props.onClick as (event: unknown) => void;
-    }
-    if (props.onKeyDown && 'onKeyDown' in node) {
-      extNode.onKeyDown = props.onKeyDown as (event: unknown) => void;
-    }
-    if (props.onKeyPress && 'onKeyPress' in node) {
-      extNode.onKeyPress = props.onKeyPress as (event: unknown) => void;
-    }
-    if (props.onChange && 'onChange' in node) {
-      extNode.onChange = props.onChange as (event: unknown) => void;
-    }
-    if (props.onFocus && 'onFocus' in node) {
-      extNode.onFocus = props.onFocus as () => void;
-    }
-    if (props.onBlur && 'onBlur' in node) {
-      extNode.onBlur = props.onBlur as () => void;
-    }
+    // NOTE: Style, className, and event handlers are applied by HostConfig.applyPropsToNode
+    // in createInstance/commitUpdate so there is a single canonical path (no duplicate setStyle).
 
     // NOTE: Children are NOT added here - React's reconciler handles child addition
     // via appendChild/appendInitialChild. Adding them here would cause duplication.

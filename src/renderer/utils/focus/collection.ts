@@ -10,7 +10,7 @@ import type { Node } from '../../../nodes/base/Node';
  * Collect all interactive components from tree
  *
  * Recursively walks the component tree to find all interactive components
- * (input, button, radio, checkbox, dropdown, list, and boxes with onClick/onPress).
+ * (input, button, link, radio, checkbox, dropdown, list, and boxes with onClick/onPress).
  * Used for tab navigation and focus management.
  *
  * @param node - Root Node to traverse
@@ -28,6 +28,7 @@ export function collectInteractiveComponents(node: Node, result: Node[], _depth:
   const isInteractive =
     node.type === 'input' ||
     node.type === 'button' ||
+    node.type === 'link' ||
     node.type === 'radio' ||
     node.type === 'checkbox' ||
     node.type === 'dropdown' ||

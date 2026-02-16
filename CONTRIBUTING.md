@@ -10,9 +10,10 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
+- Node.js >= 20.0.0
 - npm >= 9.0.0
 - Git
+- **Rust** (stable, 1.85+) — required to build the native addon; there is no JS/TS fallback. See [rustup](https://rustup.rs/).
 
 ### Development Setup
 
@@ -29,11 +30,13 @@ By participating in this project, you agree to maintain a respectful and inclusi
    npm install
    ```
 
-3. **Build the project:**
+3. **Build the project** (`build:full` runs the native addon then TypeScript/JS; use `npm run build` for TS/JS only):
 
    ```bash
-   npm run build
+   npm run build:full
    ```
+
+   Supported platforms for the native addon: macOS (x64, arm64), Linux (x64, arm64), Windows (x64, arm64). If the addon fails to load, the library throws; there is no fallback.
 
 4. **Run tests:**
 
@@ -109,7 +112,7 @@ docs: update API documentation for CommandRouter
    npm run lint        # Check code style
    npm run typecheck   # Type check
    npm test            # Run tests
-   npm run build       # Ensure build succeeds
+   npm run build       # TS/JS only; use npm run build:full for native
    ```
 
 4. **Commit your changes:**

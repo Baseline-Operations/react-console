@@ -23,7 +23,7 @@ import {
   substringToVisibleColumn,
   substringFromVisibleColumn,
 } from '../../utils/measure';
-import { applyStyles } from '../../renderer/ansi';
+import { applyStyles, getBackgroundColorCode } from '../../renderer/ansi';
 
 /**
  * Text metrics
@@ -35,11 +35,21 @@ interface TextMetrics {
 }
 
 /**
- * A segment of text with its associated style
+ * A segment of text with its associated style.
+ * focusedLink: when true, segment is from a focused LinkNode; render with inverse (reverse fg/bg).
+ * nodeRef: when set, segment is from this node (e.g. LinkNode) for bounds registration.
  */
 interface TextSegment {
   text: string;
   style: ComputedStyle;
+  focusedLink?: boolean;
+  nodeRef?: Node;
+}
+
+/** Returns true if the node has a focused property set to true (e.g. focused LinkNode). */
+function isNodeFocused(node: Node | undefined): boolean {
+  if (!node || !('focused' in node)) return false;
+  return Boolean((node as { focused: boolean }).focused);
 }
 
 // Create the mixed-in base class with proper type handling
@@ -91,31 +101,64 @@ export class TextNode extends TextNodeBase {
   }
 
   /**
+   * Apply textTransform to a string (uppercase, lowercase, capitalize).
+   */
+  private static applyTextTransform(
+    text: string,
+    transform: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+  ): string {
+    if (!text || transform === 'none') return text;
+    if (transform === 'uppercase') return text.toUpperCase();
+    if (transform === 'lowercase') return text.toLowerCase();
+    if (transform === 'capitalize') {
+      return text.replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
+    }
+    return text;
+  }
+
+  /**
    * Collect all text segments from this node and its children
    * This enables nested Text components like: <Text>Hello <Text style={{bold: true}}>World</Text></Text>
+   * Parent's textTransform is applied to child segment text when the content came from a string child
+   * (so <Text textTransform="uppercase">foo</Text> works even when "foo" is in a child TextNode).
    */
   private collectTextSegments(): TextSegment[] {
     const segments: TextSegment[] = [];
     const style = this.computeStyle();
+    const parentTransform = style.getTextTransform?.() ?? 'none';
 
     // If this node has children, collect from them (they include any text content)
     // If no children, use this node's content directly
     // This avoids double-counting when NodeFactory sets content AND reconciler adds child
     if (this.children.length > 0) {
-      // Collect from children only - they represent the actual content structure
+      // Collect from children only - they represent the actual content structure.
+      // Treat text and link children as having their own segments (shared styling path).
+      // Parent textTransform intentionally overrides child (applied to all segment text).
       for (const child of this.children) {
-        if (child.getNodeType && child.getNodeType() === 'text') {
-          const textChild = child as TextNode;
-          const childSegments = textChild.collectTextSegments();
-          segments.push(...childSegments);
+        const nodeType = child.getNodeType?.();
+        if (nodeType === 'text' || nodeType === 'link') {
+          const textLikeChild = child as TextNode;
+          const childSegments = textLikeChild.collectTextSegments();
+          const isFocusedLink = nodeType === 'link' && isNodeFocused(child);
+          for (const seg of childSegments) {
+            segments.push({
+              text: TextNode.applyTextTransform(seg.text, parentTransform),
+              style: seg.style,
+              focusedLink: isFocusedLink,
+              nodeRef: nodeType === 'link' ? child : undefined,
+            });
+          }
         } else if (child.content) {
           // Raw text node or other node with content
-          segments.push({ text: child.content, style });
+          const raw = child.content;
+          const transformed = TextNode.applyTextTransform(raw, parentTransform);
+          segments.push({ text: transformed, style });
         }
       }
     } else if (this.content) {
       // Leaf text node - use its own content
-      segments.push({ text: this.content, style });
+      const transformed = TextNode.applyTextTransform(this.content, parentTransform);
+      segments.push({ text: transformed, style });
     }
 
     return segments;
@@ -129,6 +172,73 @@ export class TextNode extends TextNodeBase {
     const baseStyle = StyleMixinRegistry.get('BaseStyle')?.getDefaultStyle() || {};
     const textStyle = StyleMixinRegistry.get('TextStyle')?.getDefaultStyle() || {};
     return { ...baseStyle, ...textStyle };
+  }
+
+  /**
+   * Return regions for interactive children (e.g. links) so BufferRenderer can register their bounds for mouse hit testing.
+   * Coordinates are relative to this node's layout (x, y = column, row within the text block).
+   * One region per node (merged if segment spans multiple lines).
+   * Known limitation: merged box uses min(x)/max(right) across lines, so a multi-line link can have a hit region
+   * wider than the text on any single line and may cause false-positive hits on adjacent non-link text.
+   */
+  getInteractiveChildRegions(): {
+    node: Node;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[] {
+    const byNode = new Map<Node, { x: number; y: number; right: number; bottom: number }>();
+    if (this.textSegments.length === 0 || this.wrappedLines.length === 0) return [];
+    const fullContent = this.textSegments.map((s) => s.text).join('');
+    let segmentStart = 0;
+    for (const seg of this.textSegments) {
+      if (!seg.nodeRef) {
+        segmentStart += seg.text.length;
+        continue;
+      }
+      const segmentEnd = segmentStart + seg.text.length;
+      let lineStartCharIndex = 0;
+      for (let lineIndex = 0; lineIndex < this.wrappedLines.length; lineIndex++) {
+        const line = this.wrappedLines[lineIndex] ?? '';
+        const lineEndCharIndex = lineStartCharIndex + line.length;
+        if (segmentEnd <= lineStartCharIndex || segmentStart >= lineEndCharIndex) {
+          lineStartCharIndex = lineEndCharIndex;
+          if (lineStartCharIndex < fullContent.length && fullContent[lineStartCharIndex] === '\n') {
+            lineStartCharIndex++;
+          }
+          continue;
+        }
+        const startInLine = Math.max(0, segmentStart - lineStartCharIndex);
+        const endInLine = Math.min(line.length, segmentEnd - lineStartCharIndex);
+        const slice = line.substring(startInLine, endInLine);
+        const width = measureText(slice);
+        const x = width > 0 ? measureText(line.substring(0, startInLine)) : 0;
+        const existing = byNode.get(seg.nodeRef);
+        const right = x + width;
+        const bottom = lineIndex + 1;
+        if (existing) {
+          existing.x = Math.min(existing.x, x);
+          existing.y = Math.min(existing.y, lineIndex);
+          existing.right = Math.max(existing.right, right);
+          existing.bottom = Math.max(existing.bottom, bottom);
+        } else {
+          byNode.set(seg.nodeRef, { x, y: lineIndex, right, bottom });
+        }
+        lineStartCharIndex = lineEndCharIndex;
+        if (lineStartCharIndex < fullContent.length && fullContent[lineStartCharIndex] === '\n') {
+          lineStartCharIndex++;
+        }
+      }
+      segmentStart = segmentEnd;
+    }
+    return Array.from(byNode.entries()).map(([node, r]) => ({
+      node,
+      x: r.x,
+      y: r.y,
+      width: r.right - r.x,
+      height: r.bottom - r.y,
+    }));
   }
 
   computeLayout(constraints: LayoutConstraints): LayoutResult {
@@ -323,6 +433,30 @@ export class TextNode extends TextNodeBase {
   }
 
   /**
+   * Walk up the parent chain and return the ANSI background-color code
+   * of the nearest ancestor with an opaque backgroundColor, or null.
+   */
+  private getParentBackgroundCode(): string | null {
+    interface StylableParent {
+      computeStyle(): ComputedStyle;
+      parent?: Node | null;
+    }
+    let current: Node | null = this.parent;
+    while (current) {
+      if ('computeStyle' in current) {
+        const pStyle = (current as unknown as StylableParent).computeStyle();
+        const bgColor = pStyle.getBackgroundColor();
+        if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
+          const code = getBackgroundColorCode(bgColor);
+          return code || null;
+        }
+      }
+      current = current.parent || null;
+    }
+    return null;
+  }
+
+  /**
    * Render a line with segment-specific styling
    * Maps positions in the line back to their original segments to apply correct styles
    * @param lineIndex - The index of this line in wrappedLines (used to calculate offset)
@@ -368,18 +502,23 @@ export class TextNode extends TextNodeBase {
     let currentRun = '';
     let currentRunStyle: ComputedStyle | null = null;
 
-    // Helper to get style for a position
-    const getStyleAtPos = (posInFull: number): ComputedStyle | null => {
+    // Per-line cost O(line_length × segment_count); fine for typical terminal text. Future optimization: precomputed position→segment index.
+    const getSegmentInfoAtPos = (
+      posInFull: number
+    ): { style: ComputedStyle | null; focusedLink: boolean } => {
       let segmentStart = 0;
       for (const segment of this.textSegments) {
         const segmentEnd = segmentStart + segment.text.length;
         if (posInFull >= segmentStart && posInFull < segmentEnd) {
-          return segment.style;
+          const focused = segment.nodeRef ? isNodeFocused(segment.nodeRef) : false;
+          return { style: segment.style, focusedLink: focused };
         }
         segmentStart = segmentEnd;
       }
-      return null;
+      return { style: null, focusedLink: false };
     };
+
+    let currentRunFocusedLink = false;
 
     // Helper to flush current run with styling
     const flushRun = () => {
@@ -393,7 +532,7 @@ export class TextNode extends TextNodeBase {
           italic: currentRunStyle.getItalic(),
           underline: currentRunStyle.getUnderline(),
           strikethrough: currentRunStyle.getStrikethrough(),
-          inverse: currentRunStyle.getInverse(),
+          inverse: currentRunFocusedLink || currentRunStyle.getInverse(),
         });
       } else {
         styledOutput += currentRun;
@@ -403,13 +542,14 @@ export class TextNode extends TextNodeBase {
 
     for (const char of line) {
       const posInFull = lineStartInFull + charIndex;
-      const segmentStyle = getStyleAtPos(posInFull);
+      const { style: segmentStyle, focusedLink: segmentFocusedLink } =
+        getSegmentInfoAtPos(posInFull);
 
-      // Check if style changed (compare by reference since styles are cached)
-      if (segmentStyle !== currentRunStyle) {
-        // Flush previous run and start new one
+      // Check if style or focus changed
+      if (segmentStyle !== currentRunStyle || segmentFocusedLink !== currentRunFocusedLink) {
         flushRun();
         currentRunStyle = segmentStyle;
+        currentRunFocusedLink = segmentFocusedLink;
       }
 
       currentRun += char;
@@ -426,33 +566,20 @@ export class TextNode extends TextNodeBase {
 
     // Re-apply parent's background color to the "after" portion if needed
     if (after) {
-      interface StylableParent {
-        computeStyle(): ComputedStyle;
-        parent?: Node | null;
-      }
-      let current: Node | null = this.parent;
-      let parentBgColor: string | null = null;
-      while (current) {
-        if ('computeStyle' in current) {
-          const pStyle = (current as unknown as StylableParent).computeStyle();
-          const bgColor = pStyle.getBackgroundColor();
-          if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
-            parentBgColor = bgColor;
-            break;
-          }
-        }
-        current = current.parent || null;
-      }
-      if (parentBgColor) {
-        const { getBackgroundColorCode } = require('../../renderer/ansi');
-        const parentBgCode = getBackgroundColorCode(parentBgColor);
-        if (parentBgCode) {
-          after = parentBgCode + after;
-        }
+      const parentBgCode = this.getParentBackgroundCode();
+      if (parentBgCode) {
+        after = parentBgCode + after;
       }
     }
 
-    buffer.lines[y] = before + styledOutput + after;
+    this.setBufferLine(buffer, y, before + styledOutput + after);
+  }
+
+  /**
+   * Write line content to buffer. Overridden by LinkNode to wrap in OSC 8.
+   */
+  protected setBufferLine(buffer: OutputBuffer, y: number, content: string): void {
+    buffer.lines[y] = content;
   }
 
   private renderLine(
@@ -498,36 +625,14 @@ export class TextNode extends TextNodeBase {
     // so it lost the background color that was set at position 0.
     // We need to restore the parent's background so gaps between children
     // maintain the parent container's background color.
-    // Walk up the node's tree parent chain to find actual effective background
-    // (not context.parent which may be 'this' for the parent node)
     if (after) {
-      interface StylableParent {
-        computeStyle(): ComputedStyle;
-        parent?: Node | null;
-      }
-      let current: Node | null = this.parent;
-      let parentBgColor: string | null = null;
-      while (current) {
-        if ('computeStyle' in current) {
-          const style = (current as unknown as StylableParent).computeStyle();
-          const bgColor = style.getBackgroundColor();
-          if (bgColor && bgColor !== 'inherit' && bgColor !== 'transparent') {
-            parentBgColor = bgColor;
-            break;
-          }
-        }
-        current = current.parent || null;
-      }
-      if (parentBgColor) {
-        const { getBackgroundColorCode } = require('../../renderer/ansi');
-        const parentBgCode = getBackgroundColorCode(parentBgColor);
-        if (parentBgCode) {
-          after = parentBgCode + after;
-        }
+      const parentBgCode = this.getParentBackgroundCode();
+      if (parentBgCode) {
+        after = parentBgCode + after;
       }
     }
 
-    buffer.lines[y] = before + styledLine + after;
+    this.setBufferLine(buffer, y, before + styledLine + after);
   }
 
   /**
@@ -590,6 +695,7 @@ export class TextNode extends TextNodeBase {
       let cx = lineStartX;
       let charIndexInLine = 0;
 
+      // Per-character segment lookup mirrors O(n×m) in renderLineWithSegments; could share a precomputed char→segment index if needed.
       for (const char of line) {
         if (cx >= x + maxWidth) break;
         if (cx < x) {
@@ -602,29 +708,34 @@ export class TextNode extends TextNodeBase {
         const posInFull = lineStartInFull + charIndexInLine;
         let segmentStart = 0;
         let segmentStyle: ComputedStyle | null = null;
+        let matchedSegment: TextSegment | null = null;
 
         for (const segment of segments) {
           const segmentEnd = segmentStart + segment.text.length;
           if (posInFull >= segmentStart && posInFull < segmentEnd) {
             segmentStyle = segment.style;
+            matchedSegment = segment;
             break;
           }
           segmentStart = segmentEnd;
         }
 
-        // Use segment style if found, otherwise use defaults
+        // Use segment style if found, otherwise use defaults (segment background is required for Code/link styling)
         const charForeground = segmentStyle?.getColor() || defaultForeground;
+        const charBackground = segmentStyle?.getBackgroundColor() || background;
         const charBold = segmentStyle?.getBold() ?? defaultBold;
         const charDim = segmentStyle?.getDim() ?? defaultDim;
         const charItalic = segmentStyle?.getItalic() ?? defaultItalic;
         const charUnderline = segmentStyle?.getUnderline() ?? defaultUnderline;
         const charStrikethrough = segmentStyle?.getStrikethrough() ?? defaultStrikethrough;
-        const charInverse = segmentStyle?.getInverse() ?? defaultInverse;
+        const charInverse =
+          !!(matchedSegment?.nodeRef && isNodeFocused(matchedSegment.nodeRef)) ||
+          (segmentStyle?.getInverse() ?? defaultInverse);
 
         buffer.setCell(cx, cy, {
           char,
           foreground: charForeground,
-          background,
+          background: charBackground,
           bold: charBold,
           dim: charDim,
           italic: charItalic,
@@ -642,6 +753,10 @@ export class TextNode extends TextNodeBase {
 
       // Move to next line in full text
       lineStartInFull += line.length;
+      // Account for stripped newlines (same logic as getInteractiveChildRegions / renderLineWithSegments)
+      if (lineStartInFull < fullContent.length && fullContent[lineStartInFull] === '\n') {
+        lineStartInFull++;
+      }
       cy++;
     }
   }

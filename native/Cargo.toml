@@ -1,0 +1,22 @@
+[package]
+name = "react-console-native"
+version = "0.1.0"
+edition = "2021"
+description = "Native addon for @baseline-operations/react-console (buffer, display, storage, bell)"
+authors = [""]
+license = "MIT"
+repository = "https://github.com/baseline-operations/react-console"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = "2"
+napi-derive = "2"
+
+[build-dependencies]
+napi-build = ">=2.0, <2.3"  # 2.3+ requires Rust 1.88; keep Rust 1.85 compat
+
+[profile.release]
+lto = true
+strip = true

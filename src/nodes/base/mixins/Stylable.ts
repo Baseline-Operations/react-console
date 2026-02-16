@@ -111,6 +111,12 @@ export class ComputedStyle {
     if (ta === 'center' || ta === 'right') return ta;
     return 'left';
   }
+
+  getTextTransform(): 'none' | 'uppercase' | 'lowercase' | 'capitalize' {
+    const tt = this.styles.textTransform;
+    if (tt === 'uppercase' || tt === 'lowercase' || tt === 'capitalize') return tt;
+    return 'none';
+  }
 }
 
 /**

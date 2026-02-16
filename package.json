@@ -107,6 +107,7 @@
   },
   "files": [
     "dist",
+    "native/prebuilds",
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
@@ -115,6 +116,8 @@
   "prepublishOnly": "npm run build",
   "scripts": {
     "build": "npm run clean && npm run build:types && npm run build:js",
+    "build:full": "npm run build:native && npm run build",
+    "build:native": "cd native && cargo build --release && node ../scripts/copy-native-addon.cjs",
     "build:types": "tsc --emitDeclarationOnly --outDir dist",
     "build:js": "rollup -c",
     "dev": "tsc --watch",

@@ -22,6 +22,7 @@ export interface ConsoleNode {
     | 'fragment'
     | 'newline'
     | 'linebreak'
+    | 'link'
     | 'textinput'
     | 'input' // deprecated, use 'textinput'
     | 'button'
@@ -104,6 +105,8 @@ export interface ConsoleNode {
   verticalScrollbar?: 'auto' | 'always' | 'hidden'; // Vertical scrollbar visibility (overrides scrollbarVisibility if set)
   scrollbarChar?: string; // Character to use for scrollbar thumb (default: '█')
   scrollbarTrackChar?: string; // Character to use for scrollbar track (default: '░')
+  // Link props (terminal hyperlink, OSC 8)
+  href?: string;
   // Overlay props
   zIndex?: number;
   backdrop?: boolean;

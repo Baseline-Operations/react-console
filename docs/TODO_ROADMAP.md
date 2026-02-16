@@ -854,7 +854,7 @@ export const TouchableHighlight = Pressable;
 ### 3.1 Verify `<Text>` Transform Capabilities
 
 **Priority**: Medium  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 > **Note**: Audit 1.5 should verify if this already exists before implementation.
 
@@ -871,10 +871,10 @@ Confirm that the `Text` component can handle all text transformations that would
 
 **Research Tasks**:
 
-- [ ] Audit current `TextStyle` type for transform support
-- [ ] Check renderer handling of text transformations
-- [ ] Determine if `textTransform` style prop exists
-- [ ] Evaluate if custom transform function is needed
+- [x] Audit current `TextStyle` type for transform support
+- [x] Check renderer handling of text transformations
+- [x] Determine if `textTransform` style prop exists
+- [x] Evaluate if custom transform function is needed
 
 **Implementation (if needed)**:
 
@@ -889,19 +889,19 @@ interface TextProps {
 
 **Tasks**:
 
-- [ ] Audit existing Text component capabilities
-- [ ] Add `textTransform` to `TextStyle` if missing
-- [ ] Implement in renderer text processing
-- [ ] Consider adding `transform` function prop for custom transforms
-- [ ] Add examples demonstrating all transforms
-- [ ] Document capabilities
+- [x] Audit existing Text component capabilities
+- [x] Add `textTransform` to `TextStyle` if missing
+- [x] Implement in renderer text processing
+- [x] Consider adding `transform` function prop for custom transforms
+- [x] Add examples demonstrating all transforms
+- [x] Document capabilities
 
 ---
 
 ### 3.2 Inline Text Styling Component
 
 **Priority**: High  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 > **Note**: Audit 1.5 should verify if nested Text already works correctly.
 
@@ -943,11 +943,11 @@ If we add an alias, consider naming options:
 
 **Research Tasks**:
 
-- [ ] Verify nested Text rendering works correctly (block parent, inline children)
-- [ ] Check if inline styles merge properly with parent
-- [ ] Verify ANSI codes are properly nested/reset
-- [ ] Confirm Text at root level renders as block (newline after)
-- [ ] Confirm nested Text renders inline (no newline)
+- [x] Verify nested Text rendering works correctly (block parent, inline children)
+- [x] Check if inline styles merge properly with parent
+- [x] Verify ANSI codes are properly nested/reset
+- [x] Confirm Text at root level renders as block (newline after)
+- [x] Confirm nested Text renders inline (no newline)
 
 **Implementation Notes**:
 
@@ -969,13 +969,13 @@ export function InlineText(props: TextProps) {
 
 **Tasks**:
 
-- [ ] Test nested Text scenarios thoroughly
-- [ ] Verify block vs inline behavior based on nesting context
-- [ ] Fix any issues with nested text rendering
-- [ ] Decide on naming (Span vs InlineText vs documentation-only)
-- [ ] Implement component if needed
-- [ ] Export from primitives
-- [ ] Document inline styling patterns with clear examples
+- [x] Test nested Text scenarios thoroughly
+- [x] Verify block vs inline behavior based on nesting context
+- [x] Fix any issues with nested text rendering
+- [x] Decide on naming (Span vs InlineText vs documentation-only)
+- [x] Implement component if needed
+- [x] Export from primitives
+- [x] Document inline styling patterns with clear examples
 
 ---
 
@@ -984,7 +984,7 @@ export function InlineText(props: TextProps) {
 > **Audit Finding**: Identified as missing during gap analysis.
 
 **Priority**: Low  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 Display clickable URLs using OSC 8 terminal hyperlinks (primary) with `open` package fallback.
 
@@ -1109,23 +1109,23 @@ Links should be clickable in **static apps** too, not just interactive ones. OSC
 
 **Tasks**:
 
-- [ ] Add `open` as optional/peer dependency
-- [ ] Create OSC 8 terminal capability detection utility
-- [ ] Create `src/components/primitives/Link.tsx`
-- [ ] Implement OSC 8 escape sequence output (always emitted)
-- [ ] Implement fallback behavior with `open` package
-- [ ] Add fallback prop with all modes (true/false/'always'/function)
-- [ ] Add disabled prop with appropriate styling
-- [ ] Add tabIndex for focus order control
-- [ ] Add state-based styling support (focused, hovered, disabled)
-- [ ] Add onHover, onHoverOut, onFocus, onBlur handlers
-- [ ] Add showUrl option for accessibility
-- [ ] Add onPress handler (in addition to fallback)
-- [ ] Add accessibilityLabel prop
-- [ ] Export from primitives
-- [ ] Add unit tests
-- [ ] Add example (both static and interactive modes)
-- [ ] Document terminal support and fallback behavior
+- [x] Add `open` as optional/peer dependency
+- [x] Create OSC 8 terminal capability detection utility
+- [x] Create `src/components/primitives/Link.tsx`
+- [x] Implement OSC 8 escape sequence output (always emitted)
+- [x] Implement fallback behavior with `open` package
+- [x] Add fallback prop with all modes (true/false/'always'/function)
+- [x] Add disabled prop with appropriate styling
+- [x] Add tabIndex for focus order control
+- [x] Add state-based styling support (focused, hovered, disabled)
+- [x] Add onHover, onHoverOut, onFocus, onBlur handlers
+- [x] Add showUrl option for accessibility
+- [x] Add onPress handler (in addition to fallback)
+- [x] Add accessibilityLabel prop
+- [x] Export from primitives
+- [x] Add unit tests
+- [x] Add example (both static and interactive modes)
+- [x] Document terminal support and fallback behavior
 
 **Related Utilities** (can be added alongside):
 
@@ -1142,7 +1142,7 @@ The `open` package also supports:
 > **Audit Finding**: Identified as missing during gap analysis.
 
 **Priority**: Low  
-**Status**: [ ] Not started
+**Status**: [x] Complete (v0.1.5)
 
 Display code with syntax highlighting in terminal.
 
@@ -1172,13 +1172,13 @@ Display code with syntax highlighting in terminal.
 
 **Tasks**:
 
-- [ ] Research lightweight syntax highlighting options
-- [ ] Create `src/components/primitives/Code.tsx`
-- [ ] Implement basic highlighting for common languages
-- [ ] Add line numbers support
-- [ ] Add line highlighting
-- [ ] Export from primitives
-- [ ] Document usage and language support
+- [x] Research lightweight syntax highlighting options
+- [x] Create `src/components/primitives/Code.tsx`
+- [x] Implement basic highlighting for common languages
+- [x] Add line numbers support
+- [x] Add line highlighting
+- [x] Export from primitives
+- [x] Document usage and language support
 
 ---
 
@@ -2576,10 +2576,10 @@ Use this checklist to track overall progress. **All items must be completed befo
 - [x] 2.2 LineBreak count prop
 - [x] 2.3 Divider component
 - [x] 2.4 TouchableOpacity/TouchableHighlight aliases
-- [ ] 3.1 Text transform verification
-- [ ] 3.2 Inline text styling (nested Text / alias decision)
-- [ ] 3.3 Link component (terminal hyperlinks)
-- [ ] 3.4 Code component (syntax highlighting)
+- [x] 3.1 Text transform verification
+- [x] 3.2 Inline text styling (nested Text / alias decision)
+- [x] 3.3 Link component (terminal hyperlinks)
+- [x] 3.4 Code component (syntax highlighting)
 
 **Phase 2: I/O & Integration** (Developer Experience)
 
@@ -2638,12 +2638,15 @@ When completing any task:
 6. **Update TypeDoc**: Ensure JSDoc comments are complete
 7. **Create example**: Add example file if applicable
 8. **Update README**: If feature is user-facing
+9. **Code cleanup (each version, especially after Rust updates)**: Remove unused code, dead TS implementations replaced by the addon, unused exports, and obsolete dependencies. Run a final pass before marking the version complete — see per-version "Code cleanup" items below.
 
 ---
 
 ## Version Planning
 
 All work in this roadmap will be completed before v0.2.0. Each logical grouping gets its own patch release. Nothing is deferred or skipped.
+
+**Code cleanup**: Every version includes a **Code cleanup** step before the version is considered complete. After Rust updates (v0.1.5–0.1.8, v0.2.0), cleanup means removing the replaced TS implementation and all dead code, unused exports, and obsolete dependencies. For other versions, cleanup is a lighter pass (unused code, lint, exports). See Cleanup Protocol step 9.
 
 ### v0.1.3 - Audits & Bug Fixes
 
@@ -2667,59 +2670,173 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 - [x] 2.3 Divider component
 - [x] 2.4 TouchableOpacity/TouchableHighlight aliases
 
-### v0.1.5 - Text Components & Styling
+### v0.1.5 - Rust Addon & Text Components
 
-- [ ] 3.1 Text transform verification/implementation
-- [ ] 3.2 Inline text styling (nested Text / alias decision)
-- [ ] 3.3 Link component (terminal hyperlinks)
-- [ ] 3.4 Code component (syntax highlighting)
+Rust addon is introduced and required from this version; no TS fallback. See [RUST_LIFT_PLAN_0.2.0.md](./RUST_LIFT_PLAN_0.2.0.md).
 
-### v0.1.6 - I/O Stream Hooks
+**Branch**: `v0.1.5`
+
+**Rust — Addon skeleton & build (must land first so later versions use it)**
+
+- [x] RUST-6.1 Crate layout (e.g. `native/` or `packages/react-console-native`); build and link from main package (napi-build pinned to 2.0 for Rust 1.85)
+- [x] RUST-6.2 Prebuild pipeline (e.g. GitHub Actions) for all supported platforms/arches
+- [x] RUST-1.1 napi-rs addon skeleton; load required; fail clearly if load fails (no fallback)
+- [x] RUST-6.3 TS loader: require addon at startup; on failure, throw with clear message (no fallback)
+- [x] RUST-6.4 Document supported platforms and "no fallback" in README/contributing
+
+**Text & styling (builds on existing layout; render path still TS until 0.1.6)**
+
+- [x] 3.1 Text transform verification/implementation
+- [x] 3.2 Inline text styling (nested Text / alias decision)
+- [x] 3.3 Link component (terminal hyperlinks)
+- [x] 3.4 Code component (syntax highlighting)
+
+**Code cleanup**
+
+- [x] Remove unused code and stale references from addon integration; trim any TS that becomes dead after loader lands; verify no orphan exports or deps
+
+### v0.1.6 - Rust Render Path & I/O Hooks
+
+Render path moves to Rust so all future component work uses the native buffer/display. No new TS buffer/display code.
+
+**Rust — Buffer & output (Phase 1)**
+
+- [ ] RUST-1.2 Cell buffer in Rust (grid, get/set/fill/clear/resize, dirty regions)
+- [ ] RUST-1.3 ANSI generation in Rust (cell→ANSI, transition codes, color parsing)
+- [ ] RUST-1.4 Compositing in Rust (layers → single buffer)
+- [ ] RUST-1.5 Display buffer in Rust (current/pending, diff, flush full, flush diff to fd)
+- [ ] RUST-1.6 TS integration: render path uses only Rust buffer/composite/flush; remove TS buffer/display for this path
+
+**I/O hooks**
 
 - [ ] 4.1 useStdin hook
 - [ ] 4.2 useStdout hook
 - [ ] 4.3 useStderr hook
 
-### v0.1.7 - Console Capture System
+**Code cleanup**
+
+- [ ] Remove TS buffer/display implementation (CellBuffer, CompositeBuffer, DisplayBuffer, ANSIGenerator, buffer types, and call sites); remove unused buffer/ANSI exports; drop dead code paths and tests that targeted removed TS code; update imports and barrel exports
+
+### v0.1.7 - Console & Rust Storage
+
+Console and any storage-heavy features use Rust storage from the start; avoids adding TS storage features that would be replaced.
+
+**Rust — Storage (all backends, default memory)**
+
+- [ ] RUST-3.1 Storage: memory backend (default), no file created
+- [ ] RUST-3.2 Storage: file backend (encrypted), path from options/env
+- [ ] RUST-3.3 Storage: keychain backend for secrets (keyring)
+- [ ] RUST-3.4 TS storage API → addon only; remove current TS storage implementation
+- [ ] RUST-3.5 Document storage backends (default memory, when to use file/keychain)
+
+**Console**
 
 - [ ] 5.1 Console component & useConsole hook
 
-### v0.1.8 - React DevTools Integration
+**Code cleanup**
+
+- [ ] Remove TS storage implementation (utils/storage.ts StorageManager, ApplicationStorage, file/encryption logic); remove storage-related dead code and tests; drop optional deps used only by old storage; update hooks/storage.ts to call addon only; clean barrel exports
+
+### v0.1.8 - React DevTools & Rust Bell
+
+Bell moves to Rust so we don't add more TS bell logic that gets replaced later.
+
+**Rust — Bell and sound**
+
+- [ ] RUST-4.1 Bell: terminal BEL in Rust; integrate with display flush
+- [ ] RUST-4.2 Bell: PCM tones in Rust (frequency, duration, waveform, volume, pan)
+- [ ] RUST-4.3 Bell: patterns and sequences in Rust; registerPattern/playPattern equivalent
+- [ ] RUST-4.4 TS Bell API → addon only; remove TS Bell implementation
+
+**DevTools**
 
 - [ ] 6.1 React DevTools support (configurable via render options)
+
+**Code cleanup**
+
+- [ ] Remove TS Bell implementation (apis/Bell.ts PCM, speaker, patterns); remove optional @mastra/node-speaker usage for bell path; remove bell-related dead code and tests; ensure Bell API and useBell call addon only; clean exports and internal refs
 
 ### v0.1.9 - Accessibility
 
 - [ ] 7.1 ARIA & Screen Reader support research & implementation
 
-### v0.1.10 - Image Component
+**Code cleanup**
+
+- [ ] Remove unused code and dead refs from this version; run lint and fix any new unused exports or imports
+
+### v0.1.10 - Image Component & Graphics Prep
+
+Image component (TS/ANSI protocols); wcwidth, graphics research, and advanced terminal features in Rust.
+
+**Rust — Layout, graphics research & advanced terminal**
+
+- [ ] RUST-2.4 wcwidth/wcswidth export for TS layout (CJK, combining chars)
+- [ ] RUST-5.1 Research: Kitty vs Sixel vs iTerm2; document pixel-based mode (Kitty)
+- [ ] RUST-2.1 DA/DECRQSS parsing; expose capability flags and cursor/style state to TS
+- [ ] RUST-2.2 Synchronized output for full redraws when enabled
+- [ ] RUST-2.3 DECSCUSR, REP; optional OSC 4/10/11 get/set
+- [ ] RUST-2.5 Document advanced terminal features and how to enable them
+
+**Image**
 
 - [ ] 8.1 Image component (iTerm2, Kitty, Sixel, Unicode fallback)
 
-### v0.1.11 - Data Display Components
+**Code cleanup**
+
+- [ ] Remove any TS layout/measure code superseded by wcwidth from addon; trim dead graphics or image helpers; verify exports and tests
+
+### v0.1.11 - Data Display & Rust Graphics/Sound Exploration
+
+**Rust — Graphics & sound exploration**
+
+- [ ] RUST-5.2 Exploration: minimal graphics API in addon (place image/block) or defer to roadmap
+- [ ] RUST-5.3 Document graphics/pixel findings (in scope for 0.2.0 vs post-0.2.0)
+- [ ] RUST-4.5 Exploration: advanced sound (e.g. WAV playback); document if deferred
+
+**Data display**
 
 - [ ] 9.1 Table enhancements (declarative + compound APIs)
 - [ ] 9.2 Section component (declarative + compound APIs)
 
+**Code cleanup**
+
+- [ ] Remove unused code and dead refs from this version; run lint and fix unused exports/imports
+
 ### v0.1.12 - Testing Infrastructure
 
 - [ ] 10.1 Testing utilities (render, mock terminal, keyboard, mouse, focus, resize)
+
+**Code cleanup**
+
+- [ ] Remove unused test helpers or mocks; ensure no dead code from this version
 
 ### v0.1.13 - Developer Tooling
 
 - [ ] 11.1 ESLint plugin for React Console
 - [ ] 11.2 Storybook support (implementation or documented alternative)
 
+**Code cleanup**
+
+- [ ] Remove unused code and dead refs from this version; run lint and fix unused exports/imports
+
 ### v0.1.14 - Keyboard & Exit Handling
 
 - [ ] 12.1 Keyboard shortcuts / Hotkeys system
 - [ ] 12.2 Exit handling & cleanup hooks
+
+**Code cleanup**
+
+- [ ] Remove unused code and dead refs from this version; run lint and fix unused exports/imports
 
 ### v0.1.15 - Notifications & Utilities
 
 - [ ] 12.3 Notification / Toast system
 - [ ] 12.4 Color utilities
 - [ ] 12.5 Performance profiling utilities
+
+**Code cleanup**
+
+- [ ] Remove unused code and dead refs from this version; run lint and fix unused exports/imports
 
 ### v0.1.16 - Documentation & Polish
 
@@ -2729,11 +2846,24 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 - [ ] README updated
 - [ ] CHANGELOG complete
 
-### v0.2.0 - Release
+**Code cleanup**
 
-- [ ] All above versions complete
-- [ ] Full test coverage
-- [ ] All documentation complete
+- [ ] Full pass: remove any remaining unused code, dead exports, and obsolete deps; ensure no TS buffer/storage/bell remnants; run lint and typecheck
+
+### v0.2.0 - Final Cleanup & Release
+
+All Rust and feature work is done in v0.1.x. This version is final cleanup, documentation verification, and release only. See [RUST_LIFT_PLAN_0.2.0.md](./RUST_LIFT_PLAN_0.2.0.md) for design reference.
+
+**Code cleanup**
+
+- [ ] Final pass: remove any remaining dead code, unused exports, obsolete deps; full lint and typecheck; verify no orphan TS that duplicated addon behavior
+
+**Documentation & release**
+
+- [ ] Verify all documentation complete (all components, hooks, APIs)
+- [ ] Verify README and CHANGELOG complete
+- [ ] Full test coverage verified
+- [ ] All code-cleanup items for all prior versions done
 - [ ] Version bump to 0.2.0
 - [ ] Release notes
 
@@ -2741,13 +2871,21 @@ All work in this roadmap will be completed before v0.2.0. Each logical grouping 
 
 ## Order of Work
 
-1. **v0.1.3**: Complete all audits - these inform everything else
-2. **v0.1.4 - v0.1.7**: Core functionality (layout, text, I/O hooks, console)
-3. **v0.1.8 - v0.1.10**: DevTools, accessibility, and media (DevTools, accessibility, images)
-4. **v0.1.11 - v0.1.13**: Data components, testing, and developer tooling
-5. **v0.1.14 - v0.1.15**: Additional features (hotkeys, exit handling, notifications, utilities)
-6. **v0.1.16**: Documentation and polish
-7. **v0.2.0**: Final release
+Rust work is blended into patch versions so we don't build TS buffer/display/storage/bell that later gets replaced. Addon is required from v0.1.5.
+
+1. **v0.1.3**: Complete all audits — these inform everything else
+2. **v0.1.4**: Core layout (already done)
+3. **v0.1.5**: Rust addon skeleton & build (RUST-6.x, 1.1) + text components (3.1–3.4)
+4. **v0.1.6**: Rust render path (RUST-1.2–1.6) + I/O hooks (4.1–4.3) — from here, render is Rust
+5. **v0.1.7**: Rust storage (RUST-3.x) + Console (5.1)
+6. **v0.1.8**: Rust bell (RUST-4.1–4.4) + React DevTools (6.1)
+7. **v0.1.9**: Accessibility (7.1)
+8. **v0.1.10**: wcwidth, graphics research & advanced terminal (RUST-2.4, 5.1, 2.1–2.3, 2.5) + Image component (8.1)
+9. **v0.1.11**: Graphics/sound exploration (RUST-5.2, 5.3, 4.5) + Data display (9.1, 9.2)
+10. **v0.1.12 - v0.1.13**: Testing, developer tooling
+11. **v0.1.14 - v0.1.15**: Keyboard, exit, notifications, utilities
+12. **v0.1.16**: Documentation and polish
+13. **v0.2.0**: Final cleanup, documentation verification, and release only (no new Rust or feature work)
 
 Each patch version should be a complete, working state. No broken functionality between versions.
 
@@ -2775,4 +2913,4 @@ Each patch version should be a complete, working state. No broken functionality 
 
 ---
 
-_Last Updated: February 10, 2026_
+_Last Updated: February 15, 2026_
