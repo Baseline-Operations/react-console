@@ -54,7 +54,7 @@ jobs:
         run: npm run build:native
 
       - name: Upload prebuild
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: prebuild-${{ matrix.platform }}-${{ matrix.arch }}
           path: native/prebuilds/react_console_native.node
